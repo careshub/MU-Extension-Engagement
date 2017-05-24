@@ -67,7 +67,7 @@ function register_muext_engagement_cpt() {
 		'has_archive'           => true,
 		'exclude_from_search'   => false,
 		'publicly_queryable'    => true,
-		'capabilities'          => $capabilities,
+		// 'capabilities'          => $capabilities,
 		'show_in_rest'          => false,
 	);
 	register_post_type( 'muext_engagement', $args );

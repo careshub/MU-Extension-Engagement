@@ -18,7 +18,7 @@ namespace MU_Ext_Engagement\Admin;
 // add_action( 'admin_menu', array( $this, 'settings_init' ) );
 
 // Add an action link labeled "Settings" pointing to the options page from the plugin listing.
-// $plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . \MU_Ext_Engagement\get_plugin_slug(); . '.php' );
+// $plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . \MU_Ext_Engagement\get_plugin_slug() . '.php' );
 // add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
 
 // Add sample metaboxes
@@ -39,8 +39,8 @@ function enqueue_admin_scripts_and_styles() {
 
 	$screen = get_current_screen();
 	if ( $this->plugin_screen_hook_suffix == $screen->id ) {
-		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug(); .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version() );
-		wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug(); . '-admin-script', plugins_url( 'assets/js/admin.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
+		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version() );
+		wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-script', plugins_url( 'assets/js/admin.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
 	}
 }
 
@@ -56,7 +56,7 @@ $this->plugin_screen_hook_suffix = add_options_page(
 	__( 'Single Sign-On', 'muext-engagement' ),
 	__( 'Single Sign-On', 'muext-engagement' ),
 	'manage_options',
-	\MU_Ext_Engagement\get_plugin_slug();,
+	\MU_Ext_Engagement\get_plugin_slug(),
 	array( $this, 'display_plugin_admin_page' )
 );
 
@@ -79,8 +79,8 @@ function display_plugin_admin_page() {
 	<form action="<?php echo admin_url( 'options.php' ) ?>" method='post'>
 
 		<?php
-		settings_fields( \MU_Ext_Engagement\get_plugin_slug(); );
-		do_settings_sections( \MU_Ext_Engagement\get_plugin_slug(); );
+		settings_fields( \MU_Ext_Engagement\get_plugin_slug() );
+		do_settings_sections( \MU_Ext_Engagement\get_plugin_slug() );
 		submit_button();
 		?>
 
@@ -99,7 +99,7 @@ function add_action_links( $links ) {
 
 return array_merge(
 	array(
-		'settings' => '<a href="' . admin_url( 'options-general.php?page=' . \MU_Ext_Engagement\get_plugin_slug(); ) . '">' . __( 'Settings', 'muext-engagement' ) . '</a>'
+		'settings' => '<a href="' . admin_url( 'options-general.php?page=' . \MU_Ext_Engagement\get_plugin_slug() ) . '">' . __( 'Settings', 'muext-engagement' ) . '</a>'
 	),
 	$links
 );
