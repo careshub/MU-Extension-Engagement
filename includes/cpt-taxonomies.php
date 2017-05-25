@@ -64,7 +64,8 @@ function register_muext_engagement_cpt() {
 		'show_in_admin_bar'     => true,
 		'show_in_nav_menus'     => true,
 		'can_export'            => true,
-		'has_archive'           => true,
+		'has_archive'           => 'engagements',
+		'rewrite'               => array( 'slug' => 'engagements' ),
 		'exclude_from_search'   => false,
 		'publicly_queryable'    => true,
 		// 'capabilities'          => $capabilities,
@@ -106,6 +107,7 @@ function register_program_categories() {
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
 		'show_in_rest'               => false,
+		'rewrite'                    => array( 'slug' => 'themes' ),
 	);
 	register_taxonomy( 'muext_program_category', array( 'muext_engagement' ), $args );
 }
@@ -144,6 +146,7 @@ function register_program_tags() {
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
 		'show_in_rest'               => false,
+		'rewrite'                    => array( 'slug' => 'keywords' ),
 	);
 	register_taxonomy( 'muext_program_tag', array( 'muext_engagement' ), $args );
 
