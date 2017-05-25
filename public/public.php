@@ -10,7 +10,7 @@ add_filter( 'template_include', __NAMESPACE__ . '\\template_loader' );
 
 
 // Load public-facing style sheet and JavaScript.
-// add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_styles_scripts' ) );
+add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_styles_scripts' );
 // add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_scripts' ) );
 
 /**
@@ -32,7 +32,12 @@ function load_plugin_textdomain() {
  */
 function enqueue_styles_scripts() {
 	// Scripts
-	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
+	// wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
+
+	// Styles
+	if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) ) {
+		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-style', plugins_url( 'css/public.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
+	}
 }
 
 
