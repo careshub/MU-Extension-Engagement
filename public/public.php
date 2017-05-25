@@ -120,7 +120,23 @@ function get_template_part( $slug, $name = '' ) {
 	}
 }
 
+/**
+ * Get template directory path.
+ *
+ * @return string $path File path to the included templates directory.
+ */
 function get_template_path() {
 	return \MU_Ext_Engagement\get_plugin_base_path() . 'public/templates/';
 }
 
+/**
+ * Convert dates that are stored in 2017-05-26 format to May 26, 2017 format
+ * for readability.
+ *
+ * @return string $date Text-formatted date.
+ */
+function convert_to_human_date( $date ) {
+    // Goal format is "F j, Y"
+    $date = date_create_from_format( 'Y-m-d', $date );
+    return date_format( $date, 'F j, Y' );
+}
