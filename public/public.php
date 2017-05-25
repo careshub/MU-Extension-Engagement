@@ -35,7 +35,7 @@ function enqueue_styles_scripts() {
 	// wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
 
 	// Styles
-	if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) ) {
+	if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) || is_engagement_tax_archive() ) {
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-style', plugins_url( 'css/public.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
 	}
 }
@@ -73,6 +73,8 @@ function template_loader( $template ) {
 	if ( is_singular( 'muext_engagement' ) ) {
 		$default_file = 'single-muext_engagement.php';
 	} elseif ( is_post_type_archive( 'muext_engagement' ) ) {
+		$default_file = 'archive-muext_engagement.php';
+	} elseif ( is_engagement_tax_archive() ) {
 		$default_file = 'archive-muext_engagement.php';
 	} else {
 		$default_file = '';
@@ -139,4 +141,8 @@ function convert_to_human_date( $date ) {
     // Goal format is "F j, Y"
     $date = date_create_from_format( 'Y-m-d', $date );
     return date_format( $date, 'F j, Y' );
+}
+
+function is_engagement_tax_archive() {
+	return is_tax( array( 'muext_program_category', 'muext_program_tag' ) );
 }

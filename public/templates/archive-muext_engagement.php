@@ -16,10 +16,21 @@ get_header(); ?>
 
 	<?php if ( have_posts() ) : ?>
 		<header class="page-header">
-			<h1 class="page-title">Engagements</h1>
 			<?php
 				// the_archive_title( '<h1 class="page-title">', '</h1>' );
 				// the_archive_description( '<div class="taxonomy-description">', '</div>' );
+				if ( \MU_Ext_Engagement\Public_Facing\is_engagement_tax_archive() ) {
+					$term = get_term_by( 'slug', get_query_var( 'term' ), get_query_var( 'taxonomy' ) );
+					$queried_tax = get_taxonomy( $term->taxonomy );
+					?>
+					<h1 class="page-title"><a href="<?php echo get_post_type_archive_link( 'muext_engagement' ); ?>">Engagements</a></h1>
+					<h2 class="page-title"><?php echo $queried_tax->labels->name; ?>: <?php echo $term->name; ?></h2>
+					<?php
+				} else {
+					?>
+					<h1 class="page-title">Engagements</h1>
+					<?php
+				}
 			?>
 		</header><!-- .page-header -->
 	<?php endif; ?>
