@@ -52,13 +52,13 @@ function enqueue_admin_scripts_and_styles() {
 */
 function add_plugin_admin_menu() {
 
-$this->plugin_screen_hook_suffix = add_options_page(
-	__( 'Single Sign-On', 'muext-engagement' ),
-	__( 'Single Sign-On', 'muext-engagement' ),
-	'manage_options',
-	\MU_Ext_Engagement\get_plugin_slug(),
-	array( $this, 'display_plugin_admin_page' )
-);
+	$this->plugin_screen_hook_suffix = add_options_page(
+		__( 'Single Sign-On', 'muext-engagement' ),
+		__( 'Single Sign-On', 'muext-engagement' ),
+		'manage_options',
+		\MU_Ext_Engagement\get_plugin_slug(),
+		array( $this, 'display_plugin_admin_page' )
+	);
 
 }
 
