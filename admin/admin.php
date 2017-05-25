@@ -176,7 +176,7 @@ function muext_program_info_meta_box() {
 		'desc' => esc_html__( 'Select the date that this engagement occurred. If the event spanned more than one day, select the start date.', 'cmb2' ),
 		'id'   => $prefix . 'start_date',
 		'type' => 'text_date',
-		// 'date_format' => 'Y-m-d',
+		'date_format' => 'Y-m-d',
 	) );
 
 	$cmb->add_field( array(
@@ -184,7 +184,7 @@ function muext_program_info_meta_box() {
 		'desc' => esc_html__( 'If the event spanned more than one day, select the end date.', 'cmb2' ),
 		'id'   => $prefix . 'end_date',
 		'type' => 'text_date',
-		// 'date_format' => 'Y-m-d',
+		'date_format' => 'Y-m-d',
 	) );
 
 	$cmb->add_field( array(
