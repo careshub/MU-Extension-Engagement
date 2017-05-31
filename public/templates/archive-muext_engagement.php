@@ -39,6 +39,9 @@ get_header(); ?>
 		<main id="main" class="site-main" role="main">
 
 		<?php
+		// Render the filters/search box interface.
+		muext_render_filters_box();
+
 		if ( have_posts() ) : ?>
 			<?php
 			/* Start the Loop */
@@ -55,9 +58,9 @@ get_header(); ?>
 			) );
 
 		else :
-
-			get_template_part( 'content', 'none' );
-
+		?>
+			<p class="no-results not-found">No engagements match your search criteria. Try a less specific search.</p>
+		<?php
 		endif; ?>
 
 		</main><!-- #main -->

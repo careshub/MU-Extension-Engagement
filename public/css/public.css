@@ -2,6 +2,45 @@
 	background-color: #eaeaea;
 	margin-bottom: 1em;
 }
+.muext-filters {
+	margin-bottom: 2em;
+}
+.muext-filters form {
+	margin-top: 1em;
+}
+
+/* Toggles for showing/hiding content */
+.toggle-container.toggle-closed > .toggle-content {
+	display: none;
+}
+.toggle-container.toggle-open > .toggle-content {
+	display: block;
+	transition: appearance .5s ease-in-out;
+}
+
+.arrow {
+	display: inline-block;
+	vertical-align: middle;
+	width: 0;
+	height: 0;
+	border-top: 8px solid transparent;
+	border-bottom: 8px solid transparent;
+	border-left: 8px solid silver;
+	margin-right: .9em;
+	transition: transform .2s ease-in-out;
+}
+.arrow-down {
+	-moz-transform:rotate(90deg);
+	-webkit-transform:rotate(90deg);
+	-o-transform:rotate(90deg);
+	-ms-transform:rotate(90deg);
+	transform:rotate(90deg);
+}
+.toggle-content.border-left {
+	margin-left: 1.5em;
+	padding-left: .8em;
+	border-left: 1px solid silver;
+}
 
 /*
  * Some flexbox structures for layout.

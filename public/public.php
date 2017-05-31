@@ -13,6 +13,12 @@ add_filter( 'template_include', __NAMESPACE__ . '\\template_loader' );
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_styles_scripts' );
 // add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_scripts' ) );
 
+// We may want to apply some GET params to the query on the DVT archive.
+add_action( 'pre_get_posts', __NAMESPACE__ . '\\filter_archive_query' );
+
+// Clean the GET string
+add_action( 'template_redirect', __NAMESPACE__ . '\\reformat_get_string', 11 );
+
 /**
  * Load the plugin text domain for translation.
  *
@@ -32,7 +38,7 @@ function load_plugin_textdomain() {
  */
 function enqueue_styles_scripts() {
 	// Scripts
-	// wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
+	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
 
 	// Styles
 	if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) || is_engagement_tax_archive() ) {
@@ -121,6 +127,84 @@ function get_template_part( $slug, $name = '' ) {
 		load_template( $template, false );
 	}
 }
+
+/**
+ * Use GET params to modify the archive query.
+ *
+ * @since    1.0.0
+ */
+function filter_archive_query( $wp_query_obj ) {
+	// We use GET params to track the state of the filters.
+	if ( ! is_admin() && $wp_query_obj->is_post_type_archive( 'muext_engagement' ) && $wp_query_obj->is_main_query() ) {
+		// Check for term filters.
+		// Which taxonomies are we interested in?
+		$taxonomies = get_object_taxonomies( 'muext_engagement' );
+		foreach ( $taxonomies as $taxonomy ) {
+			if ( $terms = muext_get_archive_filter_params( $taxonomy ) ) {
+				$wp_query_obj->query_vars['tax_query'][] = array(
+					'taxonomy' => $taxonomy,
+					'field'    => 'slug',
+					'terms'    => $terms,
+				);
+			}
+		}
+	}
+}
+
+/**
+ * Cleanup GET params upon submission.
+ *
+ * Standard GET submission looks like:
+ * ?s=schmoly&theme[]=agriculture&theme[]=health&t[]=lunch&t[]=pockets
+ * We reformat it to look like this:
+ * ?s=schmoly&theme=agriculture,health&t=lunch,pockets
+ *
+ * @since    1.0.0
+ */
+function reformat_get_string() {
+	if ( is_post_type_archive( 'muext_engagement' ) && ! empty( $_GET['engagement_filter_active'] ) ) {
+		$cleaned = array();
+		$redirect = false;
+
+		// Which taxonomies are we interested in?
+		$taxonomies = get_object_taxonomies( 'muext_engagement' );
+
+		// Loop through the taxonomies and convert them from arrays to comma-separated strings.
+		foreach ( $taxonomies as $taxonomy ) {
+			// We're using the friendly param in the form and the query parser.
+			$friendly_param = muext_get_friendly_filter_param_name( $taxonomy );
+			if ( isset( $_GET[ $friendly_param ] ) ) {
+				if ( is_array( $_REQUEST[ $friendly_param ] ) ) {
+					$_GET[ $friendly_param ] = implode( ',', array_map( 'urlencode', $_REQUEST[ $friendly_param ] ) );
+					// Since we've changed the params, we want to redirect.
+					$redirect = true;
+				} else {
+					$_GET[ $friendly_param ] = urlencode( $_REQUEST[ $friendly_param ] );
+				}
+			}
+		}
+
+		// Remove an empty search param, because yuck.
+		if ( isset( $_GET['s'] ) && ! $_GET['s'] ) {
+			unset( $_GET['s'] );
+			// Since we've changed the params, we want to redirect.
+			$redirect = true;
+		}
+
+		/*
+		 * Unset the marker we're using to know that the user requested a filtered view,
+		 * so we don't run this routine on the redirect page load.
+		 */
+		unset( $_GET['engagement_filter_active'] );
+
+		if ( $redirect ) {
+			// Add the cleaned up parameters to the archive url.
+			wp_safe_redirect( add_query_arg( $_GET, get_post_type_archive_link( 'muext_engagement' ) ) );
+			exit;
+		}
+	}
+}
+
 
 /**
  * Get template directory path.
