@@ -27,7 +27,7 @@ function register_muext_engagement_cpt() {
 		'update_item'           => __( 'Update Engagement', 'muext-engagement' ),
 		'view_item'             => __( 'View Engagement', 'muext-engagement' ),
 		'view_items'            => __( 'View Engagements', 'muext-engagement' ),
-		'search_items'          => __( 'Search Engagement', 'muext-engagement' ),
+		'search_items'          => __( 'Search Engagements', 'muext-engagement' ),
 		'not_found'             => __( 'Not found', 'muext-engagement' ),
 		'not_found_in_trash'    => __( 'Not found in Trash', 'muext-engagement' ),
 		'featured_image'        => __( 'Featured Image', 'muext-engagement' ),
