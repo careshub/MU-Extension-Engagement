@@ -10,7 +10,7 @@ namespace MU_Ext_Engagement\Admin;
 // }
 
 // Load admin style sheet and JavaScript.
-// add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts_and_styles' ) );
+add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_admin_scripts_and_styles' );
 
 // Add the single-site options page and menu item.
 add_action( 'admin_menu', __NAMESPACE__ . '\\add_plugin_admin_menu' );
@@ -29,18 +29,26 @@ add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_info_meta_box' )
 *
 * @since     1.0.0
 *
-* @return    null    Return early if no settings page is registered.
+* @param string $hook_suffix The current admin page.
 */
-function enqueue_admin_scripts_and_styles() {
+function enqueue_admin_scripts_and_styles( $hook_suffix ) {
+	$screen = get_current_screen();
 
-	if ( ! isset( $this->plugin_screen_hook_suffix ) ) {
-		return;
+	// Enqueue items for single engagement edit screen.
+	if ( in_array( $hook_suffix, array( 'post.php', 'post-new.php' ) ) ) {
+		if ( ! empty( $screen->post_type ) && 'muext_engagement' == $screen->post_type ) {
+			wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', plugins_url( 'assets/js/admin-edit.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
+
+			// Localize the script with new data
+			$api_key = get_option( 'muext-google-location-apikey' );
+			wp_localize_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', 'muext_js_data', array( 'google_api_key' => $api_key ) );
+		}
 	}
 
-	$screen = get_current_screen();
-	if ( $this->plugin_screen_hook_suffix == $screen->id ) {
-		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version() );
-		wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-script', plugins_url( 'assets/js/admin.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
+    // Enqueue items for settings screen.
+	if ( ! empty( $screen->id ) && 'muext_engagement_page_muext-engagement' == $screen->id ) {
+		// wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version() );
+		// wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . 'settings-admin-script', plugins_url( 'assets/js/admin-settings.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
 	}
 }
 
