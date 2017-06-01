@@ -13,9 +13,9 @@ namespace MU_Ext_Engagement\Admin;
 // add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts_and_styles' ) );
 
 // Add the single-site options page and menu item.
-// add_action( 'admin_menu', array( $this, 'add_plugin_admin_menu' ) );
+add_action( 'admin_menu', __NAMESPACE__ . '\\add_plugin_admin_menu' );
 // Add settings to the single-site admin page.
-// add_action( 'admin_menu', array( $this, 'settings_init' ) );
+add_action( 'admin_menu', __NAMESPACE__ . '\\settings_init' );
 
 // Add an action link labeled "Settings" pointing to the options page from the plugin listing.
 // $plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . \MU_Ext_Engagement\get_plugin_slug() . '.php' );
@@ -44,22 +44,20 @@ function enqueue_admin_scripts_and_styles() {
 	}
 }
 
-// Maybe if we need a settings page, it should be in a class.
 /**
 * Register the administration menu for this plugin into the WordPress Dashboard menu.
 *
 * @since    1.0.0
 */
 function add_plugin_admin_menu() {
-
-	$this->plugin_screen_hook_suffix = add_options_page(
-		__( 'Single Sign-On', 'muext-engagement' ),
-		__( 'Single Sign-On', 'muext-engagement' ),
+	add_submenu_page(
+		'edit.php?post_type=muext_engagement',
+		__( 'Engagement Settings', 'muext-engagement' ),
+		__( 'Settings', 'muext-engagement' ),
 		'manage_options',
-		\MU_Ext_Engagement\get_plugin_slug(),
-		array( $this, 'display_plugin_admin_page' )
+		\MU_Ext_Engagement\get_plugin_slug() . '-settings',
+		__NAMESPACE__ . '\\display_plugin_admin_page'
 	);
-
 }
 
 /**
@@ -68,19 +66,16 @@ function add_plugin_admin_menu() {
 * @since    1.0.0
 */
 function display_plugin_admin_page() {
-// include_once( 'views/admin.php' );
 // Note that update/get/delete_site_option sets site option _or_ network options if multisite.
 // Note that update/get/delete_option sets option for current site.
 ?>
 <div class="wrap">
-	<?php screen_icon(); ?>
 	<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
 
 	<form action="<?php echo admin_url( 'options.php' ) ?>" method='post'>
-
 		<?php
-		settings_fields( \MU_Ext_Engagement\get_plugin_slug() );
-		do_settings_sections( \MU_Ext_Engagement\get_plugin_slug() );
+		settings_fields( \MU_Ext_Engagement\get_plugin_slug() . '-settings' );
+		do_settings_sections( \MU_Ext_Engagement\get_plugin_slug() . '-settings' );
 		submit_button();
 		?>
 
@@ -88,6 +83,40 @@ function display_plugin_admin_page() {
 
 </div>
 <?php
+}
+
+function settings_init() {
+	// General
+	add_settings_section(
+		\MU_Ext_Engagement\get_plugin_slug(),
+		__( 'General', 'bp-docs' ),
+		__NAMESPACE__ . '\\settings_section',
+		\MU_Ext_Engagement\get_plugin_slug() . '-settings'
+	);
+
+	// General - Docs slug
+	add_settings_field(
+		'muext-google-location-apikey',
+		__( 'Google Location API Key', 'muext-engagement'  ),
+		__NAMESPACE__ . '\\google_api_key_setting_markup',
+		\MU_Ext_Engagement\get_plugin_slug() . '-settings',
+		\MU_Ext_Engagement\get_plugin_slug()
+	);
+	register_setting( \MU_Ext_Engagement\get_plugin_slug() . '-settings', 'muext-google-location-apikey', 'sanitize_text_field' );
+}
+
+function settings_section() {
+	// Nothing needed here
+}
+
+function google_api_key_setting_markup() {
+	$apikey = get_option( 'muext-google-location-apikey' );
+	?>
+	<label for="muext-google-location-apikey" class="screen-reader-text"><?php _e( "Enter the Google Locations API key for this site.", 'muext-engagement' ) ?></label>
+	<input name="muext-google-location-apikey" id="muext-google-location-apikey" type="text" value="<?php echo $apikey; ?>"/>
+	<p class="description"><?php _e( "Enter the Google Locations API key for this site.", 'muext-engagement' ) ?></p>
+
+	<?php
 }
 
 /**
