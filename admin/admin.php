@@ -23,8 +23,11 @@ add_action( 'admin_menu', __NAMESPACE__ . '\\settings_init' );
 // $plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . \MU_Ext_Engagement\get_plugin_slug() . '.php' );
 // add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
 
-// Add sample metaboxes
+// Add metaboxes
+// Program information
 add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_info_meta_box' );
+// Program outcomes
+add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_box' );
 
 /**
 * Register and enqueue admin-specific style sheets and javascript files.
@@ -162,7 +165,7 @@ return array_merge(
 }
 
 /**
- * Define the metabox and field configurations.
+ * Define the program information metabox and field configurations.
  */
 function muext_program_info_meta_box() {
 
@@ -216,9 +219,17 @@ function muext_program_info_meta_box() {
 		'sanitization_cb' => __NAMESPACE__ . '\\telephone_number_sanitization', // custom sanitization callback parameter
 	) );
 
+	// Regular text field
+	$cmb->add_field( array(
+		'name'       => __( 'College or Affiliation', 'muext-engagement' ),
+		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
+		'id'         => $prefix . 'college_affiliation',
+		'type'       => 'text',
+	) );
+
 	// URL text field
 	$cmb->add_field( array(
-		'name' => __( 'Program URL', 'cmb2' ),
+		'name' => __( 'Program URL', 'muext-engagement' ),
 		// 'desc' => __( 'field description (optional)', 'muext-engagement' ),
 		'id'   => $prefix . 'url',
 		'type' => 'text_url',
@@ -227,7 +238,19 @@ function muext_program_info_meta_box() {
 	) );
 
 	$cmb->add_field( array(
-		'name' => esc_html__( 'Date', 'cmb2' ),
+		'name' => esc_html__( 'Timeframe (text)', 'muext-engagement' ),
+		'desc' => esc_html__( 'A text description of when this occurred. For reference only. (Read only.)', 'cmb2' ),
+		'id'   => $prefix . 'timeframe',
+		'type' => 'text',
+		'save_field' => false, // Disables the saving of this field.
+		'attributes' => array(
+			'disabled' => 'disabled',
+			'readonly' => 'readonly',
+		),
+	) );
+
+	$cmb->add_field( array(
+		'name' => esc_html__( 'Date', 'muext-engagement' ),
 		'desc' => esc_html__( 'Select the date that this engagement occurred. If the event spanned more than one day, select the start date.', 'cmb2' ),
 		'id'   => $prefix . 'start_date',
 		'type' => 'text_date',
@@ -235,7 +258,7 @@ function muext_program_info_meta_box() {
 	) );
 
 	$cmb->add_field( array(
-		'name' => esc_html__( 'End Date', 'cmb2' ),
+		'name' => esc_html__( 'End Date', 'muext-engagement' ),
 		'desc' => esc_html__( 'If the event spanned more than one day, select the end date.', 'cmb2' ),
 		'id'   => $prefix . 'end_date',
 		'type' => 'text_date',
@@ -243,13 +266,12 @@ function muext_program_info_meta_box() {
 	) );
 
 	$cmb->add_field( array(
-		'name'    => esc_html__( 'Description', 'cmb2' ),
+		'name'    => esc_html__( 'Description', 'muext-engagement' ),
 		// 'desc'    => esc_html__( 'field description (optional)', 'cmb2' ),
 		'id'      => 'content', // This will be saved as the main post content.
 		'type'    => 'wysiwyg',
 		'options' => array( 'textarea_rows' => 10, ),
 	) );
-
 
 	// $cmb->add_field( array(
 	// 	'name'     => esc_html__( 'Test Taxonomy Multi Checkbox', 'cmb2' ),
@@ -259,6 +281,68 @@ function muext_program_info_meta_box() {
 	// 	'taxonomy' => 'muext_program_category', // Taxonomy Slug
 	// 	// 'inline'  => true, // Toggles display to inline
 	// ) );
+
+	// Add other metaboxes as needed
+}
+
+/**
+ * Define the program information metabox and field configurations.
+ */
+function muext_program_outcomes_meta_box() {
+
+	// Start with an underscore to hide fields from custom fields list
+	$prefix = '_muext_';
+
+	/**
+	 * Initiate the metabox
+	 */
+	$cmb = new_cmb2_box( array(
+		'id'            => 'program_outcomes',
+		'title'         => __( 'Program Outcomes', 'muext-engagement' ),
+		'object_types'  => array( 'muext_engagement' ), // Post type
+		'context'       => 'normal',
+		'priority'      => 'high',
+		'show_names'    => true, // Show field names on the left
+		// 'cmb_styles' => false, // false to disable the CMB stylesheet
+		// 'closed'     => true, // Keep the metabox closed by default
+	) );
+
+	$cmb->add_field( array(
+		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
+		'desc'    => esc_html__( 'A text description of when this occurred. For reference only. (Read only.)', 'cmb2' ),
+		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
+		'type'    => 'textarea',
+		// 'options' => array( 'textarea_rows' => 10, ),
+		'save_field' => false, // Disables the saving of this field.
+		'attributes' => array(
+			'disabled' => 'disabled',
+			'readonly' => 'readonly',
+		),
+	) );
+
+	$cmb->add_field( array(
+		'name' => __( 'Number of direct contacts', 'muext-engagement' ),
+		'id'   => $prefix . 'direct_contacts',
+		'type' => 'text',
+		'attributes' => array(
+			'type' => 'number',
+			'pattern' => '\d*',
+		),
+		'sanitization_cb' => 'absint',
+        'escape_cb'       => 'absint',
+	) );
+
+	$cmb->add_field( array(
+		'name' => __( 'Number of indirect contacts', 'muext-engagement' ),
+		'id'   => $prefix . 'indirect_contacts',
+		'type' => 'text',
+		'attributes' => array(
+			'type' => 'number',
+			'pattern' => '\d*',
+		),
+		'sanitization_cb' => 'absint',
+        'escape_cb'       => 'absint',
+	) );
 
 	// Add other metaboxes as needed
 }
