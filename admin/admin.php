@@ -20,8 +20,8 @@ add_action( 'admin_menu', __NAMESPACE__ . '\\add_plugin_admin_menu' );
 add_action( 'admin_menu', __NAMESPACE__ . '\\settings_init' );
 
 // Add an action link labeled "Settings" pointing to the options page from the plugin listing.
-// $plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . \MU_Ext_Engagement\get_plugin_slug() . '.php' );
-// add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
+$plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . 'loader.php' );
+add_filter( 'plugin_action_links_' . $plugin_basename, __NAMESPACE__ . '\\add_action_links' );
 
 // Add metaboxes
 // Program information
@@ -155,12 +155,12 @@ function google_api_key_setting_markup() {
 */
 function add_action_links( $links ) {
 
-return array_merge(
-	array(
-		'settings' => '<a href="' . admin_url( 'options-general.php?page=' . \MU_Ext_Engagement\get_plugin_slug() ) . '">' . __( 'Settings', 'muext-engagement' ) . '</a>'
-	),
-	$links
-);
+	return array_merge(
+		array(
+			'settings' => '<a href="' . admin_url( 'edit.php?post_type=muext_engagement&page=muext-engagement-settings' ) . '">' . __( 'Settings', 'muext-engagement' ) . '</a>'
+		),
+		$links
+	);
 
 }
 
