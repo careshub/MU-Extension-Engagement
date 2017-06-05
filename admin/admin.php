@@ -11,6 +11,8 @@ namespace MU_Ext_Engagement\Admin;
 
 // Load admin style sheet and JavaScript.
 add_action( 'admin_enqueue_scripts', __NAMESPACE__ . '\\enqueue_admin_scripts_and_styles' );
+// Add async and defer
+add_filter( 'script_loader_tag', __NAMESPACE__ . '\\add_async_attribute', 10, 2 );
 
 // Add the single-site options page and menu item.
 add_action( 'admin_menu', __NAMESPACE__ . '\\add_plugin_admin_menu' );
@@ -37,11 +39,13 @@ function enqueue_admin_scripts_and_styles( $hook_suffix ) {
 	// Enqueue items for single engagement edit screen.
 	if ( in_array( $hook_suffix, array( 'post.php', 'post-new.php' ) ) ) {
 		if ( ! empty( $screen->post_type ) && 'muext_engagement' == $screen->post_type ) {
-			wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', plugins_url( 'assets/js/admin-edit.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
+			wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', plugins_url( 'assets/js/admin-edit.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
 
 			// Localize the script with new data
 			$api_key = get_option( 'muext-google-location-apikey' );
 			wp_localize_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', 'muext_js_data', array( 'google_api_key' => $api_key ) );
+
+			wp_enqueue_script( 'google_places_api', "https://maps.googleapis.com/maps/api/js?key={$api_key}&libraries=places&callback=initAutocomplete", array( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script' ), \MU_Ext_Engagement\get_plugin_version(), true );
 		}
 	}
 
@@ -50,6 +54,20 @@ function enqueue_admin_scripts_and_styles( $hook_suffix ) {
 		// wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version() );
 		// wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . 'settings-admin-script', plugins_url( 'assets/js/admin-settings.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
 	}
+}
+
+/**
+* The Google maps API needs to be loaded async defer.
+*
+* @since     1.0.0
+*
+* @param string $hook_suffix The current admin page.
+*/
+function add_async_attribute( $tag, $handle ) {
+	if ( 'google_places_api' === $handle ) {
+		$tag = str_replace( ' src', ' async="async" defer="defer" src', $tag );
+	}
+	return $tag;
 }
 
 /**
@@ -121,7 +139,7 @@ function google_api_key_setting_markup() {
 	$apikey = get_option( 'muext-google-location-apikey' );
 	?>
 	<label for="muext-google-location-apikey" class="screen-reader-text"><?php _e( "Enter the Google Locations API key for this site.", 'muext-engagement' ) ?></label>
-	<input name="muext-google-location-apikey" id="muext-google-location-apikey" type="text" value="<?php echo $apikey; ?>"/>
+	<input name="muext-google-location-apikey" id="muext-google-location-apikey" type="text" value="<?php echo $apikey; ?>" size=60/>
 	<p class="description"><?php _e( "Enter the Google Locations API key for this site.", 'muext-engagement' ) ?></p>
 
 	<?php
