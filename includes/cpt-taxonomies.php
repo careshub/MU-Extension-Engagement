@@ -8,6 +8,10 @@ add_action( 'init', __NAMESPACE__ . '\\register_muext_engagement_cpt' );
 add_action( 'init', __NAMESPACE__ . '\\register_program_categories' );
 // Register the engagement program tag taxonomy.
 add_action( 'init', __NAMESPACE__ . '\\register_program_tags' );
+// Register the engagement program audience taxonomy.
+add_action( 'init', __NAMESPACE__ . '\\register_program_audience' );
+// Register the engagement program impact area taxonomy.
+add_action( 'init', __NAMESPACE__ . '\\register_program_impact_areas' );
 
 // Register Custom Post Type
 function register_muext_engagement_cpt() {
@@ -54,7 +58,12 @@ function register_muext_engagement_cpt() {
 		'description'           => __( 'Stores information about ongoing engagements.', 'muext-engagement' ),
 		'labels'                => $labels,
 		'supports'              => array( 'title', 'thumbnail', 'revisions', ),
-		'taxonomies'            => array( 'muext_program_category', 'muext_program_tag' ),
+		'taxonomies'            => array(
+										'muext_program_category',
+										'muext_program_tag',
+										'muext_program_audience',
+										'muext_program_impact_area'
+									),
 		'hierarchical'          => false,
 		'public'                => true,
 		'show_ui'               => true,
@@ -149,5 +158,84 @@ function register_program_tags() {
 		'rewrite'                    => array( 'slug' => 'keywords' ),
 	);
 	register_taxonomy( 'muext_program_tag', array( 'muext_engagement' ), $args );
+
+}
+
+function register_program_audience() {
+
+	$labels = array(
+		'name'                       => _x( 'Program Audience', 'Taxonomy General Name', 'muext-engagement' ),
+		'singular_name'              => _x( 'Program Audience', 'Taxonomy Singular Name', 'muext-engagement' ),
+		'menu_name'                  => __( 'Program Audience', 'muext-engagement' ),
+		'all_items'                  => __( 'All Audiences', 'muext-engagement' ),
+		'parent_item'                => __( 'Parent Audience', 'muext-engagement' ),
+		'parent_item_colon'          => __( 'Parent Tag:', 'muext-engagement' ),
+		'new_item_name'              => __( 'New Audience Name', 'muext-engagement' ),
+		'add_new_item'               => __( 'Add New Audience', 'muext-engagement' ),
+		'edit_item'                  => __( 'Edit Audience', 'muext-engagement' ),
+		'update_item'                => __( 'Update Audience', 'muext-engagement' ),
+		'view_item'                  => __( 'View Audience', 'muext-engagement' ),
+		'separate_items_with_commas' => __( 'Separate audiences with commas', 'muext-engagement' ),
+		'add_or_remove_items'        => __( 'Add or remove audiences', 'muext-engagement' ),
+		'choose_from_most_used'      => __( 'Choose from the most used', 'muext-engagement' ),
+		'popular_items'              => __( 'Popular Audiences', 'muext-engagement' ),
+		'search_items'               => __( 'Search Audiences', 'muext-engagement' ),
+		'not_found'                  => __( 'Not Found', 'muext-engagement' ),
+		'no_terms'                   => __( 'No audiences', 'muext-engagement' ),
+		'items_list'                 => __( 'Items audiences', 'muext-engagement' ),
+		'items_list_navigation'      => __( 'Audiences list navigation', 'muext-engagement' ),
+	);
+	$args = array(
+		'labels'                     => $labels,
+		'hierarchical'               => true,
+		'public'                     => true,
+		'show_ui'                    => true,
+		'show_admin_column'          => true,
+		'show_in_nav_menus'          => true,
+		'show_tagcloud'              => true,
+		'show_in_rest'               => false,
+		'rewrite'                    => array( 'slug' => 'audience' ),
+	);
+	register_taxonomy( 'muext_program_audience', array( 'muext_engagement' ), $args );
+
+}
+
+
+function register_program_impact_areas() {
+
+	$labels = array(
+		'name'                       => _x( 'Impact Area', 'Taxonomy General Name', 'muext-engagement' ),
+		'singular_name'              => _x( 'Impact Area', 'Taxonomy Singular Name', 'muext-engagement' ),
+		'menu_name'                  => __( 'Impact Area', 'muext-engagement' ),
+		'all_items'                  => __( 'All Impact Areas', 'muext-engagement' ),
+		'parent_item'                => __( 'Parent Impact Area', 'muext-engagement' ),
+		'parent_item_colon'          => __( 'Parent Impact Area:', 'muext-engagement' ),
+		'new_item_name'              => __( 'New Impact Area Name', 'muext-engagement' ),
+		'add_new_item'               => __( 'Add New Impact Area', 'muext-engagement' ),
+		'edit_item'                  => __( 'Edit Impact Area', 'muext-engagement' ),
+		'update_item'                => __( 'Update Impact Area', 'muext-engagement' ),
+		'view_item'                  => __( 'View Impact Area', 'muext-engagement' ),
+		'separate_items_with_commas' => __( 'Separate impact areas with commas', 'muext-engagement' ),
+		'add_or_remove_items'        => __( 'Add or remove impact areas', 'muext-engagement' ),
+		'choose_from_most_used'      => __( 'Choose from the most used', 'muext-engagement' ),
+		'popular_items'              => __( 'Popular Impact Areas', 'muext-engagement' ),
+		'search_items'               => __( 'Search Impact Areas', 'muext-engagement' ),
+		'not_found'                  => __( 'Not Found', 'muext-engagement' ),
+		'no_terms'                   => __( 'No impact areas', 'muext-engagement' ),
+		'items_list'                 => __( 'Items Impact Areas', 'muext-engagement' ),
+		'items_list_navigation'      => __( 'Impact area list navigation', 'muext-engagement' ),
+	);
+	$args = array(
+		'labels'                     => $labels,
+		'hierarchical'               => true,
+		'public'                     => true,
+		'show_ui'                    => true,
+		'show_admin_column'          => true,
+		'show_in_nav_menus'          => true,
+		'show_tagcloud'              => true,
+		'show_in_rest'               => false,
+		'rewrite'                    => array( 'slug' => 'impact-area' ),
+	);
+	register_taxonomy( 'muext_program_impact_area', array( 'muext_engagement' ), $args );
 
 }
