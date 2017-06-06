@@ -38,30 +38,34 @@ get_header(); ?>
 	<div id="primary" class="content-area">
 		<main id="main" class="site-main" role="main">
 
-		<?php
-		// Render the filters/search box interface.
-		muext_render_filters_box();
+			<?php if ( is_user_logged_in() ) : ?>
+				<?php
+				// Render the filters/search box interface.
+				muext_render_filters_box();
 
-		if ( have_posts() ) : ?>
-			<?php
-			/* Start the Loop */
-			while ( have_posts() ) : the_post();
+				if ( have_posts() ) : ?>
+					<?php
+					/* Start the Loop */
+					while ( have_posts() ) : the_post();
 
-				\MU_Ext_Engagement\Public_Facing\get_template_part( 'content', get_post_type() );
+						\MU_Ext_Engagement\Public_Facing\get_template_part( 'content', get_post_type() );
 
-			endwhile;
+					endwhile;
 
-			the_posts_pagination( array(
-				'prev_text' => twentyseventeen_get_svg( array( 'icon' => 'arrow-left' ) ) . '<span class="screen-reader-text">' . __( 'Previous page', 'muext-engagement' ) . '</span>',
-				'next_text' => '<span class="screen-reader-text">' . __( 'Next page', 'muext-engagement' ) . '</span>' . twentyseventeen_get_svg( array( 'icon' => 'arrow-right' ) ),
-				'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'muext-engagement' ) . ' </span>',
-			) );
+					the_posts_pagination( array(
+						'prev_text' => twentyseventeen_get_svg( array( 'icon' => 'arrow-left' ) ) . '<span class="screen-reader-text">' . __( 'Previous page', 'muext-engagement' ) . '</span>',
+						'next_text' => '<span class="screen-reader-text">' . __( 'Next page', 'muext-engagement' ) . '</span>' . twentyseventeen_get_svg( array( 'icon' => 'arrow-right' ) ),
+						'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'muext-engagement' ) . ' </span>',
+					) );
 
-		else :
-		?>
-			<p class="no-results not-found">No engagements match your search criteria. Try a less specific search.</p>
-		<?php
-		endif; ?>
+				else :
+				?>
+					<p class="no-results not-found">No engagements match your search criteria. Try a less specific search.</p>
+				<?php
+				endif; ?>
+			<?php else: ?>
+				<p class="log-in-required">Please log in to view engagements.</p>
+			<?php endif; ?>
 
 		</main><!-- #main -->
 	</div><!-- #primary -->
