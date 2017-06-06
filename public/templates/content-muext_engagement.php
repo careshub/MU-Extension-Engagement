@@ -19,6 +19,7 @@ $phone    = get_post_meta( $post_id, '_muext_contact_phone', true );
 $url      = get_post_meta( $post_id, '_muext_url', true );
 $date     = get_post_meta( $post_id, '_muext_start_date', true );
 $end_date = get_post_meta( $post_id, '_muext_end_date', true );
+$outcome  = get_post_meta( $post_id, '_muext_outcome_text', true );
 
 // Convert dates that are stored in 2017-05-26 format to May 26, 2017 format for readability.
 $human_date = ( $date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_human_date( $date ) : '';
@@ -73,6 +74,7 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 		<?php endif; ?>
 
 		<div class="description">
+			<h4>About</h4>
 			<?php
 				/* translators: %s: Name of current post */
 				the_content( sprintf(
@@ -80,6 +82,10 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 					get_the_title()
 				) );
 			?>
+			<?php if ( $outcome ) : ?>
+				<h4>Outcomes</h4>
+				<?php echo apply_filters( 'the_content', $outcome ); ?>
+			<?php endif; ?>
 		</div>
 
 		<?php if ( is_single() ) : ?>
