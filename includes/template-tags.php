@@ -29,7 +29,7 @@ function muext_render_filters_box() {
 		<span class="arrow"></span><a href="#engagements-filters" id="engagements-filter-toggle" class="toggle-trigger">Filter <?php echo $eng_obj->labels->name; ?></a>
 		<form id="engagements-filters" action="" method="GET" class="toggle-content engagements-filters clear">
 			<input id="search-form-engagements" class="search-field" placeholder="<?php echo $eng_obj->labels->search_items; ?>&hellip;" value="<?php echo $search_terms ?>" name="s" type="search">
-			<div class="Grid Grid--full med-Grid--fit">
+			<div class="Grid Grid--full med-Grid--1of2">
 				<?php
 				// Provide filters for related taxonomies
 				foreach ( $taxonomies as $taxonomy) {
