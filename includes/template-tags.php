@@ -71,3 +71,58 @@ function muext_render_filters_box() {
 	</div>
 	<?php
 }
+
+function muext_import_shortcode(){
+	ob_start();
+	echo '<pre>';
+	$import_start = get_option( 'muext_import_has_run' );
+	$import_start = ( $import_start ) ? (int) $import_start : 1;
+	$import_end = $import_start + 50;
+	$row = 1;
+	if ( ($handle = fopen( \MU_Ext_Engagement\get_plugin_base_path() . '/working/Ext_Data_For_Import.csv', "r") ) !== FALSE ) {
+		while ( ( $data = fgetcsv( $handle, 0, "," ) ) !== FALSE ) {
+			// post_title = $data[3]
+			// post_content = $data[4]
+
+			// _muext_college_affiliation = $data[0]
+			// _muext_contact_name = $data[1]
+			// _muext_contact_phone = $data[2]
+			// _muext_location_text = $data[5]
+			// _muext_timeframe = $data[6]
+			// _muext_outcome_text = $data[7]
+
+			// muext_program_category = $data[8]
+
+			if ( $row >= $import_start && $row < $import_end ) {
+				$post_args = array(
+					'post_title' => $data[3],
+					'post_type' => 'muext_engagement',
+					'post_content' => $data[4],
+					// 'tax_input' => array( 'muext_program_category' => $data[8] ),
+					'meta_input' => array(
+						'_muext_college_affiliation' => $data[0],
+						'_muext_contact_name' => $data[1],
+						'_muext_contact_phone' => $data[2],
+						'_muext_location_text' => $data[5],
+						'_muext_timeframe' => $data[6],
+						'_muext_outcome_text' => $data[7],
+					),
+				);
+
+				$post_id = wp_insert_post( $post_args );
+				wp_set_post_terms( $post_id, (int) $data[9], 'muext_program_category' );
+				echo PHP_EOL . "Created post {$post_id}";
+				update_option( 'muext_import_has_run', $row, false);
+			}
+			++$row;
+		}
+	} else {
+		echo 'fopen failed';
+		var_dump( $handle );
+	}
+	fclose($handle);
+	echo '</pre>';
+
+	return ob_get_clean();
+}
+add_shortcode( 'muext_importer', 'muext_import_shortcode' );
