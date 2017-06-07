@@ -373,3 +373,33 @@ function telephone_number_sanitization( $value, $field_args, $field ) {
 
 	return $value;
 }
+
+/**
+ * Make sure that the post content is used in the content wysiwyg field.
+ *
+ * @param mixed $data     The value get_metadata() should
+ *                         return - a single metadata value,
+ *                         or an array of values.
+ *
+ * @param int   $object_id Object ID.
+ *
+ * @param array $args {
+ *     An array of arguments for retrieving data
+ *
+ *     @type string $type     The current object type
+ *     @type int    $id       The current object ID
+ *     @type string $field_id The ID of the field being requested
+ *     @type bool   $repeat   Whether current field is repeatable
+ *     @type bool   $single   Whether current field is a single database row
+ * }
+ *
+ * @param CMB2_Field object $field This field object
+ */
+function populate_post_content_input( $data, $object_id, $args, $field ) {
+	if ( isset( $args['field_id'] ) && 'content' ==  $args['field_id'] ) {
+		$post = get_post( $object_id, 'object', 'edit' );
+		$data = $post->post_content;
+	}
+	return $data;
+}
+add_filter( "cmb2_override_content_meta_value", __NAMESPACE__ . '\\populate_post_content_input', 10, 4  );
