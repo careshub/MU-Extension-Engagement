@@ -194,6 +194,61 @@ function muext_program_info_meta_box() {
 		'type'       => 'text',
 	) );
 
+	// Location details
+	// Return values from the API
+	// Street number => street_number
+	// Street name => route
+	// City => locality
+	// County => administrative_area_level_2
+	// State => administrative_area_level_1
+	// Country => country
+	// ZIP code => postal_code
+	$cmb->add_field( array(
+		'name'       => __( 'Street Number', 'muext-engagement' ),
+		'id'         => $prefix . 'street_number',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Street Name', 'muext-engagement' ),
+		'id'         => $prefix . 'route',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'City', 'muext-engagement' ),
+		'id'         => $prefix . 'locality',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'County', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_2',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'State', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_1',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Country', 'muext-engagement' ),
+		'id'         => $prefix . 'country',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'ZIP code', 'muext-engagement' ),
+		'id'         => $prefix . 'postal_code',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Longitude', 'muext-engagement' ),
+		'id'         => $prefix . 'longitude',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Latitude', 'muext-engagement' ),
+		'id'         => $prefix . 'latitude',
+		'type'       => 'hidden',
+	) );
+
 	// Regular text field
 	$cmb->add_field( array(
 		'name'       => __( 'Contact Person Name', 'muext-engagement' ),

@@ -1,4 +1,14 @@
 var placeSearch, autocomplete;
+var fieldPrefix = '_muext_';
+var locationFields = {
+	street_number: 'short_name',
+	route: 'long_name',
+	locality: 'long_name',
+	administrative_area_level_2: 'long_name',
+	administrative_area_level_1: 'long_name',
+	country: 'long_name',
+	postal_code: 'short_name'
+};
 function initAutocomplete() {
 	// Create the autocomplete object, restricting the search to geographical
 	// location types.
@@ -26,13 +36,20 @@ function placeChangedCallback() {
 	// Country => country
 	// ZIP code => postal_code
 	// The formatted address is dropped into the box.
+	for (var field in locationFields) {
+		document.getElementById(fieldPrefix + field).value = '';
+		document.getElementById(fieldPrefix + field).disabled = false;
+	}
 	for (var i = 0; i < place.address_components.length; i++) {
 		var addressType = place.address_components[i].types[0];
-		if (componentForm[addressType]) {
-			var val = place.address_components[i][componentForm[addressType]];
-			document.getElementById(addressType).value = val;
+		if (locationFields[addressType]) {
+			var val = place.address_components[i][locationFields[addressType]];
+			document.getElementById(fieldPrefix + addressType).value = val;
 		}
 	}
+	// Latitude and Longitude
+	document.getElementById(fieldPrefix + "latitude").value = place.geometry.location.lat();
+	document.getElementById(fieldPrefix + "longitude").value = place.geometry.location.lng();
 }
 
 // Google sample for grabbing details
