@@ -12,6 +12,10 @@ add_action( 'init', __NAMESPACE__ . '\\register_program_tags' );
 add_action( 'init', __NAMESPACE__ . '\\register_program_audience' );
 // Register the engagement program impact area taxonomy.
 add_action( 'init', __NAMESPACE__ . '\\register_program_impact_areas' );
+// Register the engagement program impact area taxonomy.
+add_action( 'init', __NAMESPACE__ . '\\register_program_outreach_type' );
+// Register the engagement program impact area taxonomy.
+add_action( 'init', __NAMESPACE__ . '\\register_program_affiliation' );
 
 // Register Custom Post Type
 function register_muext_engagement_cpt() {
@@ -62,7 +66,9 @@ function register_muext_engagement_cpt() {
 										'muext_program_category',
 										'muext_program_tag',
 										'muext_program_audience',
-										'muext_program_impact_area'
+										'muext_program_impact_area',
+										'muext_program_outreach_type',
+										'muext_program_affiliation'
 									),
 		'hierarchical'          => false,
 		'public'                => true,
@@ -237,5 +243,83 @@ function register_program_impact_areas() {
 		'rewrite'                    => array( 'slug' => 'impact-area' ),
 	);
 	register_taxonomy( 'muext_program_impact_area', array( 'muext_engagement' ), $args );
+
+}
+
+function register_program_outreach_type() {
+
+	$labels = array(
+		'name'                       => _x( 'Outreach Type', 'Taxonomy General Name', 'muext-engagement' ),
+		'singular_name'              => _x( 'Outreach Type', 'Taxonomy Singular Name', 'muext-engagement' ),
+		'menu_name'                  => __( 'Outreach Type', 'muext-engagement' ),
+		'all_items'                  => __( 'All Outreach Types', 'muext-engagement' ),
+		'parent_item'                => __( 'Parent Outreach Type', 'muext-engagement' ),
+		'parent_item_colon'          => __( 'Parent Outreach Type:', 'muext-engagement' ),
+		'new_item_name'              => __( 'New Outreach Type Name', 'muext-engagement' ),
+		'add_new_item'               => __( 'Add New Outreach Type', 'muext-engagement' ),
+		'edit_item'                  => __( 'Edit Outreach Type', 'muext-engagement' ),
+		'update_item'                => __( 'Update Outreach Type', 'muext-engagement' ),
+		'view_item'                  => __( 'View Outreach Type', 'muext-engagement' ),
+		'separate_items_with_commas' => __( 'Separate outreach types with commas', 'muext-engagement' ),
+		'add_or_remove_items'        => __( 'Add or remove outreach types', 'muext-engagement' ),
+		'choose_from_most_used'      => __( 'Choose from the most used', 'muext-engagement' ),
+		'popular_items'              => __( 'Popular Outreach Types', 'muext-engagement' ),
+		'search_items'               => __( 'Search Outreach Types', 'muext-engagement' ),
+		'not_found'                  => __( 'Not Found', 'muext-engagement' ),
+		'no_terms'                   => __( 'No outreach types', 'muext-engagement' ),
+		'items_list'                 => __( 'Outreach Types', 'muext-engagement' ),
+		'items_list_navigation'      => __( 'Outreach type list navigation', 'muext-engagement' ),
+	);
+	$args = array(
+		'labels'                     => $labels,
+		'hierarchical'               => true,
+		'public'                     => true,
+		'show_ui'                    => true,
+		'show_admin_column'          => true,
+		'show_in_nav_menus'          => true,
+		'show_tagcloud'              => true,
+		'show_in_rest'               => false,
+		'rewrite'                    => array( 'slug' => 'outreach-type' ),
+	);
+	register_taxonomy( 'muext_program_outreach_type', array( 'muext_engagement' ), $args );
+
+}
+
+function register_program_affiliation() {
+
+	$labels = array(
+		'name'                       => _x( 'Affiliation', 'Taxonomy General Name', 'muext-engagement' ),
+		'singular_name'              => _x( 'Affiliation', 'Taxonomy Singular Name', 'muext-engagement' ),
+		'menu_name'                  => __( 'Affiliation', 'muext-engagement' ),
+		'all_items'                  => __( 'All Affiliations', 'muext-engagement' ),
+		'parent_item'                => __( 'Parent Affiliation', 'muext-engagement' ),
+		'parent_item_colon'          => __( 'Parent Affiliation:', 'muext-engagement' ),
+		'new_item_name'              => __( 'New Affiliation Name', 'muext-engagement' ),
+		'add_new_item'               => __( 'Add New Affiliation', 'muext-engagement' ),
+		'edit_item'                  => __( 'Edit Affiliation', 'muext-engagement' ),
+		'update_item'                => __( 'Update Affiliation', 'muext-engagement' ),
+		'view_item'                  => __( 'View Affiliation', 'muext-engagement' ),
+		'separate_items_with_commas' => __( 'Separate affiliations with commas', 'muext-engagement' ),
+		'add_or_remove_items'        => __( 'Add or remove affiliations', 'muext-engagement' ),
+		'choose_from_most_used'      => __( 'Choose from the most used', 'muext-engagement' ),
+		'popular_items'              => __( 'Popular Affiliations', 'muext-engagement' ),
+		'search_items'               => __( 'Search Affiliations', 'muext-engagement' ),
+		'not_found'                  => __( 'Not Found', 'muext-engagement' ),
+		'no_terms'                   => __( 'No affiliations', 'muext-engagement' ),
+		'items_list'                 => __( 'Affiliations', 'muext-engagement' ),
+		'items_list_navigation'      => __( 'Affiliation list navigation', 'muext-engagement' ),
+	);
+	$args = array(
+		'labels'                     => $labels,
+		'hierarchical'               => true,
+		'public'                     => true,
+		'show_ui'                    => true,
+		'show_admin_column'          => true,
+		'show_in_nav_menus'          => true,
+		'show_tagcloud'              => true,
+		'show_in_rest'               => false,
+		'rewrite'                    => array( 'slug' => 'affilation' ),
+	);
+	register_taxonomy( 'muext_program_affiliation', array( 'muext_engagement' ), $args );
 
 }
