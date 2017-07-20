@@ -75,52 +75,67 @@ function muext_render_filters_box() {
 function muext_import_shortcode(){
 	ob_start();
 	echo '<pre>';
-	$import_start = get_option( 'muext_import_has_run' );
-	$import_start = ( $import_start ) ? (int) $import_start : 1;
-	$import_end = $import_start + 50;
-	$row = 1;
-	if ( ($handle = fopen( \MU_Ext_Engagement\get_plugin_base_path() . '/working/Ext_Data_For_Import.csv', "r") ) !== FALSE ) {
-		while ( ( $data = fgetcsv( $handle, 0, "," ) ) !== FALSE ) {
-			// post_title = $data[3]
-			// post_content = $data[4]
+	$taxonomy = 'muext_program_affiliation';
+	Top-level terms.
+	$terms = array(
+		'Athletics' => 'ATHL',
+		'College of Agriculture, Food and Natural Resources' => 'CAFNR',
+		'College of Arts and Science' => 'AS',
+		'College of Education' => 'EDUC',
+		'College of Engineering' => 'ENGR',
+		'College of Human Environmental Sciences' => 'HES',
+		'College of Veterinary Medicine' => 'VETM',
+		'Graduate School' => 'GRAD',
+		'Marketing & Communications' => 'COMM',
+		'Office of the Chancellor' => 'CHANC',
+		'Office of the Provost' => 'PROVOST',
+		'School of Health Professions' => 'HP',
+		'School of Journalism' => 'JOURN',
+		'School of Law' => 'LAW',
+		'School of Medicine' => 'MED',
+		'School of Public Affairs' => 'PUBAF',
+		'Sinclair School of Nursing' => 'NURS',
+		'Student Affairs' => 'STUDENT',
+		'Trulaske Collee of Business' => 'BUS',
+		'University Advancement' => 'ADVANCE',
+		'University Operations' => 'OPER'
+	);
 
-			// _muext_college_affiliation = $data[0]
-			// _muext_contact_name = $data[1]
-			// _muext_contact_phone = $data[2]
-			// _muext_location_text = $data[5]
-			// _muext_timeframe = $data[6]
-			// _muext_outcome_text = $data[7]
-
-			// muext_program_category = $data[8]
-
-			if ( $row >= $import_start && $row < $import_end ) {
-				$post_args = array(
-					'post_title' => $data[3],
-					'post_type' => 'muext_engagement',
-					'post_content' => $data[4],
-					// 'tax_input' => array( 'muext_program_category' => $data[8] ),
-					'meta_input' => array(
-						'_muext_college_affiliation' => $data[0],
-						'_muext_contact_name' => $data[1],
-						'_muext_contact_phone' => $data[2],
-						'_muext_location_text' => $data[5],
-						'_muext_timeframe' => $data[6],
-						'_muext_outcome_text' => $data[7],
-					),
-				);
-
-				$post_id = wp_insert_post( $post_args );
-				wp_set_post_terms( $post_id, (int) $data[9], 'muext_program_category' );
-				echo PHP_EOL . "Created post {$post_id}";
-				update_option( 'muext_import_has_run', $row, false);
-			}
-			++$row;
-		}
-	} else {
-		echo 'fopen failed';
-		var_dump( $handle );
+	foreach ( $terms as $name => $slug ) {
+		$term_id = wp_insert_term( $name, $taxonomy, $args = array( 'slug' => $slug ) );
+		echo "{$term_id} {$name}: {$slug}" . PHP_EOL;
 	}
-	fclose($handle);
+
+	// Child terms
+
+	// $terms = array(
+	// 	"cafnr" => array( "Agribusiness Management", "Agricultural Economics", "Agricultural Education", "Agricultural Systems Management", "Agriculture", "Animal Sciences", "Baskett Research Center", "Biochemistry", "Bradford Research Center", "Captive Wild Animal Management", "Division of Applied Social Sciences", "Entrepreneurship", "Environmental Sciences", "Fisher Delta Research Center", "Food Science & Nutrition", "Food Systems and Bioengineering", "Forage Systems Research Center", "Foremost Dairy Research Center", "Forestry", "Graves-Chapple Research Center", "Greenley Research Center", "Horticulture and Agroforestry Research Center", "Hospitality Management", "Hundley-Whaley Research Center", "International Agriculture, Food & Natural Resources", "Jefferson Farm and Garden", "Natural Resource Science and Management", "Parks, Recreation & Sport", "Plant Sciences", "Rural Sociology", "School of Natural Resources", "Science & Agricultural Journalism", "Soil, Environmental and Atmospheric Sciences", "South Farm Research Center", "Southwest Research Center", "Sustainable Agriculture", "Thompson Research Center", "Viticulture & Enology", "Wurdack Research Center" ),
+	// 	"as" => array( "Aerospace Studies", "American Archaeology", "Anthropology", "Art History and Archaeology", "Biological Sciences", "Black Studies", "Canadian Studies", "Chemistry", "Chinese Studies", "Classical Studies", "Communication", "Digital Storytelling", "East Asian Studies", "Economics", "English", "Geography", "Geological Sciences", "German and Russian Studies", "History", "Mathematics", "Military Science and Leadership", "Music", "Philosophy", "Physics and Astronomy", "Political Science", "Psychological Sciences", "Religious Studies", "Romance Languages", "Sociology", "Statistics", "Theatre", "Women\'s and Gender Studies" ),
+	// 	"educ" => array( "Adventure Club", "Assessment Resource Center (ARC)", "Educational Leadership & Policy Analysis", "Educational, School & Counseling Psychology", "Hook Center for Educational Leadership and District Renewal", "Information Science & Learning Technologies", "Learning, Teaching & Curriculum", "Missouri Prevention Center (MPC)", "Mizzou K-12", "ParentLink", "Positive Behavioral Interventions and Supports (PBIS)", "Special Education", "The ReSTEM Institute" ),
+	// 	"engr" => array( "Bioengineering", "Chemical Engineering", "Civil & Environmental Engineering", "Computer Science", "Electrical & Computer Engineering", "Information Technology (IT)", "International Coordinated Degree Programs", "Mechanical & Aerospace Engineering", "MU Informatics Institute", "Naval Sciences", "Nuclear Engineering Program" ),
+	// 	"hes" => array( "Architectural Studies", "Center for Children and Families Across Cultures", "Center for Family Policy and Research", "Center for Relationship and Family Resilience", "Human Development & Family Science", "Institute for Professional Development", "MU Child Development Lab", "Nutrition & Exercise Physiology", "Personal Financial Planning", "School of Social Work", "Textile & Apparel Management" ),
+	// 	"vetm" => array( "Veterinary Health Center", "Veterinary Medical Diagnostic Laboratory (VMDL)" ),
+	// 	"hp" => array( "Clinical and Diagnostic Sciences", "Communication Science and Disorders", "Health Psychology", "Health Sciences", "Occupational Therapy", "Physical Therapy " ),
+	// 	"journ" => array( "Reynolds Journalism Institute" ),
+	// 	"law" => array( "Center for Intellectual Property & Entrepreneurship", "Center for the Study of Dispute Resolution" ),
+	// 	"med" => array( "Anesthesiology and Perioperative Medicine", "Biochemistry", "Center for Health Care Quality", "Center for Health Ethics", "Center for Health Policy", "Center for Micro/Nano Systems and Nanotechnology", "Center for Patient-Centered Outcomes Research", "Center for Precision Medicine", "Center for Translational Neuroscience", "Child Health", "Christopher S. Bond Life Sciences Center", "Clinical Research Center", "Dalton Cardiovascular Research Center", "Dermatology", "Electron Microscopy Core Facility", "Ellis Fischel Cancer Center", "Emergency Medicine", "Family and Community Medicine", "Health and Behavioral Risk Research Center", "Health Management and Informatics", "Interdisciplinary Center on Aging", "International Institute of Nano and Molecular Medicine", "Mason Eye Institute", "Medical Pharmacology & Physiology", "Medicine", "Missouri Cancer Registry", "Molecular Microbiology and Immunology", "MU Coulter Translational Partnership Program", "MU Institute for Clinical and Translational Science", "MU Research Reactor", "National Center for Gender Physiology", "Neurology", "Nuclear Science and Engineering Institute", "Nutrition & Exercise Physiology", "Obstetrics, Gynecology and Women\'s Health", "OneHealth BioRepository", "Ophthalmology", "Orthopaedic Surgery", "Otolaryngology", "Pathology and Anatomical Sciences", "Physical Medicine and Rehabilitation", "Proteomics Center", "Psychiatry", "Radiology", "Radiopharmaceutical Sciences Research Institute", "Structural Biology Core Facility", "Surgery", "Thompson Center for Autism & Neurodevelopmental Disorders", "Thompson Laboratory for Regenerative Orthopaedics" ),
+	// 	"pubaf" => array( "Institute of Public Policy" ),
+	// 	"bus" => array( "Accountancy", "Center for Sales and Customer Development", "Entrepreneurship Bootcamp for Veterans with Disabilities", "Finance", "Financial Research Institute", "International Trade Center", "Jeffrey E. Smith Institute of Real Estate", "Management", "Marketing" )
+	// );
+	// foreach ( $terms as $parent => $children ) {
+	// 	$parent_term = get_term_by( 'slug', $parent, $taxonomy );
+
+	// 	foreach ( $children as $child_name ) {
+	// 		$new_term_id = wp_insert_term( $child_name, $taxonomy, array( 'parent' => $parent_term->term_id ) );
+	// 		if ( is_wp_error( $new_term_id ) ) {
+	// 			echo "{$child_name} errored";
+	// 			var_dump($new_term_id);
+	// 		} else {
+	// 			echo $parent_term->term_id . " : {$child_name} : {$new_term_id}" . PHP_EOL;
+	// 		}
+	// 	}
+	// }
+
 	echo '</pre>';
 
 	return ob_get_clean();
