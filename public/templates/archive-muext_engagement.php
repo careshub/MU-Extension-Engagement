@@ -64,7 +64,7 @@ get_header(); ?>
 				<?php
 				endif; ?>
 			<?php else: ?>
-				<p class="log-in-required">Please log in to view engagements.</p>
+				<p class="log-in-required">Please <a href="<?php echo wp_login_url(); ?>">log in</a> to view engagements.</p>
 			<?php endif; ?>
 
 		</main><!-- #main -->
