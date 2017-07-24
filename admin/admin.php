@@ -276,10 +276,15 @@ function muext_program_info_meta_box() {
 
 	// Regular text field
 	$cmb->add_field( array(
-		'name'       => __( 'College or Affiliation', 'muext-engagement' ),
+		'name'       => __( 'College or Affiliation. For reference only. (Do not update.)', 'muext-engagement' ),
 		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
 		'id'         => $prefix . 'college_affiliation',
 		'type'       => 'text',
+		'save_field' => false, // Disables the saving of this field.
+		// 'attributes' => array(
+		// 	'disabled' => 'disabled',
+		// 	'readonly' => 'readonly',
+		// ),
 	) );
 
 	// URL text field
@@ -294,14 +299,14 @@ function muext_program_info_meta_box() {
 
 	$cmb->add_field( array(
 		'name' => esc_html__( 'Timeframe (text)', 'muext-engagement' ),
-		'desc' => esc_html__( 'A text description of when this occurred. For reference only. (Read only.)', 'cmb2' ),
+		'desc' => esc_html__( 'A text description of when this occurred. For reference only. (Do not update.)', 'cmb2' ),
 		'id'   => $prefix . 'timeframe',
 		'type' => 'text',
 		'save_field' => false, // Disables the saving of this field.
-		'attributes' => array(
-			'disabled' => 'disabled',
-			'readonly' => 'readonly',
-		),
+		// 'attributes' => array(
+		// 	'disabled' => 'disabled',
+		// 	'readonly' => 'readonly',
+		// ),
 	) );
 
 	$cmb->add_field( array(
@@ -364,15 +369,15 @@ function muext_program_outcomes_meta_box() {
 
 	$cmb->add_field( array(
 		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
-		'desc'    => esc_html__( 'A text description of when this occurred. For reference only. (Read only.)', 'cmb2' ),
+		'desc'    => esc_html__( 'A text description of when this occurred. For reference only. (Do not update.)', 'cmb2' ),
 		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
 		'type'    => 'textarea',
 		// 'options' => array( 'textarea_rows' => 10, ),
 		'save_field' => false, // Disables the saving of this field.
-		'attributes' => array(
-			'disabled' => 'disabled',
-			'readonly' => 'readonly',
-		),
+		// 'attributes' => array(
+		// 	'disabled' => 'disabled',
+		// 	'readonly' => 'readonly',
+		// ),
 	) );
 
 	$cmb->add_field( array(
