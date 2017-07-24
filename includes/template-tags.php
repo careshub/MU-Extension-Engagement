@@ -76,35 +76,35 @@ function muext_import_shortcode(){
 	ob_start();
 	echo '<pre>';
 	$taxonomy = 'muext_program_affiliation';
-	Top-level terms.
-	$terms = array(
-		'Athletics' => 'ATHL',
-		'College of Agriculture, Food and Natural Resources' => 'CAFNR',
-		'College of Arts and Science' => 'AS',
-		'College of Education' => 'EDUC',
-		'College of Engineering' => 'ENGR',
-		'College of Human Environmental Sciences' => 'HES',
-		'College of Veterinary Medicine' => 'VETM',
-		'Graduate School' => 'GRAD',
-		'Marketing & Communications' => 'COMM',
-		'Office of the Chancellor' => 'CHANC',
-		'Office of the Provost' => 'PROVOST',
-		'School of Health Professions' => 'HP',
-		'School of Journalism' => 'JOURN',
-		'School of Law' => 'LAW',
-		'School of Medicine' => 'MED',
-		'School of Public Affairs' => 'PUBAF',
-		'Sinclair School of Nursing' => 'NURS',
-		'Student Affairs' => 'STUDENT',
-		'Trulaske Collee of Business' => 'BUS',
-		'University Advancement' => 'ADVANCE',
-		'University Operations' => 'OPER'
-	);
+	// Top-level terms.
+	// $terms = array(
+	// 	'Athletics' => 'ATHL',
+	// 	'College of Agriculture, Food and Natural Resources' => 'CAFNR',
+	// 	'College of Arts and Science' => 'AS',
+	// 	'College of Education' => 'EDUC',
+	// 	'College of Engineering' => 'ENGR',
+	// 	'College of Human Environmental Sciences' => 'HES',
+	// 	'College of Veterinary Medicine' => 'VETM',
+	// 	'Graduate School' => 'GRAD',
+	// 	'Marketing & Communications' => 'COMM',
+	// 	'Office of the Chancellor' => 'CHANC',
+	// 	'Office of the Provost' => 'PROVOST',
+	// 	'School of Health Professions' => 'HP',
+	// 	'School of Journalism' => 'JOURN',
+	// 	'School of Law' => 'LAW',
+	// 	'School of Medicine' => 'MED',
+	// 	'School of Public Affairs' => 'PUBAF',
+	// 	'Sinclair School of Nursing' => 'NURS',
+	// 	'Student Affairs' => 'STUDENT',
+	// 	'Trulaske Collee of Business' => 'BUS',
+	// 	'University Advancement' => 'ADVANCE',
+	// 	'University Operations' => 'OPER'
+	// );
 
-	foreach ( $terms as $name => $slug ) {
-		$term_id = wp_insert_term( $name, $taxonomy, $args = array( 'slug' => $slug ) );
-		echo "{$term_id} {$name}: {$slug}" . PHP_EOL;
-	}
+	// foreach ( $terms as $name => $slug ) {
+	// 	$term_id = wp_insert_term( $name, $taxonomy, $args = array( 'slug' => $slug ) );
+	// 	echo "{$term_id} {$name}: {$slug}" . PHP_EOL;
+	// }
 
 	// Child terms
 
