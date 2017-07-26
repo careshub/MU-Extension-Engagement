@@ -228,5 +228,5 @@ function convert_to_human_date( $date ) {
 }
 
 function is_engagement_tax_archive() {
-	return is_tax( array( 'muext_program_category', 'muext_program_tag' ) );
+	return is_tax( array( 'muext_program_category', 'muext_program_tag', 'muext_program_audience', 'muext_program_impact_area', 'muext_program_outreach_type', 'muext_program_affiliation' ) );
 }
