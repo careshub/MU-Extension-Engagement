@@ -44,6 +44,10 @@
 .engagement-meta.end-of-single{
 	border-bottom: 3px solid #f1b82d;
 }
+.engagement-meta {
+	background-color: #eaeaea;
+	margin-bottom: 1em;
+}
 .muext-filters {
 	margin-bottom: 2em;
 }

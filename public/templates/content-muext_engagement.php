@@ -32,7 +32,7 @@ foreach ( $affiliation_terms as $term ){
 //trim that last comma
 $this_aff_str = rtrim ( $this_aff_str, ', ' );
 
-//var_dump( get_post_meta( $post_id ) );
+
 // Convert dates that are stored in 2017-05-26 format to May 26, 2017 format for readability.
 $human_date = ( $date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_human_date( $date ) : '';
 $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_human_date( $end_date ) : '';
@@ -61,6 +61,7 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 	<div class="entry-content">
 		<?php if ( $location || $human_date ) : ?>
 			<div class="engagement-meta">
+
 				<!--<div class="Grid Grid--full med-Grid--fit">-->
 				<div>
 					<?php if ( $location ) : ?>
@@ -98,23 +99,19 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 					get_the_title()
 				) );
 				
-			/* if ( $outcome ) : ?>
-				<h4>Outcomes</h4>
-				<?php echo apply_filters( 'the_content', $outcome ); ?>
-			<?php endif; 
-			*/ 
 			?>
 		</div>
+
+		
 
 		<?php //if ( is_single() ) : ?>
 			<div class="engagement-meta end-of-single">
 				<?php if ( $contact ) { ?>
 					<div class="inset-contents">
-						<!--<h3>Contact</h3>-->
 						<h4>Contact</h4>
-						<?php echo $contact; ?>
+						<strong><?php echo $contact; ?></strong>
 							<?php if ( $email ) : ?>
-								&emsp;<a href="mailto:<?php echo $email; ?>"><span class="fa fa-envelope"></span></a>
+								&emsp;<a href="mailto:<?php echo $email; ?>"><?php echo $email; ?></a>
 							<?php endif; ?>
 							<?php if ( $phone ) : ?>
 								&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $phone; ?></a>
@@ -153,7 +150,7 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 
 	</div><!-- .entry-content -->
 
-	<?php if ( is_single() ) : ?>
+	<?php if ( is_single() ) { ?>
 		<footer class="entry-footer">
 		<?php
 			// Get Categories for posts.
@@ -186,8 +183,9 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 
 					twentyseventeen_edit_link();
 			}
+			
 		 ?>
 		 </footer> <!-- .entry-footer -->
-	<?php endif; ?>
+	<?php } ?>
 
 </article><!-- #post-## -->

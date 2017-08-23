@@ -23,7 +23,6 @@ add_action( 'template_redirect', __NAMESPACE__ . '\\reformat_get_string', 11 );
 //add_filter( 'wp_tag_cloud_args', __NAMESPACE__ . '\\filter_engagement_theme_tag_cloud_args' );
 add_filter('wp_generate_tag_cloud_data', __NAMESPACE__ . '\\muext_tag_cloud_class_active');
 
-
 /**
  * Load the plugin text domain for translation.
  *
@@ -49,6 +48,7 @@ function enqueue_styles_scripts() {
 	if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) || is_engagement_tax_archive() || is_front_page() ) {
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-style', plugins_url( 'css/public.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-fontawesome-style', plugins_url( 'font-awesome-4.7.0/css/font-awesome.min.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
+
 	}
 }
 
@@ -327,11 +327,6 @@ function muext_category_has_parent($catid){
     }
     return false;
 }
-
-
-
-
-
 
 
 

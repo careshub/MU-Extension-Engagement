@@ -26,8 +26,6 @@ get_header(); ?>
 					if ( comments_open() || get_comments_number() ) :
 						comments_template();
 					endif;
-					
-					//echo get_post_meta( $post_id );
 
 					the_post_navigation( array(
 						'prev_text' => '<span class="screen-reader-text">' . __( 'Previous Post', 'muext-engagement' ) . '</span><span aria-hidden="true" class="nav-subtitle">' . __( 'Previous', 'muext-engagement' ) . '</span> <span class="nav-title"><span class="nav-title-icon-wrapper">' . twentyseventeen_get_svg( array( 'icon' => 'arrow-left' ) ) . '</span>%title</span>',
