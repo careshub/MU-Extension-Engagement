@@ -33,6 +33,9 @@ require_once( $basepath . 'includes/cmb2/init.php' );
 // Helper functions
 require_once( $basepath . 'includes/functions.php' );
 
+// Helper functions
+require_once( $basepath . 'includes/template-tags.php' );
+
 // The main class
 require_once( $basepath . 'public/public.php' );
 
