@@ -18,6 +18,10 @@
 	float: left;
 	width: 58%;
 }
+body.page-two-column.home #primary .muext_engagement .entry-header,
+body.page-two-column.home #primary .muext_engagement .entry-content{
+	width:100%;
+}
 .home #secondary{
 	float: right;
 	padding-top: 0;
@@ -42,7 +46,7 @@
 	padding: 0.5em;
 }
 .engagement-meta.end-of-single{
-	border-bottom: 3px solid #f1b82d;
+	border-bottom: 4px solid #f1b82d;
 }
 .engagement-meta {
 	background-color: #eaeaea;

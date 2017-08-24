@@ -109,9 +109,9 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 				<?php if ( $contact ) { ?>
 					<div class="inset-contents">
 						<h4>Contact</h4>
-						<strong><?php echo $contact; ?></strong>
+						<?php echo $contact; ?>
 							<?php if ( $email ) : ?>
-								&emsp;<a href="mailto:<?php echo $email; ?>"><?php echo $email; ?></a>
+								&emsp;<a href="mailto:<?php echo $email; ?>"><span class="fa fa-envelope"></span></a>
 							<?php endif; ?>
 							<?php if ( $phone ) : ?>
 								&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $phone; ?></a>
