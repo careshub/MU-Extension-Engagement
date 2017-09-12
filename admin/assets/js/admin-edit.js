@@ -1,4 +1,4 @@
-var placeSearch, autocomplete;
+var placeSearch, autocomplete, autocompletes = {};
 var fieldPrefix = '_muext_';
 var locationFields = {
 	street_number: 'short_name',
@@ -12,14 +12,59 @@ var locationFields = {
 function initAutocomplete() {
 	// Create the autocomplete object, restricting the search to geographical
 	// location types.
-	autocomplete = new google.maps.places.Autocomplete(
-	/** @type {!HTMLInputElement} */(document.getElementById('_muext_location_text')),
-	{types: ['geocode']});
+	
+	//trying to get this to listen to all location fields
+	//var location_fields = jQuery("[id^=_muext_location_text]:not([id$=_repeat]" ); //without group. repeat fields have a containing div ending in _repeat
+	//var location_fields = jQuery("[id^=_muext_location_group_0__muext_location_text]:not([id$=_repeat]" ); //repeat fields have a containing div ending in _repeat
+	var location_fields = jQuery("[id^=_muext_location_group_] [id$=_muext_location_text]" ); //repeat fields have a containing div ending in _repeat
+	console.log( location_fields );
+	//var autocompletes = {};
+	
+	//for each location_fields, get thee to google
+	jQuery.each( location_fields, function( i, v ){
+		//do we have the has-autocomplete class? TODO: fix this!
+		if( jQuery(v).hasClass("has-autocomplete") ){
+			//return true; //go to next location in $.each
+			//console.log( 'jas');
+		}
+		
+		//get this location field id
+		var this_id = jQuery(v).attr("id");
+		console.log( this_id );
+		
+		//get the trailing number (_muext_location_text_0)
+		var res = this_id.replace("__muext_location_text", "");
+		var under = res.lastIndexOf('_');
+		var int_maybe = parseInt( this_id.substring( under + 1 ) );
+		
+		//do we need this int check?  It's either an int (and therefore a repeated location field) or not (and therefore an original solo location field)
+		if( Number.isInteger( int_maybe ) ){
+			var digit = int_maybe;
+		} else {
+			var digit = "";
+		}
+		
+		autocompletes['autocomplete_' + digit] = new google.maps.places.Autocomplete(
+		//autocomplete = new google.maps.places.Autocomplete(
+		/** @type {!HTMLInputElement} */(document.getElementById( this_id )),
+		{types: ['geocode']});
 
-	// When the user selects an address from the dropdown, populate the address
-	// fields in the form.
-	autocomplete.addListener('place_changed', placeChangedCallback);
-	console.log( 'autocomplete is running' );
+		// When the user selects an address from the dropdown, populate the address
+		// fields in the form.
+		//autocomplete.addListener('place_changed', placeChangedCallback);
+		autocompletes['autocomplete_' + digit].addListener('place_changed', function(){
+			
+			placeChangedCallbackNumbered( autocompletes['autocomplete_' + digit], digit );
+			
+		});
+		console.log( 'autocomplete is running' );
+		
+		//add class to input, to let us know not to autocomplete it if not
+		jQuery(v).addClass("has-autocomplete");
+		
+	});
+	
+	
 }
 
 function placeChangedCallback() {
@@ -52,6 +97,56 @@ function placeChangedCallback() {
 	document.getElementById(fieldPrefix + "longitude").value = place.geometry.location.lng();
 }
 
+function placeChangedCallbackNumbered( which_autocomplete, which_index ) {
+	// Get the place details from the autocomplete object.
+	var place = which_autocomplete.getPlace();
+	console.log( which_autocomplete );
+	
+	//group prefix string
+	var groupPrefix = '_muext_location_group_' + which_index + '_';
+	
+	//get the trailing number, if any
+	//var under = which_autocomplete.lastIndexOf('_');
+	//var int_maybe = which_autocomplete.substring( under + 1 ); //may be empty string if original location (non repeater)
+	//console.log( int_maybe );
+	//if it's not an empty string, prepend with _
+	if( Number.isInteger( which_index ) ){
+		var field_suffix = '_' + which_index; 
+	} else {
+		var field_suffix = which_index; 
+	}
+	console.log( place );
+
+	// Return values from the API
+	// Street number => street_number
+	// Street name => route
+	// City => locality
+	// County => administrative_area_level_2
+	// State => administrative_area_level_1
+	// Country => country
+	// ZIP code => postal_code
+	// The formatted address is dropped into the box.
+	for (var field in locationFields) {
+		console.log( groupPrefix + fieldPrefix + field ); //_muext_street_number
+		document.getElementById(groupPrefix + fieldPrefix + field).value = '';
+		document.getElementById(groupPrefix + fieldPrefix + field).disabled = false;
+	}
+	if( typeof place !== 'undefined' ){
+		for (var i = 0; i < place.address_components.length; i++) {
+			var addressType = place.address_components[i].types[0];
+			if (locationFields[addressType]) {
+				var val = place.address_components[i][locationFields[addressType]];
+				document.getElementById(groupPrefix + fieldPrefix + addressType).value = val;
+			}
+		}
+			
+		// Latitude and Longitude
+		document.getElementById(groupPrefix + fieldPrefix + "latitude").value = place.geometry.location.lat();
+		document.getElementById(groupPrefix + fieldPrefix + "longitude").value = place.geometry.location.lng();
+		
+	}
+}
+
 // Google sample for grabbing details
 function fillInAddress() {
 	// Get the place details from the autocomplete object.
@@ -73,6 +168,29 @@ function fillInAddress() {
 	}
 }
 
+function locationRepeatListener(){
+	
+	//jQuery(".cmb-add-group-row").on("click", function(){ //no, this happens before the field is added, duh
+	jQuery("[id^=_muext_location_group_]").on("click", function(){
+		console.log( 'add loc click' );
+		//are we on a location box?
+		//if( jQuery(this).attr("data-selector") == "_muext_location_group_repeat" ){
+			
+			initAutocomplete();
+		//}
+		
+	});
+	
+};
+
+
 (function ( $ ) {
 	"use strict";
+	
+	
+	$(document).ready(function() {
+
+		locationRepeatListener();
+
+	});
 }(jQuery));

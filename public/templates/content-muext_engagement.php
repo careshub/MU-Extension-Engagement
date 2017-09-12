@@ -12,8 +12,18 @@
 
 // Set up post meta.
 $post_id  = get_the_ID();
+
+//older data = string in '_muext_location_text'; newer data = array (repeater field) in '_muext_location_group'
 $location = get_post_meta( $post_id, '_muext_location_text', true );
+if( empty( $location ) ){ //see if it's stored in the new location group format
+	$location = get_post_meta( $post_id, '_muext_location_group', true );
+}
 $contact  = get_post_meta( $post_id, '_muext_contact_name', true );
+if( empty( $contact ) ){ //see if it's stored in the new contact group format
+	$contact = get_post_meta( $post_id, '_muext_contact_group', true );
+}
+
+
 $email    = get_post_meta( $post_id, '_muext_contact_email', true );
 $phone    = get_post_meta( $post_id, '_muext_contact_phone', true );
 $url      = get_post_meta( $post_id, '_muext_url', true );
@@ -64,13 +74,28 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 
 				<!--<div class="Grid Grid--full med-Grid--fit">-->
 				<div>
-					<?php if ( $location ) : ?>
+					<?php if ( $location ) { ?>
+					
 						<div class="location Grid-cell">
 							<div class="inset-contents">
-								<span class="fa fa-map-marker icon-left"></span>&nbsp;<span class=""><?php echo $location; ?></span>
+							
+						<?php if ( is_array( $location ) ){
+							
+							foreach( $location as $one_place ){ 
+							
+									//var_dump( $one_place );
+							?>
+									<span class="fa fa-map-marker icon-left"></span>&nbsp;<span class=""><?php echo $one_place['_muext_location_text']; ?></span>
+									<br />
+							<?php } 
+						} else { ?>
+									<span class="fa fa-map-marker icon-left"></span>&nbsp;<span class=""><?php echo $location; ?></span>
+						<?php } ?>
+						
 							</div>
 						</div>
-					<?php endif; ?>
+					<?php } ?>
+					
 					<?php if ( $human_date ) : ?>
 						<div class="date Grid-cell">
 							<div class="inset-contents">
@@ -106,17 +131,38 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 
 		<?php //if ( is_single() ) : ?>
 			<div class="engagement-meta end-of-single">
-				<?php if ( $contact ) { ?>
-					<div class="inset-contents">
-						<h4>Contact</h4>
-						<?php echo $contact; ?>
-							<?php if ( $email ) : ?>
-								&emsp;<a href="mailto:<?php echo $email; ?>"><span class="fa fa-envelope"></span></a>
-							<?php endif; ?>
-							<?php if ( $phone ) : ?>
-								&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $phone; ?></a>
-							<?php endif; ?>
-					</div>
+				<?php if ( $contact ) { 
+				
+					if( is_array( $contact ) ){ ?>
+					
+						<div class="inset-contents">
+							<h4>Contacts</h4>
+							<?php 
+							foreach( $contact as $one_contact ){ ?>
+								
+									<?php echo $one_contact["_muext_contact_name"]; ?>
+										<?php if ( $one_contact["_muext_contact_email"] ) : ?>
+											&emsp;<a href="mailto:<?php echo $one_contact["_muext_contact_email"]; ?>"><span class="fa fa-envelope"></span></a>
+										<?php endif; ?>
+										<?php if ( $one_contact["_muext_contact_phone"] ) : ?>
+											&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $one_contact["_muext_contact_phone"]; ?></a>
+										<?php endif; ?>
+								
+							<?php } ?>
+						</div>
+					<?php
+					} else { ?>
+						<div class="inset-contents">
+							<h4>Contact</h4>
+							<?php echo $contact; ?>
+								<?php if ( $email ) : ?>
+									&emsp;<a href="mailto:<?php echo $email; ?>"><span class="fa fa-envelope"></span></a>
+								<?php endif; ?>
+								<?php if ( $phone ) : ?>
+									&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $phone; ?></a>
+								<?php endif; ?>
+						</div>
+					<?php } ?>
 					
 				<?php } //endif ?>
 				

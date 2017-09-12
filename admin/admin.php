@@ -186,9 +186,34 @@ function muext_program_info_meta_box() {
 		// 'closed'     => true, // Keep the metabox closed by default
 	) );
 
+	
+	$location_group_field_id = $cmb->add_field( array(
+		'id'          => '_muext_location_group',
+		'type'        => 'group',
+		'description' => __( 'Allows for more than one location info set', 'muext-engagement' ),
+		// 'repeatable'  => false, // use false if you want non-repeatable group
+		'options'     => array(
+			'group_title'   => __( 'Location {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
+			'add_button'    => __( 'Add Another Location', 'muext-engagement' ),
+			'remove_button' => __( 'Remove Location', 'muext-engagement' ),
+			'sortable'      => true, // beta
+			// 'closed'     => true, // true to have the groups closed by default
+		),
+	) );
+	
 	// Regular text field
-	$cmb->add_field( array(
+	$cmb->add_group_field( $location_group_field_id, array(
+	//$cmb->add_field( array(
 		'name'       => __( 'Location', 'muext-engagement' ),
+		'desc'       => __( 'Enter an address or the city and state.', 'muext-engagement' ),
+		'id'         => $prefix . 'location_text',
+		'type'       => 'text',
+		'repeatable'  => false
+	) );
+	// Regular text field
+	$cmb->add_field(  array(
+	//$cmb->add_field( array(
+		'name'       => __( 'Location - OLD', 'muext-engagement' ),
 		'desc'       => __( 'Enter an address or the city and state.', 'muext-engagement' ),
 		'id'         => $prefix . 'location_text',
 		'type'       => 'text',
@@ -248,10 +273,68 @@ function muext_program_info_meta_box() {
 		'id'         => $prefix . 'latitude',
 		'type'       => 'hidden',
 	) );
+	
+	// Location details
+	// Return values from the API
+	// Street number => street_number
+	// Street name => route
+	// City => locality
+	// County => administrative_area_level_2
+	// State => administrative_area_level_1
+	// Country => country
+	// ZIP code => postal_code
+	
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Street Number', 'muext-engagement' ),
+		'id'         => $prefix . 'street_number',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Street Name', 'muext-engagement' ),
+		'id'         => $prefix . 'route',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'City', 'muext-engagement' ),
+		'id'         => $prefix . 'locality',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'County', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_2',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'State', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_1',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Country', 'muext-engagement' ),
+		'id'         => $prefix . 'country',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'ZIP code', 'muext-engagement' ),
+		'id'         => $prefix . 'postal_code',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Longitude', 'muext-engagement' ),
+		'id'         => $prefix . 'longitude',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Latitude', 'muext-engagement' ),
+		'id'         => $prefix . 'latitude',
+		'type'       => 'hidden',
+	) );
 
+	
+	
 	// Regular text field
 	$cmb->add_field( array(
-		'name'       => __( 'Contact Person Name', 'muext-engagement' ),
+		'name'       => __( 'Contact Person Name - OLD', 'muext-engagement' ),
 		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
 		'id'         => $prefix . 'contact_name',
 		'type'       => 'text',
@@ -259,7 +342,7 @@ function muext_program_info_meta_box() {
 
 	// Email text field
 	$cmb->add_field( array(
-		'name' => __( 'Contact Person Email', 'muext-engagement' ),
+		'name' => __( 'Contact Person Email - OLD', 'muext-engagement' ),
 		// 'desc' => __( 'field description (optional)', 'muext-engagement' ),
 		'id'   => $prefix . 'contact_email',
 		'type' => 'text_email',
@@ -267,10 +350,48 @@ function muext_program_info_meta_box() {
 
 	// Regular text field
 	$cmb->add_field( array(
-		'name'       => __( 'Contact Person Phone', 'muext-engagement' ),
+		'name'       => __( 'Contact Person Phone - OLD', 'muext-engagement' ),
 		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
 		'id'         => $prefix . 'contact_phone',
 		'type'       => 'text',
+		'sanitization_cb' => __NAMESPACE__ . '\\telephone_number_sanitization', // custom sanitization callback parameter
+	) );
+	
+	
+
+	$contact_group_field_id = $cmb->add_field( array(
+		'id'          => '_muext_contact_group',
+		'type'        => 'group',
+		'description' => __( 'Allows for more than one contact info set', 'muext-engagement' ),
+		// 'repeatable'  => false, // use false if you want non-repeatable group
+		'options'     => array(
+			'group_title'   => __( 'Contact {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
+			'add_button'    => __( 'Add Another Contact', 'muext-engagement' ),
+			'remove_button' => __( 'Remove Contact', 'muext-engagement' ),
+			'sortable'      => true, // beta
+			// 'closed'     => true, // true to have the groups closed by default
+		),
+	) );
+
+	// Id's for group's fields only need to be unique for the group. Prefix is not needed.
+	$cmb->add_group_field( $contact_group_field_id, array(
+		'name' => 'Name',
+		'id'   => $prefix . 'contact_name',
+		'type' => 'text',
+		// 'repeatable' => true, // Repeatable fields are supported w/in repeatable groups (for most types)
+	) );
+
+	$cmb->add_group_field( $contact_group_field_id, array(
+		'name' => 'Email',
+		//'description' => 'Write a short description for this entry',
+		'id'   => $prefix . 'contact_email',
+		'type' => 'text_email',
+	) );
+
+	$cmb->add_group_field( $contact_group_field_id, array(
+		'name' => 'Phone',
+		'id'   => $prefix . 'contact_phone',
+		'type' => 'text',
 		'sanitization_cb' => __NAMESPACE__ . '\\telephone_number_sanitization', // custom sanitization callback parameter
 	) );
 
