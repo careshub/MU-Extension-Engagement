@@ -14,15 +14,19 @@
 	color: #333333;
 }
 
-.home #primary{
+.home #primary,
+.page-template-add_engagement_form  #primary{
 	float: left;
 	width: 58%;
 }
 body.page-two-column.home #primary .muext_engagement .entry-header,
-body.page-two-column.home #primary .muext_engagement .entry-content{
+body.page-two-column.page-template-add_engagement_form  #primary .muext_engagement .entry-header,
+body.page-two-column.home #primary .muext_engagement .entry-content
+body.page-two-column.page-template-add_engagement_form  #primary .muext_engagement .entry-content{
 	width:100%;
 }
-.home #secondary{
+.home #secondary,
+.page-template-add_engagement_form  #secondary{
 	float: right;
 	padding-top: 0;
 	width: 36%;
@@ -33,6 +37,7 @@ body.page-two-column.home #primary .muext_engagement .entry-content{
 }
 .archive.has-sidebar #secondary,
 .single.has-sidebar #secondary,
+.page-template-add_engagement_form #secondary,
 .home #secondary {
 	background-color: #eaeaea;
 	padding: 1.5em;
@@ -59,7 +64,7 @@ body.page-two-column.home #primary .muext_engagement .entry-content{
 	margin-top: 1em;
 }
 
-#secondary .tagcloud a {
+#secondary .tagcloud a{
 	background-color: #fff;
 	border-radius: 4px;
 }

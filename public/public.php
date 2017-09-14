@@ -45,11 +45,11 @@ function enqueue_styles_scripts() {
 	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
 
 	// Styles
-	if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) || is_engagement_tax_archive() || is_front_page() ) {
+	//if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) || is_engagement_tax_archive() || is_front_page() ) {
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-style', plugins_url( 'css/public.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-fontawesome-style', plugins_url( 'font-awesome-4.7.0/css/font-awesome.min.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
 
-	}
+	//}
 }
 
 
