@@ -429,6 +429,19 @@ function muext_program_info_meta_box() {
 		// 	'readonly' => 'readonly',
 		// ),
 	) );
+	
+	$cmb->add_field( array(
+		'name' => esc_html__( 'Timeframe frequency', 'muext-engagement' ),
+		'desc' => esc_html__( 'Select the most applicable', 'cmb2' ),
+		'id'   => $prefix . 'frequency',
+		'type' => 'select',
+		'options'          => array(
+			'recurring' => __( 'recurring', 'cmb2' ),
+			'ongoing'   => __( 'ongoing/continuous', 'cmb2' ),
+			'ended'     => __( 'ended', 'cmb2' ),
+			'N/A'     => __( 'N/A', 'cmb2' ),
+		),
+	) );
 
 	$cmb->add_field( array(
 		'name' => esc_html__( 'Date', 'muext-engagement' ),
