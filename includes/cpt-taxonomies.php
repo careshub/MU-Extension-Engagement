@@ -16,6 +16,8 @@ add_action( 'init', __NAMESPACE__ . '\\register_program_impact_areas' );
 add_action( 'init', __NAMESPACE__ . '\\register_program_outreach_type' );
 // Register the engagement program impact area taxonomy.
 add_action( 'init', __NAMESPACE__ . '\\register_program_affiliation' );
+// Register the engagement program funding source taxonomy.
+add_action( 'init', __NAMESPACE__ . '\\register_program_funding_source' );
 
 // Register Custom Post Type
 function register_muext_engagement_cpt() {
@@ -321,5 +323,43 @@ function register_program_affiliation() {
 		'rewrite'                    => array( 'slug' => 'affilation' ),
 	);
 	register_taxonomy( 'muext_program_affiliation', array( 'muext_engagement' ), $args );
+
+}
+function register_program_funding_source() {
+
+	$labels = array(
+		'name'                       => _x( 'Funding Source', 'Taxonomy General Name', 'muext-engagement' ),
+		'singular_name'              => _x( 'Funding Source', 'Taxonomy Singular Name', 'muext-engagement' ),
+		'menu_name'                  => __( 'Funding Source', 'muext-engagement' ),
+		'all_items'                  => __( 'All Funding Sources', 'muext-engagement' ),
+		'parent_item'                => __( 'Parent Funding Source', 'muext-engagement' ),
+		'parent_item_colon'          => __( 'Parent Funding Source:', 'muext-engagement' ),
+		'new_item_name'              => __( 'New Funding Source Name', 'muext-engagement' ),
+		'add_new_item'               => __( 'Add New Funding Source', 'muext-engagement' ),
+		'edit_item'                  => __( 'Edit Funding Source', 'muext-engagement' ),
+		'update_item'                => __( 'Update Funding Source', 'muext-engagement' ),
+		'view_item'                  => __( 'View Funding Source', 'muext-engagement' ),
+		'separate_items_with_commas' => __( 'Separate Funding Sources with commas', 'muext-engagement' ),
+		'add_or_remove_items'        => __( 'Add or remove Funding Sources', 'muext-engagement' ),
+		'choose_from_most_used'      => __( 'Choose from the most used', 'muext-engagement' ),
+		'popular_items'              => __( 'Popular Funding Sources', 'muext-engagement' ),
+		'search_items'               => __( 'Search Funding Sources', 'muext-engagement' ),
+		'not_found'                  => __( 'Not Found', 'muext-engagement' ),
+		'no_terms'                   => __( 'No affiliations', 'muext-engagement' ),
+		'items_list'                 => __( 'Funding Sources', 'muext-engagement' ),
+		'items_list_navigation'      => __( 'Funding Source list navigation', 'muext-engagement' ),
+	);
+	$args = array(
+		'labels'                     => $labels,
+		'hierarchical'               => true,
+		'public'                     => true,
+		'show_ui'                    => true,
+		'show_admin_column'          => true,
+		'show_in_nav_menus'          => true,
+		'show_tagcloud'              => true,
+		'show_in_rest'               => false,
+		'rewrite'                    => array( 'slug' => 'funding_cource' ),
+	);
+	register_taxonomy( 'muext_program_funding', array( 'muext_engagement' ), $args );
 
 }
