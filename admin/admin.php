@@ -424,6 +424,38 @@ function muext_program_info_meta_box() {
 		//'options' => array( 'textarea_rows' => 10, ),
 	) );
 	
+	// URL text field
+	$cmb->add_field( array(
+		'name' => __( 'Program URL', 'muext-engagement' ),
+		// 'desc' => __( 'field description (optional)', 'muext-engagement' ),
+		'id'   => $prefix . 'url',
+		'type' => 'text_url',
+		// 'protocols' => array('http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet'), // Array of allowed protocols
+		// 'repeatable' => true,
+	) );
+	
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Image for New Engagement', 'muext-engagement' ),
+		'id'         => 'engagement_image',
+		'type'       => 'text',
+		'attributes' => array(
+			'type' => 'file', // Let's use a standard file upload field
+		),
+	) );
+	
+	
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Affiliation', 'muext-engagement' ),
+		'id'         => 'affiliation',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_affiliation' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		//'inline'	 => true,
+	) );
+	
 	// Regular text field
 	$cmb->add_field( array(
 		'name'       => __( 'College or Affiliation. For reference only. (Do not update.)', 'muext-engagement' ),
@@ -437,16 +469,9 @@ function muext_program_info_meta_box() {
 		// 	'readonly' => 'readonly',
 		// ),
 	) );
+	
+	
 
-	// URL text field
-	$cmb->add_field( array(
-		'name' => __( 'Program URL', 'muext-engagement' ),
-		// 'desc' => __( 'field description (optional)', 'muext-engagement' ),
-		'id'   => $prefix . 'url',
-		'type' => 'text_url',
-		// 'protocols' => array('http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet'), // Array of allowed protocols
-		// 'repeatable' => true,
-	) );
 
 	/** WHEN **/
 	$cmb->add_field( array(
@@ -502,28 +527,6 @@ function muext_program_info_meta_box() {
 	// 	// 'inline'  => true, // Toggles display to inline
 	// ) );
 	// Add other metaboxes as needed
-	$cmb->add_field( array(
-		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Image for New Engagement', 'muext-engagement' ),
-		'id'         => 'engagement_image',
-		'type'       => 'text',
-		'attributes' => array(
-			'type' => 'file', // Let's use a standard file upload field
-		),
-	) );
-	
-	
-	$cmb->add_field( array(
-		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Affiliation', 'muext-engagement' ),
-		'id'         => 'affiliation',
-		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
-		'type'       => 'pw_multiselect',
-		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_affiliation' ),
-		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
-		//'inline'	 => true,
-	) );
-	
 	
 	//outcomes and impact
 	
@@ -533,7 +536,8 @@ function muext_program_info_meta_box() {
 		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
 		'type'    => 'textarea',
 		// 'options' => array( 'textarea_rows' => 10, ),
-		'save_field' => false, // Disables the saving of this field.
+		//'save_field' => false, // Disables the saving of this field.
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
 		// 'attributes' => array(
 		// 	'disabled' => 'disabled',
 		// 	'readonly' => 'readonly',
@@ -577,9 +581,7 @@ function muext_before_row_cb( $field_args, $field ) {
 	} else if( '_muext_start_date' == $field_args['id'] ){
 		echo '<div class="question-type">WHEN</div>';
 	} else if( '_muext_outcome_text' == $field_args['id'] ){
-		echo '<div class="outcomebox-start">SOMETHING</div>';
-	} else if( '_muext_outcome_text' == $field_args['id'] ){
-		echo '<div class="outcomebox-end"></div>';
+		echo '<div class="question-type">HOW....DID IT GO?</div>';
 	} 
 	
 	//var_dump( $field_args['id'] );
@@ -712,7 +714,7 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 	// Get any submission errors
 	if ( ( $error = $cmb->prop( 'submission_error' ) ) && is_wp_error( $error ) ) {
 		// If there was an error with the submission, add it to our ouput.
-		$output .= '<h3>' . sprintf( __( 'There was an error in the submission: %s', 'YOURTEXTDOMAIN' ), '<strong>'. $error->get_error_message() .'</strong>' ) . '</h3>';
+		$output .= '<h3>' . sprintf( __( 'There was an error in the submission: %s', 'muext-engagement' ), '<strong>'. $error->get_error_message() .'</strong>' ) . '</h3>';
 	}
 	
 	// If the post was submitted successfully, notify the user.
@@ -721,11 +723,11 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 		$name = get_post_meta( $post->ID, 'submitted_author_name', 1 );
 		$name = $name ? ' '. $name : '';
 		// Add notice of submission to our output
-		$output .= '<h3>' . sprintf( __( 'Thank you%s, your new Engagement has been submitted and is pending review by a curator.', 'YOURTEXTDOMAIN' ), esc_html( $name ) ) . '</h3>';
+		$output .= '<h3>' . sprintf( __( 'Thank you%s, your new Engagement has been submitted and is pending review by a curator.', 'muext-engagement' ), esc_html( $name ) ) . '</h3>';
 	}
 	
 	// Get our form
-	$output .= cmb2_get_metabox_form( $cmb, 'fake-object-id', array( 'save_button' => __( 'Submit Post', 'YOURTEXTDOMAIN' ) ) );
+	$output .= cmb2_get_metabox_form( $cmb, 'fake-object-id', array( 'save_button' => __( 'Save Engagement', 'muext-engagement' ) ) );
 	
 	
 	return $output;
