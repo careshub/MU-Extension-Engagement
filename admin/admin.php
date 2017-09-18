@@ -469,7 +469,7 @@ function muext_program_info_meta_box() {
 
 	$cmb->add_field( array(
 		'name' => esc_html__( 'Timeframe (text)', 'muext-engagement' ),
-		'desc' => esc_html__( 'A text description of when this occurred. For reference only. (Do not update.)', 'muext-engagement' ),
+		'desc' => esc_html__( 'If more detail is necessary to describe the Timeframe of the Engagement, do so here', 'muext-engagement' ),
 		'id'   => $prefix . 'timeframe',
 		'type' => 'text',
 		'save_field' => false, // Disables the saving of this field.
@@ -813,6 +813,8 @@ function muext_handle_frontend_new_post_form_submission() {
 	//now, taxonomies...
 	if ( $new_submission_id !== 0 ) {
         muext_select2_taxonomy_process( $new_submission_id, 'affiliation', 'muext_program_affiliation' );
+        muext_select2_taxonomy_process( $new_submission_id, 'audience', 'muext_program_audience' );
+        muext_select2_taxonomy_process( $new_submission_id, 'impact', 'muext_program_impact_area' );
 		
     }
 	
