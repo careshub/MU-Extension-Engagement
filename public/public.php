@@ -2,6 +2,10 @@
 
 namespace MU_Ext_Engagement\Public_Facing;
 
+// importing function from admin space?
+require (__DIR__ . '../../admin/admin.php');
+use function MU_Ext_Engagement\Admin\muext_frontend_form_submission_shortcode as admin_muext_frontend_form_submission_shortcode;
+
 // Load plugin text domain
 add_action( 'init', __NAMESPACE__ . '\\load_plugin_textdomain' );
 
@@ -22,6 +26,11 @@ add_action( 'template_redirect', __NAMESPACE__ . '\\reformat_get_string', 11 );
 // filter the Engagement Theme tag cloud to add highlight class and to count child posts and only display top-level
 //add_filter( 'wp_tag_cloud_args', __NAMESPACE__ . '\\filter_engagement_theme_tag_cloud_args' );
 add_filter('wp_generate_tag_cloud_data', __NAMESPACE__ . '\\muext_tag_cloud_class_active');
+
+//add shortcode to render form in admin/admin
+add_shortcode( 'cmb-frontend', 'MU_Ext_Engagement\Admin\muext_frontend_form_submission_shortcode' );
+
+
 
 /**
  * Load the plugin text domain for translation.

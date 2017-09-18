@@ -24,8 +24,11 @@ $plugin_basename = plugin_basename( plugin_dir_path( __DIR__ ) . 'loader.php' );
 add_filter( 'plugin_action_links_' . $plugin_basename, __NAMESPACE__ . '\\add_action_links' );
 
 // Add metaboxes
-// Program information
-add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_info_meta_box' );
+// Program information (admin and front end)
+//add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_info_meta_box' );
+add_action( 'cmb2_init', __NAMESPACE__ . '\\muext_program_info_meta_box' ); //If you use cmb2_admin_init, like in the example_functions.php file, to register your metaboxes, they will not be available on the front end. Use cmb2_init instead.
+add_action( 'cmb2_after_init', __NAMESPACE__ . '\\muext_handle_frontend_new_post_form_submission' );
+
 // Program outcomes
 add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_box' );
 
@@ -187,182 +190,23 @@ function muext_program_info_meta_box() {
 	) );
 
 	
-	$location_group_field_id = $cmb->add_field( array(
-		'id'          => '_muext_location_group',
-		'type'        => 'group',
-		'description' => __( 'Allows for more than one location info set', 'muext-engagement' ),
-		// 'repeatable'  => false, // use false if you want non-repeatable group
-		'options'     => array(
-			'group_title'   => __( 'Location {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
-			'add_button'    => __( 'Add Another Location', 'muext-engagement' ),
-			'remove_button' => __( 'Remove Location', 'muext-engagement' ),
-			'sortable'      => true, // beta
-			// 'closed'     => true, // true to have the groups closed by default
-		),
+	// Id's for group's fields only need to be unique for the group. Prefix is not needed.
+	$cmb->add_field( array(
+		'name' => 'Engagement Title *',
+		'id'   => $prefix . 'title',
+		'type' => 'text',
+		'attributes'  => array(
+			'placeholder' => 'Name your Engagement',
+		)
+		// 'repeatable' => true, // Repeatable fields are supported w/in repeatable groups (for most types)
 	) );
+		
 	
-	// Regular text field
-	$cmb->add_group_field( $location_group_field_id, array(
-	//$cmb->add_field( array(
-		'name'       => __( 'Location', 'muext-engagement' ),
-		'desc'       => __( 'Enter an address or the city and state.', 'muext-engagement' ),
-		'id'         => $prefix . 'location_text',
-		'type'       => 'text',
-		'repeatable'  => false
-	) );
-	// Regular text field
-	$cmb->add_field(  array(
-	//$cmb->add_field( array(
-		'name'       => __( 'Location - OLD', 'muext-engagement' ),
-		'desc'       => __( 'Enter an address or the city and state.', 'muext-engagement' ),
-		'id'         => $prefix . 'location_text',
-		'type'       => 'text',
-	) );
-
-	// Location details
-	// Return values from the API
-	// Street number => street_number
-	// Street name => route
-	// City => locality
-	// County => administrative_area_level_2
-	// State => administrative_area_level_1
-	// Country => country
-	// ZIP code => postal_code
-	$cmb->add_field( array(
-		'name'       => __( 'Street Number', 'muext-engagement' ),
-		'id'         => $prefix . 'street_number',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'Street Name', 'muext-engagement' ),
-		'id'         => $prefix . 'route',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'City', 'muext-engagement' ),
-		'id'         => $prefix . 'locality',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'County', 'muext-engagement' ),
-		'id'         => $prefix . 'administrative_area_level_2',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'State', 'muext-engagement' ),
-		'id'         => $prefix . 'administrative_area_level_1',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'Country', 'muext-engagement' ),
-		'id'         => $prefix . 'country',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'ZIP code', 'muext-engagement' ),
-		'id'         => $prefix . 'postal_code',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'Longitude', 'muext-engagement' ),
-		'id'         => $prefix . 'longitude',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_field( array(
-		'name'       => __( 'Latitude', 'muext-engagement' ),
-		'id'         => $prefix . 'latitude',
-		'type'       => 'hidden',
-	) );
-	
-	// Location details
-	// Return values from the API
-	// Street number => street_number
-	// Street name => route
-	// City => locality
-	// County => administrative_area_level_2
-	// State => administrative_area_level_1
-	// Country => country
-	// ZIP code => postal_code
-	
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'Street Number', 'muext-engagement' ),
-		'id'         => $prefix . 'street_number',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'Street Name', 'muext-engagement' ),
-		'id'         => $prefix . 'route',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'City', 'muext-engagement' ),
-		'id'         => $prefix . 'locality',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'County', 'muext-engagement' ),
-		'id'         => $prefix . 'administrative_area_level_2',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'State', 'muext-engagement' ),
-		'id'         => $prefix . 'administrative_area_level_1',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'Country', 'muext-engagement' ),
-		'id'         => $prefix . 'country',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'ZIP code', 'muext-engagement' ),
-		'id'         => $prefix . 'postal_code',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'Longitude', 'muext-engagement' ),
-		'id'         => $prefix . 'longitude',
-		'type'       => 'hidden',
-	) );
-	$cmb->add_group_field( $location_group_field_id, array(
-		'name'       => __( 'Latitude', 'muext-engagement' ),
-		'id'         => $prefix . 'latitude',
-		'type'       => 'hidden',
-	) );
-
-	
-	
-	// Regular text field
-	$cmb->add_field( array(
-		'name'       => __( 'Contact Person Name - OLD', 'muext-engagement' ),
-		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
-		'id'         => $prefix . 'contact_name',
-		'type'       => 'text',
-	) );
-
-	// Email text field
-	$cmb->add_field( array(
-		'name' => __( 'Contact Person Email - OLD', 'muext-engagement' ),
-		// 'desc' => __( 'field description (optional)', 'muext-engagement' ),
-		'id'   => $prefix . 'contact_email',
-		'type' => 'text_email',
-	) );
-
-	// Regular text field
-	$cmb->add_field( array(
-		'name'       => __( 'Contact Person Phone - OLD', 'muext-engagement' ),
-		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
-		'id'         => $prefix . 'contact_phone',
-		'type'       => 'text',
-		'sanitization_cb' => __NAMESPACE__ . '\\telephone_number_sanitization', // custom sanitization callback parameter
-	) );
-	
-	
-
+	/** WHO ***/
 	$contact_group_field_id = $cmb->add_field( array(
 		'id'          => '_muext_contact_group',
 		'type'        => 'group',
-		'description' => __( 'Allows for more than one contact info set', 'muext-engagement' ),
+		'description' => __( 'WHO', 'muext-engagement' ),
 		// 'repeatable'  => false, // use false if you want non-repeatable group
 		'options'     => array(
 			'group_title'   => __( 'Contact {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
@@ -394,7 +238,192 @@ function muext_program_info_meta_box() {
 		'type' => 'text',
 		'sanitization_cb' => __NAMESPACE__ . '\\telephone_number_sanitization', // custom sanitization callback parameter
 	) );
+	
+	// Regular text field
+	$cmb->add_field( array(
+		'name'       => __( 'Contact Person Name - OLD', 'muext-engagement' ),
+		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
+		'id'         => $prefix . 'contact_name',
+		'type'       => 'text',
+		'on_front'	 => false,
+	) );
 
+	// Email text field
+	$cmb->add_field( array(
+		'name' => __( 'Contact Person Email - OLD', 'muext-engagement' ),
+		// 'desc' => __( 'field description (optional)', 'muext-engagement' ),
+		'id'   => $prefix . 'contact_email',
+		'type' => 'text_email',
+		'on_front'	 => false,
+	) );
+
+	// Regular text field
+	$cmb->add_field( array(
+		'name'       => __( 'Contact Person Phone - OLD', 'muext-engagement' ),
+		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
+		'id'         => $prefix . 'contact_phone',
+		'type'       => 'text',
+		'on_front'	 => false,
+		'sanitization_cb' => __NAMESPACE__ . '\\telephone_number_sanitization', // custom sanitization callback parameter
+	) );
+	
+	/** WHERE **/
+	$location_group_field_id = $cmb->add_field( array(
+		'id'          => '_muext_location_group',
+		'type'        => 'group',
+		'description' => __( 'WHERE', 'muext-engagement' ),
+		// 'repeatable'  => false, // use false if you want non-repeatable group
+		'options'     => array(
+			'group_title'   => __( 'Location {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
+			'add_button'    => __( 'Add Another Location', 'muext-engagement' ),
+			'remove_button' => __( 'Remove Location', 'muext-engagement' ),
+			'sortable'      => true, // beta
+			// 'closed'     => true, // true to have the groups closed by default
+		),
+	) );
+	
+	// Regular text field
+	$cmb->add_group_field( $location_group_field_id, array(
+	//$cmb->add_field( array(
+		'name'       => __( 'Location', 'muext-engagement' ),
+		'desc'       => __( 'Enter an address or the city and state.', 'muext-engagement' ),
+		'id'         => $prefix . 'location_text',
+		'type'       => 'text',
+		//'repeatable'  => false
+	) );
+	// Regular text field
+	$cmb->add_field(  array(
+	//$cmb->add_field( array(
+		'name'       => __( 'Location - OLD', 'muext-engagement' ),
+		'desc'       => __( 'Enter an address or the city and state.', 'muext-engagement' ),
+		'id'         => $prefix . 'location_text',
+		'type'       => 'text',
+		'on_front'	 => false,
+	) );
+
+	// Location details
+	// Return values from the API
+	// Street number => street_number
+	// Street name => route
+	// City => locality
+	// County => administrative_area_level_2
+	// State => administrative_area_level_1
+	// Country => country
+	// ZIP code => postal_code
+	$cmb->add_field( array(
+		'name'       => __( 'Street Number', 'muext-engagement' ),
+		'id'         => $prefix . 'street_number',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Street Name', 'muext-engagement' ),
+		'id'         => $prefix . 'route',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'City', 'muext-engagement' ),
+		'id'         => $prefix . 'locality',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'County', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_2',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'State', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_1',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Country', 'muext-engagement' ),
+		'id'         => $prefix . 'country',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'ZIP code', 'muext-engagement' ),
+		'id'         => $prefix . 'postal_code',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Longitude', 'muext-engagement' ),
+		'id'         => $prefix . 'longitude',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_field( array(
+		'name'       => __( 'Latitude', 'muext-engagement' ),
+		'id'         => $prefix . 'latitude',
+		'type'       => 'hidden',
+	) );
+	
+	// Location details
+	// Return values from the API
+	// Street number => street_number
+	// Street name => route
+	// City => locality
+	// County => administrative_area_level_2
+	// State => administrative_area_level_1
+	// Country => country
+	// ZIP code => postal_code
+	
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Street Number', 'muext-engagement' ),
+		'id'         => $prefix . 'street_number',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Street Name', 'muext-engagement' ),
+		'id'         => $prefix . 'route',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'City', 'muext-engagement' ),
+		'id'         => $prefix . 'locality',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'County', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_2',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'State', 'muext-engagement' ),
+		'id'         => $prefix . 'administrative_area_level_1',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Country', 'muext-engagement' ),
+		'id'         => $prefix . 'country',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'ZIP code', 'muext-engagement' ),
+		'id'         => $prefix . 'postal_code',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Longitude', 'muext-engagement' ),
+		'id'         => $prefix . 'longitude',
+		'type'       => 'hidden',
+	) );
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'Latitude', 'muext-engagement' ),
+		'id'         => $prefix . 'latitude',
+		'type'       => 'hidden',
+	) );
+
+	
+
+	/** WHAT **/
+	$cmb->add_field( array(
+		'name'    => esc_html__( 'Description *', 'muext-engagement' ),
+		// 'desc'    => esc_html__( 'field description (optional)', 'cmb2' ),
+		'id'      => 'content', // This will be saved as the main post content.
+		'type'    => 'text',
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		//'options' => array( 'textarea_rows' => 10, ),
+	) );
+	
 	// Regular text field
 	$cmb->add_field( array(
 		'name'       => __( 'College or Affiliation. For reference only. (Do not update.)', 'muext-engagement' ),
@@ -402,6 +431,7 @@ function muext_program_info_meta_box() {
 		'id'         => $prefix . 'college_affiliation',
 		'type'       => 'text',
 		'save_field' => false, // Disables the saving of this field.
+		'on_front'	 => false,
 		// 'attributes' => array(
 		// 	'disabled' => 'disabled',
 		// 	'readonly' => 'readonly',
@@ -418,9 +448,28 @@ function muext_program_info_meta_box() {
 		// 'repeatable' => true,
 	) );
 
+	/** WHEN **/
+	$cmb->add_field( array(
+		'name' => esc_html__( 'Start Date', 'muext-engagement' ),
+		'desc' => esc_html__( 'Select the date that this engagement occurred. If the event spanned more than one day, select the start date.', 'cmb2' ),
+		'id'   => $prefix . 'start_date',
+		'type' => 'text_date',
+		'date_format' => 'Y-m-d',
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+	) );
+
+	$cmb->add_field( array(
+		'name' => esc_html__( 'End Date', 'muext-engagement' ),
+		'desc' => esc_html__( 'If the event spanned more than one day, select the end date.', 'cmb2' ),
+		'id'   => $prefix . 'end_date',
+		'type' => 'text_date',
+		'date_format' => 'Y-m-d',
+		'on_front'	 => false,
+	) );
+
 	$cmb->add_field( array(
 		'name' => esc_html__( 'Timeframe (text)', 'muext-engagement' ),
-		'desc' => esc_html__( 'A text description of when this occurred. For reference only. (Do not update.)', 'cmb2' ),
+		'desc' => esc_html__( 'A text description of when this occurred. For reference only. (Do not update.)', 'muext-engagement' ),
 		'id'   => $prefix . 'timeframe',
 		'type' => 'text',
 		'save_field' => false, // Disables the saving of this field.
@@ -432,7 +481,7 @@ function muext_program_info_meta_box() {
 	
 	$cmb->add_field( array(
 		'name' => esc_html__( 'Timeframe frequency', 'muext-engagement' ),
-		'desc' => esc_html__( 'Select the most applicable', 'cmb2' ),
+		'desc' => esc_html__( 'Select the most applicable', 'muext-engagement' ),
 		'id'   => $prefix . 'frequency',
 		'type' => 'select',
 		'options'          => array(
@@ -443,29 +492,6 @@ function muext_program_info_meta_box() {
 		),
 	) );
 
-	$cmb->add_field( array(
-		'name' => esc_html__( 'Date', 'muext-engagement' ),
-		'desc' => esc_html__( 'Select the date that this engagement occurred. If the event spanned more than one day, select the start date.', 'cmb2' ),
-		'id'   => $prefix . 'start_date',
-		'type' => 'text_date',
-		'date_format' => 'Y-m-d',
-	) );
-
-	$cmb->add_field( array(
-		'name' => esc_html__( 'End Date', 'muext-engagement' ),
-		'desc' => esc_html__( 'If the event spanned more than one day, select the end date.', 'cmb2' ),
-		'id'   => $prefix . 'end_date',
-		'type' => 'text_date',
-		'date_format' => 'Y-m-d',
-	) );
-
-	$cmb->add_field( array(
-		'name'    => esc_html__( 'Description', 'muext-engagement' ),
-		// 'desc'    => esc_html__( 'field description (optional)', 'cmb2' ),
-		'id'      => 'content', // This will be saved as the main post content.
-		'type'    => 'wysiwyg',
-		'options' => array( 'textarea_rows' => 10, ),
-	) );
 
 	// $cmb->add_field( array(
 	// 	'name'     => esc_html__( 'Test Taxonomy Multi Checkbox', 'cmb2' ),
@@ -475,9 +501,90 @@ function muext_program_info_meta_box() {
 	// 	'taxonomy' => 'muext_program_category', // Taxonomy Slug
 	// 	// 'inline'  => true, // Toggles display to inline
 	// ) );
-
 	// Add other metaboxes as needed
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Image for New Engagement', 'muext-engagement' ),
+		'id'         => 'engagement_image',
+		'type'       => 'text',
+		'attributes' => array(
+			'type' => 'file', // Let's use a standard file upload field
+		),
+	) );
+	
+	
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Affiliation', 'muext-engagement' ),
+		'id'         => 'affiliation',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_affiliation' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		//'inline'	 => true,
+	) );
+	
+	
+	//outcomes and impact
+	
+	$cmb->add_field( array(
+		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
+		'desc'    => esc_html__( 'Describe the outcomes of the Engagement', 'cmb2' ),
+		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
+		'type'    => 'textarea',
+		// 'options' => array( 'textarea_rows' => 10, ),
+		'save_field' => false, // Disables the saving of this field.
+		// 'attributes' => array(
+		// 	'disabled' => 'disabled',
+		// 	'readonly' => 'readonly',
+		// ),
+	) );
+	
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Audience', 'muext-engagement' ),
+		'id'         => 'audience',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_audience' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		//'inline'	 => true,
+	) );
+	
+	
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Impact', 'muext-engagement' ),
+		'id'         => 'impact',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_impact_area' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		//'inline'	 => true,
+	) );
 }
+
+
+
+/**
+ * Adds content before fields (based on 'id')
+ *
+ **/
+function muext_before_row_cb( $field_args, $field ) {
+	//if ( 'content' == $field->object_id ) {
+	if ( 'content' == $field_args['id'] ) { //if we're before the Description section
+		echo '<div class="question-type">WHAT</div>';
+	} else if( '_muext_start_date' == $field_args['id'] ){
+		echo '<div class="question-type">WHEN</div>';
+	} else if( '_muext_outcome_text' == $field_args['id'] ){
+		echo '<div class="outcomebox-start">SOMETHING</div>';
+	} else if( '_muext_outcome_text' == $field_args['id'] ){
+		echo '<div class="outcomebox-end"></div>';
+	} 
+	
+	//var_dump( $field_args['id'] );
+}
+
 
 /**
  * Define the program information metabox and field configurations.
@@ -540,6 +647,283 @@ function muext_program_outcomes_meta_box() {
 
 	// Add other metaboxes as needed
 }
+
+
+
+/******* FRONT END FORM FUNCTIONALITY *******/
+
+/**
+ * Gets the front-end-post-form cmb instance
+ *
+ * @return CMB2 object
+ */
+ 
+function muext_frontend_cmb2_get() {
+	// Use ID of metabox for frontend
+	$metabox_id = 'program_information';
+	// Post/object ID is not applicable since we're using this form for submission
+	$object_id  = 'fake-object-id';
+	// Get CMB2 metabox object
+	return cmb2_get_metabox( $metabox_id, $object_id );
+}
+
+/**
+ * Handle the cmb_frontend_form shortcode
+ *
+ * @param  array  $atts Array of shortcode attributes
+ * @return string       Form html
+ */
+ 
+function muext_frontend_form_submission_shortcode( $atts = array() ) {
+
+
+	// Get CMB2 metabox object
+	$cmb = muext_frontend_cmb2_get();
+	//$cmb = cmb2_get_metabox( 'program_information', 'fake-object-id' );
+	
+	// Get $cmb object_types
+	$post_types = $cmb->prop( 'object_types' );
+	
+	// Current user
+	$user_id = get_current_user_id();
+	
+	// Parse attributes
+	$atts = shortcode_atts( array(
+		'post_author' => $user_id ? $user_id : 1, // Current user, or admin
+		'post_status' => 'pending',
+		'post_type'   => reset( $post_types ), // Only use first object_type in array
+	), $atts, 'cmb-frontend' );
+	
+	//Let's add these attributes as hidden fields to our cmb form so that they will be passed through to our form submission
+
+	foreach ( $atts as $key => $value ) {
+		$cmb->add_hidden_field( array(
+			'field_args'  => array(
+				'id'    => "atts[$key]",
+				'type'  => 'hidden',
+				'default' => $value,
+			),
+		) );
+	}
+	
+	// Initiate our output variable
+	$output = '';
+	
+	// Get any submission errors
+	if ( ( $error = $cmb->prop( 'submission_error' ) ) && is_wp_error( $error ) ) {
+		// If there was an error with the submission, add it to our ouput.
+		$output .= '<h3>' . sprintf( __( 'There was an error in the submission: %s', 'YOURTEXTDOMAIN' ), '<strong>'. $error->get_error_message() .'</strong>' ) . '</h3>';
+	}
+	
+	// If the post was submitted successfully, notify the user.
+	if ( isset( $_GET['post_submitted'] ) && ( $post = get_post( absint( $_GET['post_submitted'] ) ) ) ) {
+		// Get submitter's name
+		$name = get_post_meta( $post->ID, 'submitted_author_name', 1 );
+		$name = $name ? ' '. $name : '';
+		// Add notice of submission to our output
+		$output .= '<h3>' . sprintf( __( 'Thank you%s, your new Engagement has been submitted and is pending review by a curator.', 'YOURTEXTDOMAIN' ), esc_html( $name ) ) . '</h3>';
+	}
+	
+	// Get our form
+	$output .= cmb2_get_metabox_form( $cmb, 'fake-object-id', array( 'save_button' => __( 'Submit Post', 'YOURTEXTDOMAIN' ) ) );
+	
+	
+	return $output;
+}
+//add_shortcode( 'cmb-frontend', 'muext_frontend_form_submission_shortcode' );
+
+
+/**
+ * Handles form submission on save. Redirects if save is successful, otherwise sets an error message as a cmb property
+ *
+ * @return void
+ */
+ 
+function muext_handle_frontend_new_post_form_submission() {
+	// If no form submission, bail
+	if ( empty( $_POST ) || ! isset( $_POST['submit-cmb'], $_POST['object_id'] ) ) {
+		return false;
+	}
+	// Get CMB2 metabox object
+	$cmb = muext_frontend_cmb2_get();
+	$post_data = array();
+	
+	// Get our shortcode attributes and set them as our initial post_data args
+	if ( isset( $_POST['atts'] ) ) {
+		foreach ( (array) $_POST['atts'] as $key => $value ) {
+			$post_data[ $key ] = sanitize_text_field( $value );
+		}
+		unset( $_POST['atts'] );
+	}
+	
+	// Check security nonce
+	if ( ! isset( $_POST[ $cmb->nonce() ] ) || ! wp_verify_nonce( $_POST[ $cmb->nonce() ], $cmb->nonce() ) ) {
+		return $cmb->prop( 'submission_error', new \WP_Error( 'security_fail', __( 'Security check failed.' ) ) );
+	}
+	
+	// Check title submitted
+	if ( empty( $_POST['_muext_title'] ) ) {
+		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'New post requires a title.' ) ) );
+	}
+	// Check title submitted
+	if ( empty( $_POST['content'] ) ) {
+		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'Engagement requires a description.' ) ) );
+	}
+	
+	// And that the title is not the default title
+	if ( $cmb->get_field( '_muext_title' )->default() == $_POST['_muext_title'] ) {
+		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'Please enter a new title.' ) ) );
+	}
+	/**
+	 * Fetch sanitized values
+	 */
+	 
+	$sanitized_values = $cmb->get_sanitized_values( $_POST );
+	// Set our post data arguments
+	$post_data['post_title']   = $sanitized_values['_muext_title'];
+	unset( $sanitized_values['_muext_title'] );
+	
+	$post_data['post_content'] = $sanitized_values['content'];
+	unset( $sanitized_values['content'] );
+	
+	// Create the new post
+	$new_submission_id = wp_insert_post( $post_data, true );
+	
+	// If we hit a snag, update the user
+	if ( is_wp_error( $new_submission_id ) ) {
+		return $cmb->prop( 'submission_error', $new_submission_id );
+	}
+	$cmb->save_fields( $new_submission_id, 'post', $sanitized_values );
+	
+	/**
+	 * Other than post_type and post_status, we want
+	 * our uploaded attachment post to have the same post-data
+	 */
+	unset( $post_data['post_type'] );
+	unset( $post_data['post_status'] );
+	
+	// Try to upload the featured image
+	$img_id = muext_frontend_form_photo_upload( $new_submission_id, $post_data );
+	
+	// If our photo upload was successful, set the featured image
+	if ( $img_id && ! is_wp_error( $img_id ) ) {
+		set_post_thumbnail( $new_submission_id, $img_id );
+	}
+	
+	//now, taxonomies...
+	if ( $new_submission_id !== 0 ) {
+        muext_select2_taxonomy_process( $new_submission_id, 'affiliation', 'muext_program_affiliation' );
+		
+    }
+	
+	/*
+	 * Redirect back to the form page with a query variable with the new post ID.
+	 * This will help double-submissions with browser refreshes
+	 */
+	wp_redirect( esc_url_raw( add_query_arg( 'post_submitted', $new_submission_id ) ) );
+	exit;
+}
+
+
+
+
+/**
+ * Handles uploading a file to a WordPress post
+ *
+ * @param  int   $post_id              Post ID to upload the photo to
+ * @param  array $attachment_post_data Attachement post-data array
+ */
+ 
+function muext_frontend_form_photo_upload( $post_id, $attachment_post_data = array() ) {
+	// Make sure the right files were submitted
+	if (
+		empty( $_FILES )
+		|| ! isset( $_FILES['engagement_image'] )
+		|| isset( $_FILES['engagement_image']['error'] ) && 0 !== $_FILES['engagement_image']['error']
+	) {
+		//var_dump( $_FILES );
+		return;
+	}
+	
+	// Filter out empty array values
+	$files = array_filter( $_FILES['engagement_image'] );
+	
+	// Make sure files were submitted at all
+	if ( empty( $files ) ) {
+		return;
+	}
+	// Make sure to include the WordPress media uploader API if it's not (front-end)
+	if ( ! function_exists( 'media_handle_upload' ) ) {
+		require_once( ABSPATH . 'wp-admin/includes/image.php' );
+		require_once( ABSPATH . 'wp-admin/includes/file.php' );
+		require_once( ABSPATH . 'wp-admin/includes/media.php' );
+	}
+	// Upload the file and send back the attachment post ID
+	return media_handle_upload( 'engagement_image', $post_id, $attachment_post_data );
+}
+
+
+//https://halfelf.org/2017/cmb2-select2-taxonomies/
+/**
+ * Saves taxonomy terms
+ *
+ **/
+function muext_select2_taxonomy_process( $post_id, $postmeta, $taxonomy ) {
+ 
+    $get_post_meta = get_post_meta( $post_id, $postmeta, true );
+    $get_the_terms = get_the_terms( $post_id, $taxonomy );
+ 
+    if ( is_array( $get_post_meta ) ) {
+        // If we already have the post meta, then we should set the terms
+        $get_post_meta   = array_map( 'intval', $get_post_meta );
+        $get_post_meta   = array_unique( $get_post_meta );
+        $set_the_terms = array();
+ 
+        foreach( $get_post_meta as $term_id ) {
+            $term = get_term_by( 'id' , $term_id, $taxonomy );
+            array_push( $set_the_terms, $term->slug );
+        }
+ 
+        wp_set_object_terms( $post_id, $set_the_terms , $taxonomy );
+ 
+    } elseif ( $get_the_terms && ! is_wp_error( $get_the_terms ) ) {
+        // If there's no post meta, we force the terms to be the default
+        $get_post_meta = array();
+        foreach( $get_the_terms as $term ) {
+            $term_id = $term->term_id;
+            array_push( $get_post_meta, $term_id );
+        }
+        update_post_meta( $post_id, $postmeta, $get_post_meta );
+    }
+ 
+}
+
+/**
+ * Get a list of terms
+ *
+ * Generic function to return an array of taxonomy terms formatted for CMB2.
+ * Simply pass in your get_terms arguments and get back a beautifully formatted
+ * CMB2 options array.
+ *
+ * @param string|array $taxonomies Taxonomy name or list of Taxonomy names
+ * @param  array|string $query_args Optional. Array or string of arguments to get terms
+ * @return array CMB2 options array
+ */
+function muext_get_cmb_options_array_tax( $taxonomies, $query_args = '' ) {
+	$defaults = array(
+		'hide_empty' => false
+	);
+	$args = wp_parse_args( $query_args, $defaults );
+	$terms = get_terms( $taxonomies, $args );
+	$terms_array = array();
+	if ( ! empty( $terms ) ) {
+		foreach ( $terms as $term ) {
+			$terms_array[$term->term_id] = $term->name;
+		}
+	}
+	return $terms_array;
+}
+
 
 /**
  * Handles sanitization for telephone number fields.
