@@ -215,6 +215,7 @@ function muext_program_info_meta_box() {
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
+		'classes' => 'contact-class',
 	) );
 
 	// Id's for group's fields only need to be unique for the group. Prefix is not needed.
@@ -280,6 +281,7 @@ function muext_program_info_meta_box() {
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
+		'classes' => 'location-class',
 	) );
 	
 	// Regular text field
@@ -594,7 +596,7 @@ function muext_before_row_cb( $field_args, $field ) {
 	} else if( '_muext_start_date' == $field_args['id'] ){
 		echo '<div class="question-type">WHEN</div>';
 	} else if( '_muext_outcome_text' == $field_args['id'] ){
-		echo '<div class="question-type">IMPACT</div>';
+		echo '<div class="question-type">WHY</div>';
 	} else if( 'funding' == $field_args['id'] ){
 		echo '<div class="question-type">HOW</div>';
 	} 
