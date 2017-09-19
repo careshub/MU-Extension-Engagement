@@ -14,13 +14,13 @@
 $post_id  = get_the_ID();
 
 //older data = string in '_muext_location_text'; newer data = array (repeater field) in '_muext_location_group'
-$location = get_post_meta( $post_id, '_muext_location_text', true );
-if( empty( $location ) ){ //see if it's stored in the new location group format
-	$location = get_post_meta( $post_id, '_muext_location_group', true );
+$location = get_post_meta( $post_id, '_muext_location_group', true );
+if( empty( $location ) ){ //see if it's stored in the old location group format
+	$location = get_post_meta( $post_id, '_muext_location_text', true );
 }
-$contact  = get_post_meta( $post_id, '_muext_contact_name', true );
-if( empty( $contact ) ){ //see if it's stored in the new contact group format
 	$contact = get_post_meta( $post_id, '_muext_contact_group', true );
+if( empty( $contact ) ){ //see if it's stored in the old contact format
+	$contact  = get_post_meta( $post_id, '_muext_contact_name', true );
 }
 
 
@@ -147,7 +147,7 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 										<?php if ( $one_contact["_muext_contact_phone"] ) : ?>
 											&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $one_contact["_muext_contact_phone"]; ?></a>
 										<?php endif; ?>
-								
+										<br />
 							<?php } ?>
 						</div>
 					<?php

@@ -500,10 +500,10 @@ function muext_program_info_meta_box() {
 		'id'   => $prefix . 'frequency',
 		'type' => 'select',
 		'options'          => array(
+			'N/A'     => __( 'N/A', 'cmb2' ),
 			'recurring' => __( 'recurring', 'cmb2' ),
 			'ongoing'   => __( 'ongoing/continuous', 'cmb2' ),
 			'ended'     => __( 'ended', 'cmb2' ),
-			'N/A'     => __( 'N/A', 'cmb2' ),
 		),
 	) );
 	
