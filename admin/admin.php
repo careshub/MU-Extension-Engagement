@@ -210,8 +210,8 @@ function muext_program_info_meta_box() {
 		// 'repeatable'  => false, // use false if you want non-repeatable group
 		'options'     => array(
 			'group_title'   => __( 'Contact {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
-			'add_button'    => __( 'Add Another Contact', 'muext-engagement' ),
-			'remove_button' => __( 'Remove Contact', 'muext-engagement' ),
+			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Another Contact', 'muext-engagement' ),
+			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove Contact', 'muext-engagement' ),
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
@@ -275,8 +275,8 @@ function muext_program_info_meta_box() {
 		// 'repeatable'  => false, // use false if you want non-repeatable group
 		'options'     => array(
 			'group_title'   => __( 'Location {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
-			'add_button'    => __( 'Add Another Location', 'muext-engagement' ),
-			'remove_button' => __( 'Remove Location', 'muext-engagement' ),
+			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Another Location', 'muext-engagement' ),
+			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove Location', 'muext-engagement' ),
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
