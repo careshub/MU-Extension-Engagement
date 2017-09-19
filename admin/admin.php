@@ -211,7 +211,7 @@ function muext_program_info_meta_box() {
 		'options'     => array(
 			'group_title'   => __( 'Contact {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
 			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Another Contact', 'muext-engagement' ),
-			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove Contact', 'muext-engagement' ),
+			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove This Contact', 'muext-engagement' ),
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
@@ -276,7 +276,7 @@ function muext_program_info_meta_box() {
 		'options'     => array(
 			'group_title'   => __( 'Location {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
 			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Another Location', 'muext-engagement' ),
-			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove Location', 'muext-engagement' ),
+			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove This Location', 'muext-engagement' ),
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
@@ -493,18 +493,6 @@ function muext_program_info_meta_box() {
 	) );
 
 	$cmb->add_field( array(
-		'name' => esc_html__( 'Timeframe (text)', 'muext-engagement' ),
-		'desc' => esc_html__( 'If more detail is necessary to describe the Timeframe of the Engagement, do so here', 'muext-engagement' ),
-		'id'   => $prefix . 'timeframe',
-		'type' => 'text',
-		'save_field' => false, // Disables the saving of this field.
-		// 'attributes' => array(
-		// 	'disabled' => 'disabled',
-		// 	'readonly' => 'readonly',
-		// ),
-	) );
-	
-	$cmb->add_field( array(
 		'name' => esc_html__( 'Timeframe frequency', 'muext-engagement' ),
 		'desc' => esc_html__( 'Select the most applicable', 'muext-engagement' ),
 		'id'   => $prefix . 'frequency',
@@ -516,7 +504,32 @@ function muext_program_info_meta_box() {
 			'N/A'     => __( 'N/A', 'cmb2' ),
 		),
 	) );
-
+	
+	$cmb->add_field( array(
+		'name' => esc_html__( 'Timeframe (text)', 'muext-engagement' ),
+		'desc' => esc_html__( 'If more detail is necessary to describe the Timeframe of the Engagement, do so here', 'muext-engagement' ),
+		'id'   => $prefix . 'timeframe',
+		'type' => 'text',
+		'save_field' => false, // Disables the saving of this field.
+		// 'attributes' => array(
+		// 	'disabled' => 'disabled',
+		// 	'readonly' => 'readonly',
+		// ),
+	) );
+	
+	//$$$$ bills,y all
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Funding Source', 'muext-engagement' ),
+		'id'         => 'funding',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_funding' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		//'inline'	 => true,
+	) );
+	
 
 	// $cmb->add_field( array(
 	// 	'name'     => esc_html__( 'Test Taxonomy Multi Checkbox', 'cmb2' ),
@@ -581,7 +594,9 @@ function muext_before_row_cb( $field_args, $field ) {
 	} else if( '_muext_start_date' == $field_args['id'] ){
 		echo '<div class="question-type">WHEN</div>';
 	} else if( '_muext_outcome_text' == $field_args['id'] ){
-		echo '<div class="question-type">HOW....DID IT GO?</div>';
+		echo '<div class="question-type">IMPACT</div>';
+	} else if( 'funding' == $field_args['id'] ){
+		echo '<div class="question-type">HOW</div>';
 	} 
 	
 	//var_dump( $field_args['id'] );
