@@ -461,7 +461,7 @@ function muext_program_info_meta_box() {
 	) );
 	
 	
-	//$$$$ bills,y all
+	//THEME
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
 		'name'       => __( 'Theme', 'muext-engagement' ),
@@ -476,6 +476,8 @@ function muext_program_info_meta_box() {
 		)
 		//'inline'	 => true,
 	) );
+	
+	
 	// Regular text field
 	$cmb->add_field( array(
 		'name'       => __( 'College or Affiliation. For reference only. (Do not update.)', 'muext-engagement' ),
@@ -567,6 +569,7 @@ function muext_program_info_meta_box() {
 	// ) );
 	// Add other metaboxes as needed
 	
+	/** WHY **/
 	//outcomes and impact
 	
 	$cmb->add_field( array(
@@ -584,6 +587,23 @@ function muext_program_info_meta_box() {
 		// 	'disabled' => 'disabled',
 		// 	'readonly' => 'readonly',
 		// ),
+	) );
+	
+	
+	//THEME
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Outreach Type', 'muext-engagement' ),
+		'id'         => 'type',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_outreach_type' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		'attributes'  => array(
+			'placeholder' => '',
+		)
+		//'inline'	 => true,
 	) );
 	
 	$cmb->add_field( array(
@@ -1019,7 +1039,7 @@ function muext_handle_frontend_new_post_form_submission() {
         muext_select2_taxonomy_process( $new_submission_id, 'audience', 'muext_program_audience' );
         muext_select2_taxonomy_process( $new_submission_id, 'impact', 'muext_program_impact_area' );
         muext_select2_taxonomy_process( $new_submission_id, 'theme', 'muext_program_category' );
-        muext_select2_taxonomy_process( $new_submission_id, 'type', 'muext_program_impact_area' );
+        muext_select2_taxonomy_process( $new_submission_id, 'type', 'muext_program_outreach_type' );
 		
     }
 	
