@@ -223,6 +223,7 @@ function muext_program_info_meta_box() {
 		'name' => 'Name',
 		'id'   => $prefix . 'contact_name',
 		'type' => 'text',
+		//'render_row_cb' => __NAMESPACE__ . '\\muext_render_row_cb',
 		// 'repeatable' => true, // Repeatable fields are supported w/in repeatable groups (for most types)
 	) );
 
@@ -438,8 +439,9 @@ function muext_program_info_meta_box() {
 	
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Image for New Engagement', 'muext-engagement' ),
+		'name'       => __( 'Set Featured Image', 'muext-engagement' ),
 		'id'         => 'engagement_image',
+		'desc'		 => 'Must be .png, .gif or .jpg format. Recommended resolution: 1000px x 800px',
 		'type'       => 'text',
 		'attributes' => array(
 			'type' => 'file', // Let's use a standard file upload field
@@ -458,6 +460,22 @@ function muext_program_info_meta_box() {
 		//'inline'	 => true,
 	) );
 	
+	
+	//$$$$ bills,y all
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Theme', 'muext-engagement' ),
+		'id'         => 'theme',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_category' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		'attributes'  => array(
+			'placeholder' => '',
+		)
+		//'inline'	 => true,
+	) );
 	// Regular text field
 	$cmb->add_field( array(
 		'name'       => __( 'College or Affiliation. For reference only. (Do not update.)', 'muext-engagement' ),
@@ -495,7 +513,7 @@ function muext_program_info_meta_box() {
 	) );
 
 	$cmb->add_field( array(
-		'name' => esc_html__( 'Timeframe frequency', 'muext-engagement' ),
+		'name' => esc_html__( 'Frequency', 'muext-engagement' ),
 		'desc' => esc_html__( 'Select the most applicable', 'muext-engagement' ),
 		'id'   => $prefix . 'frequency',
 		'type' => 'select',
@@ -512,7 +530,10 @@ function muext_program_info_meta_box() {
 		'desc' => esc_html__( 'If more detail is necessary to describe the Timeframe of the Engagement, do so here', 'muext-engagement' ),
 		'id'   => $prefix . 'timeframe',
 		'type' => 'text',
-		'save_field' => false, // Disables the saving of this field.
+		//'save_field' => false, // Disables the saving of this field.
+		'attributes'  => array(
+			'placeholder' => 'e.g., occurs once every spring semester',
+		)
 		// 'attributes' => array(
 		// 	'disabled' => 'disabled',
 		// 	'readonly' => 'readonly',
@@ -529,6 +550,9 @@ function muext_program_info_meta_box() {
 		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_funding' ),
 		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
 		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		'attributes'  => array(
+			'placeholder' => '',
+		)
 		//'inline'	 => true,
 	) );
 	
@@ -553,6 +577,9 @@ function muext_program_info_meta_box() {
 		// 'options' => array( 'textarea_rows' => 10, ),
 		//'save_field' => false, // Disables the saving of this field.
 		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		'attributes'  => array(
+			'placeholder' => 'e.g., Success Story, demographic information..',
+		)
 		// 'attributes' => array(
 		// 	'disabled' => 'disabled',
 		// 	'readonly' => 'readonly',
@@ -604,6 +631,30 @@ function muext_before_row_cb( $field_args, $field ) {
 	//var_dump( $field_args['id'] );
 }
 
+/**
+ * Manually render a field.
+ *
+ * @param  array      $field_args Array of field arguments.
+ * @param  CMB2_Field $field      The field object.
+ */
+function muext_render_row_cb( $field_args, $field ) {
+	
+	//var_dump( $field );
+	
+	$classes     = $field->row_classes();
+	$id          = $field->args( 'id' );
+	$label       = $field->args( 'name' );
+	$name        = $field->args( '_name' );
+	$value       = $field->escaped_value();
+	$description = $field->args( 'description' );
+	?>
+	<div class="custom-field-row <?php echo esc_attr( $classes ); ?>">
+		<p><label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label></p>
+		<p><input id="<?php echo esc_attr( $id ); ?>" type="text" name="<?php echo esc_attr( $name ); ?>" value="<?php echo $value; ?>"/></p>
+		<p class="description"><?php echo esc_html( $description ); ?></p>
+	</div>
+	<?php
+}
 
 /**
  * Define the program information metabox and field configurations.
@@ -694,18 +745,30 @@ function muext_frontend_cmb2_get() {
  */
  
 function muext_frontend_form_submission_shortcode( $atts = array() ) {
+	global $post;
 
-
+	
+	$metabox_id = 'program_information';
 	// Get CMB2 metabox object
-	$cmb = muext_frontend_cmb2_get();
+	//$cmb = muext_frontend_cmb2_get();
 	//$cmb = cmb2_get_metabox( 'program_information', 'fake-object-id' );
 	
 	// Get $cmb object_types
-	$post_types = $cmb->prop( 'object_types' );
+	//$post_types = $cmb->prop( 'object_types' );
 	
 	// Current user
 	$user_id = get_current_user_id();
 	
+	
+	if ( ! isset( $atts['post_id'] ) ) {
+		$object_id = 'fake-object-id';
+	} else {
+		$object_id = absint( $atts['post_id'] );
+	}
+	
+	//var_dump( $object_id );
+	
+	/*
 	// Parse attributes
 	$atts = shortcode_atts( array(
 		'post_author' => $user_id ? $user_id : 1, // Current user, or admin
@@ -724,9 +787,11 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 			),
 		) );
 	}
+	*/
 	
 	// Initiate our output variable
 	$output = '';
+	$cmb = cmb2_get_metabox( $metabox_id, $object_id );
 	
 	// Get any submission errors
 	if ( ( $error = $cmb->prop( 'submission_error' ) ) && is_wp_error( $error ) ) {
@@ -740,17 +805,136 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 		$name = get_post_meta( $post->ID, 'submitted_author_name', 1 );
 		$name = $name ? ' '. $name : '';
 		// Add notice of submission to our output
-		$output .= '<h3>' . sprintf( __( 'Thank you%s, your new Engagement has been submitted and is pending review by a curator.', 'muext-engagement' ), esc_html( $name ) ) . '</h3>';
+		$output .= '<h3 class="message">' . sprintf( __( 'Thank you%s, your new Engagement has been submitted and is pending review by a curator.  Add another Engagement below.', 'muext-engagement' ), esc_html( $name ) ) . '</h3>';
 	}
 	
 	// Get our form
-	$output .= cmb2_get_metabox_form( $cmb, 'fake-object-id', array( 'save_button' => __( 'Save Engagement', 'muext-engagement' ) ) );
+	$output .= cmb2_get_metabox_form( $metabox_id, $object_id, array( 'save_button' => __( 'Save Engagement', 'muext-engagement' ) ) );
 	
 	
 	return $output;
 }
 //add_shortcode( 'cmb-frontend', 'muext_frontend_form_submission_shortcode' );
 
+
+//21sept2017: ON HOLD until Mel can find a hook for 'after repeater group added'...UUGH
+//add_action('cmb2_init', __NAMESPACE__ . '\\muext_remove_disabled_buttonrows_init');
+//add_action('cmb2_add_group_row_start', __NAMESPACE__ . '\\muext_remove_disabled_buttonrows');
+
+/**
+ * Remove rows with disabled buttons on group add (TODO: reword this when more coffeed)
+ *
+ **/
+function muext_remove_disabled_buttonrows_init(){
+
+	if(!wp_script_is('jquery', 'done')) {
+		wp_enqueue_script('jquery');
+	}
+	
+	wp_add_inline_script( 'jquery-migrate', inline_js_for_buttonrows() );
+	?>
+	
+	<?php
+	
+}
+
+function muext_remove_disabled_buttonrows(){
+	
+	error_log( 'in buttonrows');
+?>
+	<script type='text/javascript'>
+		jQuery(document).ready(function($) {
+
+			console.log( 'muext_remove_disabled_buttonrows');
+			var all_groups = jQuery( '.cmb-repeatable-grouping' );
+			
+			jQuery.each( all_groups, function(){
+				if( jQuery(this).find('.cmb-remove-group-row-button').is(':disabled') ){ //it's the first (and required) in the grouping
+					//console.log( this );
+					//hide the remove button
+					jQuery( this ).find('.cmb-remove-field-row').addClass('hidden');
+				} else {
+					jQuery( this ).find('.cmb-remove-field-row').removeClass('hidden');
+				}
+			});
+		});
+	</script>
+
+<?php
+}
+
+function inline_js_for_buttonrows(){
+	
+	
+	//error_log( 'in inline_js_for_buttonrows');
+	
+	$output = "<script type='text/javascript'>
+		jQuery(document).ready(function($) {
+
+			console.log( 'muext_remove_disabled_buttonrows');
+			var all_groups = jQuery( '.cmb-repeatable-grouping' );
+			
+			jQuery.each( all_groups, function(){
+				if( jQuery(this).find('.cmb-remove-group-row-button').is(':disabled') ){ //it's the first (and required) in the grouping
+					//console.log( this );
+					//hide the remove button
+					jQuery( this ).find('.cmb-remove-field-row').addClass('hidden');
+				} else {
+					jQuery( this ).find('.cmb-remove-field-row').removeClass('hidden');
+				}
+			});
+		});
+	</script>";
+	
+	return $output;
+}
+
+//TEST CODE
+/**
+ * Shortcode to display a CMB2 form for a post ID.
+ * @param  array  $atts Shortcode attributes
+ * @return string       Form HTML markup
+ */
+function cmb2_do_frontend_form_shortcode( $atts = array() ) {
+	global $post;
+
+	/**
+	 * Depending on your setup, check if the user has permissions to edit_posts
+	 */
+	if ( ! current_user_can( 'edit_posts' ) ) {
+		return __( 'You do not have permissions to edit this post.', 'lang_domain' );
+	}
+
+	/**
+	 * Make sure a WordPress post ID is set.
+	 * We'll default to the current post/page
+	 */
+	if ( ! isset( $atts['post_id'] ) ) {
+		$atts['post_id'] = 'fake-object-id';
+	} else {
+		$atts['post_id'] = $post->ID;
+	}
+
+	// If no metabox id is set, yell about it
+	if ( empty( $atts['id'] ) ) {
+		$atts['id'] = 'program_information';
+	}
+
+	$metabox_id = esc_attr( $atts['id'] );
+	$object_id = absint( $atts['post_id'] );
+	// Get our form
+	$form = cmb2_get_metabox_form( $metabox_id, $object_id, $atts );
+	
+	//get and insert field values (Mel canNOT find a function for this although it HAS to exist if this shows on admin screens, yes?)
+	
+	
+	$form2 = cmb2_get_metabox( $metabox_id, $object_id );
+	
+	//$field_values = muext_get_field_values( $form2 );
+	
+	//var_dump( $field_values );
+	return $form;
+}
 
 /**
  * Handles form submission on save. Redirects if save is successful, otherwise sets an error message as a cmb property
@@ -834,6 +1018,8 @@ function muext_handle_frontend_new_post_form_submission() {
         muext_select2_taxonomy_process( $new_submission_id, 'affiliation', 'muext_program_affiliation' );
         muext_select2_taxonomy_process( $new_submission_id, 'audience', 'muext_program_audience' );
         muext_select2_taxonomy_process( $new_submission_id, 'impact', 'muext_program_impact_area' );
+        muext_select2_taxonomy_process( $new_submission_id, 'theme', 'muext_program_category' );
+        muext_select2_taxonomy_process( $new_submission_id, 'type', 'muext_program_impact_area' );
 		
     }
 	
@@ -845,7 +1031,36 @@ function muext_handle_frontend_new_post_form_submission() {
 	exit;
 }
 
-
+/**
+ * Returns field values for a metabox object
+ *
+ * @params object. CMB metabox object
+ * @return array.  Array of field values in system by id.
+ *
+ **/
+function muext_get_field_values( $cmb_obj ){
+	
+	$fields = $form2->meta_box["fields"];
+	
+	$field_ids = array();
+	$field_values = array();
+	
+	//get field ids
+	foreach( $fields as $id => $val ){
+		if( $id == "id" ){
+			array_push( $field_ids, $val );
+		}
+	}
+	
+	foreach( $field_ids as $one_id ){
+		//$field_values[ $one_id ] = 
+		
+		
+	}
+	//cmb2_get_field_value( $meta_box, $field_id, $object_id = 0, $object_type = '' )
+	
+	
+}
 
 
 /**
