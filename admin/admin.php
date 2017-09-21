@@ -232,6 +232,7 @@ function muext_program_info_meta_box() {
 		//'description' => 'Write a short description for this entry',
 		'id'   => $prefix . 'contact_email',
 		'type' => 'text_email',
+		'classes' => 'inline-desktop',
 	) );
 
 	$cmb->add_group_field( $contact_group_field_id, array(
@@ -239,6 +240,7 @@ function muext_program_info_meta_box() {
 		'id'   => $prefix . 'contact_phone',
 		'type' => 'text',
 		'sanitization_cb' => __NAMESPACE__ . '\\telephone_number_sanitization', // custom sanitization callback parameter
+		'classes' => 'inline-desktop',
 	) );
 	
 	// Regular text field
@@ -498,7 +500,7 @@ function muext_program_info_meta_box() {
 	/** WHEN **/
 	$cmb->add_field( array(
 		'name' => esc_html__( 'Start Date', 'muext-engagement' ),
-		'desc' => esc_html__( 'Select the date that this engagement occurred. If the event spanned more than one day, select the start date.', 'cmb2' ),
+		'desc' => esc_html__( 'Select the rought date that this engagement occurred.', 'cmb2' ),
 		'id'   => $prefix . 'start_date',
 		'type' => 'text_date',
 		'date_format' => 'Y-m-d',
@@ -528,8 +530,8 @@ function muext_program_info_meta_box() {
 	) );
 	
 	$cmb->add_field( array(
-		'name' => esc_html__( 'Timeframe (text)', 'muext-engagement' ),
-		'desc' => esc_html__( 'If more detail is necessary to describe the Timeframe of the Engagement, do so here', 'muext-engagement' ),
+		'name' => 'Timeframe (text) - <em>Note: will not show on Engagement. Informational only.</em>',
+		'desc' => esc_html__( 'If more detail is necessary to describe the Timeframe of the Engagement, do so here.', 'muext-engagement' ),
 		'id'   => $prefix . 'timeframe',
 		'type' => 'text',
 		//'save_field' => false, // Disables the saving of this field.
