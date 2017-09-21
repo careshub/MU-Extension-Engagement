@@ -830,7 +830,7 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 	}
 	
 	// Get our form
-	$output .= cmb2_get_metabox_form( $metabox_id, $object_id, array( 'save_button' => __( 'Save Engagement', 'muext-engagement' ) ) );
+	$output .= cmb2_get_metabox_form( $metabox_id, $object_id, array( 'save_button' => __( 'Submit Engagement', 'muext-engagement' ) ) );
 	
 	
 	return $output;
