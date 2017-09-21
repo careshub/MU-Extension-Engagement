@@ -542,6 +542,7 @@ function muext_program_info_meta_box() {
 		// ),
 	) );
 	
+	/** HOW ***/
 	//$$$$ bills,y all
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
@@ -558,6 +559,22 @@ function muext_program_info_meta_box() {
 		//'inline'	 => true,
 	) );
 	
+	
+	//OUTREACH TYPE
+	$cmb->add_field( array(
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Outreach Type', 'muext-engagement' ),
+		'id'         => 'type',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_outreach_type' ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		'attributes'  => array(
+			'placeholder' => '',
+		)
+		//'inline'	 => true,
+	) );
 
 	// $cmb->add_field( array(
 	// 	'name'     => esc_html__( 'Test Taxonomy Multi Checkbox', 'cmb2' ),
@@ -589,22 +606,6 @@ function muext_program_info_meta_box() {
 		// ),
 	) );
 	
-	
-	//THEME
-	$cmb->add_field( array(
-		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Outreach Type', 'muext-engagement' ),
-		'id'         => 'type',
-		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
-		'type'       => 'pw_multiselect',
-		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_outreach_type' ),
-		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
-		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
-		'attributes'  => array(
-			'placeholder' => '',
-		)
-		//'inline'	 => true,
-	) );
 	
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
