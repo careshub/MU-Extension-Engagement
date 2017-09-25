@@ -187,6 +187,7 @@ function muext_program_info_meta_box() {
 		'show_names'    => true, // Show field names on the left
 		// 'cmb_styles' => false, // false to disable the CMB stylesheet
 		// 'closed'     => true, // Keep the metabox closed by default
+		//'show_on_cb' => 'muext_show_meta_to_chosen_roles',
 	) );
 
 	
@@ -197,7 +198,8 @@ function muext_program_info_meta_box() {
 		'type' => 'text',
 		'attributes'  => array(
 			'placeholder' => 'Name your Engagement',
-		)
+		),
+		'render_row_cb' => __NAMESPACE__ . '\\muext_render_row_cb',
 		// 'repeatable' => true, // Repeatable fields are supported w/in repeatable groups (for most types)
 	) );
 		
@@ -443,7 +445,7 @@ function muext_program_info_meta_box() {
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
 		'name'       => __( 'Set Featured Image', 'muext-engagement' ),
 		'id'         => 'engagement_image',
-		'desc'		 => 'Must be .png, .gif or .jpg format. Recommended resolution: 1000px x 800px',
+		'desc'		 => 'Must be .png, .gif or .jpg format. Minumum recommended resolution: 560px (width) x 315px (height).',
 		'type'       => 'text',
 		'attributes' => array(
 			'type' => 'file', // Let's use a standard file upload field
@@ -634,7 +636,6 @@ function muext_program_info_meta_box() {
 }
 
 
-
 /**
  * Adds content before fields (based on 'id')
  *
@@ -669,6 +670,10 @@ function muext_render_row_cb( $field_args, $field ) {
 	$label       = $field->args( 'name' );
 	$name        = $field->args( '_name' );
 	$value       = $field->escaped_value();
+	
+	//overriding value because Mel can't get this form to populate
+	//$value = get_post_meta( $post_id, string $key = '', bool $single = false )
+	
 	$description = $field->args( 'description' );
 	?>
 	<div class="custom-field-row <?php echo esc_attr( $classes ); ?>">
@@ -742,23 +747,48 @@ function muext_program_outcomes_meta_box() {
 }
 
 
+/**
+ * Display metabox for only certain user roles.
+ * @author @Mte90
+ * @link   https://github.com/CMB2/CMB2/wiki/Adding-your-own-show_on-filters
+ *
+ * @param  bool  $display  Whether metabox should be displayed or not.
+ * @param  array $meta_box Metabox config array
+ * @return bool            (Modified) Whether metabox should be displayed or not.
+ */
+function muext_show_meta_to_chosen_roles( $display, $meta_box ) {
+	if ( ! isset( $meta_box['show_on']['key'], $meta_box['show_on']['value'] ) ) {
+		return $display;
+	}
+
+	if ( 'role' !== $meta_box['show_on']['key'] ) {
+		return $display;
+	}
+
+	$user = wp_get_current_user();
+
+	// No user found, return
+	if ( empty( $user ) ) {
+		return false;
+	}
+
+	$roles = (array) $meta_box['show_on']['value'];
+
+	foreach ( $user->roles as $role ) {
+		// Does user have role.. check if array
+		if ( is_array( $roles ) && in_array( $role, $roles ) ) {
+			return true;
+		}
+	}
+
+    return false;
+}
+//add_filter( 'cmb2_show_on', 'cmb_show_meta_to_chosen_roles', 10, 2 );
+
+
+
 
 /******* FRONT END FORM FUNCTIONALITY *******/
-
-/**
- * Gets the front-end-post-form cmb instance
- *
- * @return CMB2 object
- */
- 
-function muext_frontend_cmb2_get() {
-	// Use ID of metabox for frontend
-	$metabox_id = 'program_information';
-	// Post/object ID is not applicable since we're using this form for submission
-	$object_id  = 'fake-object-id';
-	// Get CMB2 metabox object
-	return cmb2_get_metabox( $metabox_id, $object_id );
-}
 
 /**
  * Handle the cmb_frontend_form shortcode
@@ -770,48 +800,17 @@ function muext_frontend_cmb2_get() {
 function muext_frontend_form_submission_shortcode( $atts = array() ) {
 	global $post;
 
-	
 	$metabox_id = 'program_information';
-	// Get CMB2 metabox object
-	//$cmb = muext_frontend_cmb2_get();
-	//$cmb = cmb2_get_metabox( 'program_information', 'fake-object-id' );
-	
-	// Get $cmb object_types
-	//$post_types = $cmb->prop( 'object_types' );
 	
 	// Current user
 	$user_id = get_current_user_id();
 	
-	
 	if ( ! isset( $atts['post_id'] ) ) {
-		$object_id = 'fake-object-id';
+		$object_id = 'fake-objectsub-id';
 	} else {
 		$object_id = absint( $atts['post_id'] );
 	}
-	
-	//var_dump( $object_id );
-	
-	/*
-	// Parse attributes
-	$atts = shortcode_atts( array(
-		'post_author' => $user_id ? $user_id : 1, // Current user, or admin
-		'post_status' => 'pending',
-		'post_type'   => reset( $post_types ), // Only use first object_type in array
-	), $atts, 'cmb-frontend' );
-	
-	//Let's add these attributes as hidden fields to our cmb form so that they will be passed through to our form submission
 
-	foreach ( $atts as $key => $value ) {
-		$cmb->add_hidden_field( array(
-			'field_args'  => array(
-				'id'    => "atts[$key]",
-				'type'  => 'hidden',
-				'default' => $value,
-			),
-		) );
-	}
-	*/
-	
 	// Initiate our output variable
 	$output = '';
 	$cmb = cmb2_get_metabox( $metabox_id, $object_id );
@@ -831,6 +830,7 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 		$output .= '<h3 class="message">' . sprintf( __( 'Thank you%s, your new Engagement has been submitted and is pending review by a curator.  Add another Engagement below.', 'muext-engagement' ), esc_html( $name ) ) . '</h3>';
 	}
 	
+	//var_dump( $cmb );
 	// Get our form
 	$output .= cmb2_get_metabox_form( $metabox_id, $object_id, array( 'save_button' => __( 'Submit Engagement', 'muext-engagement' ) ) );
 	
@@ -839,125 +839,6 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 }
 //add_shortcode( 'cmb-frontend', 'muext_frontend_form_submission_shortcode' );
 
-
-//21sept2017: ON HOLD until Mel can find a hook for 'after repeater group added'...UUGH
-//add_action('cmb2_init', __NAMESPACE__ . '\\muext_remove_disabled_buttonrows_init');
-//add_action('cmb2_add_group_row_start', __NAMESPACE__ . '\\muext_remove_disabled_buttonrows');
-
-/**
- * Remove rows with disabled buttons on group add (TODO: reword this when more coffeed)
- *
- **/
-function muext_remove_disabled_buttonrows_init(){
-
-	if(!wp_script_is('jquery', 'done')) {
-		wp_enqueue_script('jquery');
-	}
-	
-	wp_add_inline_script( 'jquery-migrate', inline_js_for_buttonrows() );
-	?>
-	
-	<?php
-	
-}
-
-function muext_remove_disabled_buttonrows(){
-	
-	error_log( 'in buttonrows');
-?>
-	<script type='text/javascript'>
-		jQuery(document).ready(function($) {
-
-			console.log( 'muext_remove_disabled_buttonrows');
-			var all_groups = jQuery( '.cmb-repeatable-grouping' );
-			
-			jQuery.each( all_groups, function(){
-				if( jQuery(this).find('.cmb-remove-group-row-button').is(':disabled') ){ //it's the first (and required) in the grouping
-					//console.log( this );
-					//hide the remove button
-					jQuery( this ).find('.cmb-remove-field-row').addClass('hidden');
-				} else {
-					jQuery( this ).find('.cmb-remove-field-row').removeClass('hidden');
-				}
-			});
-		});
-	</script>
-
-<?php
-}
-
-function inline_js_for_buttonrows(){
-	
-	
-	//error_log( 'in inline_js_for_buttonrows');
-	
-	$output = "<script type='text/javascript'>
-		jQuery(document).ready(function($) {
-
-			console.log( 'muext_remove_disabled_buttonrows');
-			var all_groups = jQuery( '.cmb-repeatable-grouping' );
-			
-			jQuery.each( all_groups, function(){
-				if( jQuery(this).find('.cmb-remove-group-row-button').is(':disabled') ){ //it's the first (and required) in the grouping
-					//console.log( this );
-					//hide the remove button
-					jQuery( this ).find('.cmb-remove-field-row').addClass('hidden');
-				} else {
-					jQuery( this ).find('.cmb-remove-field-row').removeClass('hidden');
-				}
-			});
-		});
-	</script>";
-	
-	return $output;
-}
-
-//TEST CODE
-/**
- * Shortcode to display a CMB2 form for a post ID.
- * @param  array  $atts Shortcode attributes
- * @return string       Form HTML markup
- */
-function cmb2_do_frontend_form_shortcode( $atts = array() ) {
-	global $post;
-
-	/**
-	 * Depending on your setup, check if the user has permissions to edit_posts
-	 */
-	if ( ! current_user_can( 'edit_posts' ) ) {
-		return __( 'You do not have permissions to edit this post.', 'lang_domain' );
-	}
-
-	/**
-	 * Make sure a WordPress post ID is set.
-	 * We'll default to the current post/page
-	 */
-	if ( ! isset( $atts['post_id'] ) ) {
-		$atts['post_id'] = 'fake-object-id';
-	} else {
-		$atts['post_id'] = $post->ID;
-	}
-
-	// If no metabox id is set, yell about it
-	if ( empty( $atts['id'] ) ) {
-		$atts['id'] = 'program_information';
-	}
-
-	$metabox_id = esc_attr( $atts['id'] );
-	$object_id = absint( $atts['post_id'] );
-	// Get our form
-	$form = cmb2_get_metabox_form( $metabox_id, $object_id, $atts );
-	
-	//get and insert field values (Mel canNOT find a function for this although it HAS to exist if this shows on admin screens, yes?)
-	
-	
-	$form2 = cmb2_get_metabox( $metabox_id, $object_id );
-	
-	//$field_values = muext_get_field_values( $form2 );
-	
-	//var_dump( $field_values );
-	return $form;
-}
 
 /**
  * Handles form submission on save. Redirects if save is successful, otherwise sets an error message as a cmb property
@@ -970,9 +851,23 @@ function muext_handle_frontend_new_post_form_submission() {
 	if ( empty( $_POST ) || ! isset( $_POST['submit-cmb'], $_POST['object_id'] ) ) {
 		return false;
 	}
-	// Get CMB2 metabox object
-	$cmb = muext_frontend_cmb2_get();
+	
+	//instantiate post data array 
 	$post_data = array();
+	
+	// Get CMB2 metabox object
+	$metabox_id = 'program_information';
+	if ( ! isset( $_POST['object_id'] ) ) {
+		$object_id = 'fake-objectsub-id';
+	} else {
+		$object_id = absint( $_POST['object_id'] );
+		$post_data['ID'] = $object_id;
+		$post_data['post_status'] = 'publish';
+	}
+
+	$cmb = cmb2_get_metabox( $metabox_id, $object_id );
+	
+	
 	
 	// Get our shortcode attributes and set them as our initial post_data args
 	if ( isset( $_POST['atts'] ) ) {
@@ -989,7 +884,7 @@ function muext_handle_frontend_new_post_form_submission() {
 	
 	// Check title submitted
 	if ( empty( $_POST['_muext_title'] ) ) {
-		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'New post requires a title.' ) ) );
+		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'New Engagement requires a title.' ) ) );
 	}
 	// Check title submitted
 	if ( empty( $_POST['content'] ) ) {
@@ -1012,8 +907,11 @@ function muext_handle_frontend_new_post_form_submission() {
 	$post_data['post_content'] = $sanitized_values['content'];
 	unset( $sanitized_values['content'] );
 	
+	$post_data['post_type'] = 'muext_engagement';
+	
 	// Create the new post
 	$new_submission_id = wp_insert_post( $post_data, true );
+	
 	
 	// If we hit a snag, update the user
 	if ( is_wp_error( $new_submission_id ) ) {

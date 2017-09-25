@@ -26,6 +26,29 @@ get_header(); ?>
 					if ( comments_open() || get_comments_number() ) :
 						comments_template();
 					endif;
+					
+					//make cmb form editable on post if current user is author
+					if (is_user_logged_in() && get_current_user_id() == $post->post_author)  {
+					?>	
+					
+						<div id="edit-cmb2">
+							<div id="edit-cmb2-button">
+								<button id="edit-button" class="button">Edit this Engagement</button>
+							</div>
+						
+							<div id="edit-cmb2-content" class="hidden">
+							<?php
+							
+								//get the shortcode
+								$shortcode_str = '[cmb-frontend post_id=' . $post->ID . ']';
+								echo do_shortcode( $shortcode_str );
+							?>
+							</div>
+							
+						</div>
+					
+					<?php
+					}
 
 					the_post_navigation( array(
 						'prev_text' => '<span class="screen-reader-text">' . __( 'Previous Post', 'muext-engagement' ) . '</span><span aria-hidden="true" class="nav-subtitle">' . __( 'Previous', 'muext-engagement' ) . '</span> <span class="nav-title"><span class="nav-title-icon-wrapper">' . twentyseventeen_get_svg( array( 'icon' => 'arrow-left' ) ) . '</span>%title</span>',

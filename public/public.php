@@ -29,7 +29,7 @@ add_filter('wp_generate_tag_cloud_data', __NAMESPACE__ . '\\muext_tag_cloud_clas
 
 //add shortcode to render form in admin/admin
 add_shortcode( 'cmb-frontend', 'MU_Ext_Engagement\Admin\muext_frontend_form_submission_shortcode' );
-add_shortcode( 'cmb-form', 'MU_Ext_Engagement\Admin\cmb2_do_frontend_form_shortcode' );
+//add_shortcode( 'cmb-form', 'MU_Ext_Engagement\Admin\cmb2_do_frontend_form_shortcode' );
 
 
 
