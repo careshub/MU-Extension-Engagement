@@ -669,10 +669,14 @@ function muext_render_row_cb( $field_args, $field ) {
 			$value = get_the_title( $field->object_id );
 		}
 		?>
-		<div class="custom-field-row <?php echo esc_attr( $classes ); ?>">
-			<p><label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label></p>
-			<p><input id="<?php echo esc_attr( $id ); ?>" type="text" name="<?php echo esc_attr( $name ); ?>" value="<?php echo $value; ?>"/></p>
-			<p class="description"><?php echo esc_html( $description ); ?></p>
+		<div class="cmb-row <?php echo esc_attr( $classes ); ?>">
+			<div class="cmb-th">
+				<label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label>
+			</div>
+			<div class="cmb-td">
+				<input id="<?php echo esc_attr( $id ); ?>" type="text" name="<?php echo esc_attr( $name ); ?>" value="<?php echo $value; ?>"/>
+			</div>
+			<p class="cmb2-metabox-description"><?php echo esc_html( $description ); ?></p>
 		</div>
 
 	<?php
