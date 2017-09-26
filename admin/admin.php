@@ -862,17 +862,27 @@ function muext_handle_frontend_new_post_form_submission() {
 	
 	// Get CMB2 metabox object
 	$metabox_id = 'program_information';
+
+	//if we don't have an incoming object id, make a fake one and don't publish!
 	if ( ! isset( $_POST['object_id'] ) ) {
 		$object_id = 'fake-objectsub-id';
+		$post_data['post_status'] = 'pending';
 	} else {
 		$object_id = absint( $_POST['object_id'] );
-		$post_data['ID'] = $object_id;
-		$post_data['post_status'] = 'publish';
-	}
 
+		//if we have a post_id and it's > 1 (because absint/intval will return 1 for arrays, 0 for empty array)
+		if( is_int( $object_id ) && ( $object_id > 1 ) ){
+			$post_data['ID'] = $object_id;
+			$post_data['post_status'] = 'publish';
+
+		} else { //it's probably the string 'fake-object...'
+			$object_id = 'fake-objectsub-id';
+			$post_data['post_status'] = 'pending';
+		}
+	}
+	
+	//get our metabox object
 	$cmb = cmb2_get_metabox( $metabox_id, $object_id );
-	
-	
 	
 	// Get our shortcode attributes and set them as our initial post_data args
 	if ( isset( $_POST['atts'] ) ) {
