@@ -426,7 +426,7 @@ function muext_program_info_meta_box() {
 		'name'    => esc_html__( 'Description *', 'muext-engagement' ),
 		// 'desc'    => esc_html__( 'field description (optional)', 'cmb2' ),
 		'id'      => 'content', // This will be saved as the main post content.
-		'type'    => 'text',
+		'type'    => 'textarea',
 		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
 		//'options' => array( 'textarea_rows' => 10, ),
 	) );
@@ -594,22 +594,16 @@ function muext_program_info_meta_box() {
 	//outcomes and impact
 	
 	$cmb->add_field( array(
-		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
-		'desc'    => esc_html__( 'Describe the outcomes of the Engagement', 'cmb2' ),
-		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
-		'type'    => 'textarea',
-		// 'options' => array( 'textarea_rows' => 10, ),
-		//'save_field' => false, // Disables the saving of this field.
+		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
+		'name'       => __( 'Impact', 'muext-engagement' ),
+		'id'         => 'impact',
+		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
+		'type'       => 'pw_multiselect',
+		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_impact_area' ),
 		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
-		'attributes'  => array(
-			'placeholder' => 'e.g., Success Story, demographic information..',
-		)
-		// 'attributes' => array(
-		// 	'disabled' => 'disabled',
-		// 	'readonly' => 'readonly',
-		// ),
+		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
+		//'inline'	 => true,
 	) );
-	
 	
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
@@ -622,17 +616,24 @@ function muext_program_info_meta_box() {
 		//'inline'	 => true,
 	) );
 	
-	
 	$cmb->add_field( array(
-		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Impact', 'muext-engagement' ),
-		'id'         => 'impact',
-		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
-		'type'       => 'pw_multiselect',
-		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_impact_area' ),
-		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
-		//'inline'	 => true,
+		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
+		'desc'    => esc_html__( 'Describe the outcomes of the Engagement', 'cmb2' ),
+		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
+		'type'    => 'textarea',
+		// 'options' => array( 'textarea_rows' => 10, ),
+		//'save_field' => false, // Disables the saving of this field.
+		'attributes'  => array(
+			'placeholder' => 'e.g., Success Story, demographic information..',
+		),
+		'classes' => 'hidden',
+		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		// 'attributes' => array(
+		// 	'disabled' => 'disabled',
+		// 	'readonly' => 'readonly',
+		// ),
 	) );
+		
 }
 
 
@@ -641,16 +642,20 @@ function muext_program_info_meta_box() {
  *
  **/
 function muext_before_row_cb( $field_args, $field ) {
-	//if ( 'content' == $field->object_id ) {
+	//add headers to sections, add show/hide buttons
 	if ( 'content' == $field_args['id'] ) { //if we're before the Description section
 		echo '<div class="question-type">WHAT</div>';
 	} else if( '_muext_start_date' == $field_args['id'] ){
 		echo '<div class="question-type">WHEN</div>';
-	} else if( '_muext_outcome_text' == $field_args['id'] ){
+	} else if( 'impact' == $field_args['id'] ){
 		echo '<div class="question-type">WHY</div>';
 	} else if( 'funding' == $field_args['id'] ){
 		echo '<div class="question-type">HOW</div>';
-	} 
+	} else if( '_muext_outcome_text' == $field_args['id'] ){
+		//add button
+		echo '<button id="show-outcomes-box" class="button">Add Outcomes or Success Stories</button>';
+		
+	}
 	
 	//var_dump( $field_args['id'] );
 }
@@ -818,7 +823,7 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 	// Get any submission errors
 	if ( ( $error = $cmb->prop( 'submission_error' ) ) && is_wp_error( $error ) ) {
 		// If there was an error with the submission, add it to our ouput.
-		$output .= '<h3>' . sprintf( __( 'There was an error in the submission: %s', 'muext-engagement' ), '<strong>'. $error->get_error_message() .'</strong>' ) . '</h3>';
+		$output .= '<h3 class="warning-text">' . sprintf( __( 'There was an error in the submission: %s', 'muext-engagement' ), '<strong>'. $error->get_error_message() .'</strong>' ) . '</h3>';
 	}
 	
 	// If the post was submitted successfully, notify the user.
