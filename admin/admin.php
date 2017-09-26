@@ -450,6 +450,7 @@ function muext_program_info_meta_box() {
 		'attributes' => array(
 			'type' => 'file', // Let's use a standard file upload field
 		),
+		'render_row_cb' => __NAMESPACE__ . '\\muext_render_row_cb',
 	) );
 	
 	
@@ -488,7 +489,7 @@ function muext_program_info_meta_box() {
 		// 'desc'       => __( 'field description (optional)', 'muext-engagement' ),
 		'id'         => $prefix . 'college_affiliation',
 		'type'       => 'text',
-		'save_field' => false, // Disables the saving of this field.
+		//'save_field' => false, // Disables the saving of this field.
 		'on_front'	 => false,
 		// 'attributes' => array(
 		// 	'disabled' => 'disabled',
@@ -536,14 +537,9 @@ function muext_program_info_meta_box() {
 		'desc' => esc_html__( 'If more detail is necessary to describe the Timeframe of the Engagement, do so here.', 'muext-engagement' ),
 		'id'   => $prefix . 'timeframe',
 		'type' => 'text',
-		//'save_field' => false, // Disables the saving of this field.
 		'attributes'  => array(
 			'placeholder' => 'e.g., occurs once every spring semester',
 		)
-		// 'attributes' => array(
-		// 	'disabled' => 'disabled',
-		// 	'readonly' => 'readonly',
-		// ),
 	) );
 	
 	/** HOW ***/
@@ -580,16 +576,6 @@ function muext_program_info_meta_box() {
 		//'inline'	 => true,
 	) );
 
-	// $cmb->add_field( array(
-	// 	'name'     => esc_html__( 'Test Taxonomy Multi Checkbox', 'cmb2' ),
-	// 	'desc'     => esc_html__( 'field description (optional)', 'cmb2' ),
-	// 	'id'       => $prefix . 'multitaxonomy',
-	// 	'type'     => 'taxonomy_multicheck',
-	// 	'taxonomy' => 'muext_program_category', // Taxonomy Slug
-	// 	// 'inline'  => true, // Toggles display to inline
-	// ) );
-	// Add other metaboxes as needed
-	
 	/** WHY **/
 	//outcomes and impact
 	
@@ -669,24 +655,65 @@ function muext_before_row_cb( $field_args, $field ) {
 function muext_render_row_cb( $field_args, $field ) {
 	
 	//var_dump( $field );
+	if ( '_muext_title' == $field_args['id'] ) {
 	
-	$classes     = $field->row_classes();
-	$id          = $field->args( 'id' );
-	$label       = $field->args( 'name' );
-	$name        = $field->args( '_name' );
-	$value       = $field->escaped_value();
-	
-	//overriding value because Mel can't get this form to populate
-	//$value = get_post_meta( $post_id, string $key = '', bool $single = false )
-	
-	$description = $field->args( 'description' );
-	?>
-	<div class="custom-field-row <?php echo esc_attr( $classes ); ?>">
-		<p><label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label></p>
-		<p><input id="<?php echo esc_attr( $id ); ?>" type="text" name="<?php echo esc_attr( $name ); ?>" value="<?php echo $value; ?>"/></p>
-		<p class="description"><?php echo esc_html( $description ); ?></p>
-	</div>
+		$classes     = $field->row_classes();
+		$id          = $field->args( 'id' );
+		$label       = $field->args( 'name' );
+		$name        = $field->args( '_name' );
+		$value       = $field->escaped_value();
+		$description = $field->args( 'description' );
+
+		//if we're on an existing engagament, the $value == the title
+		if( gettype( $field->object_id ) == "integer" ){
+			$value = get_the_title( $field->object_id );
+		}
+		?>
+		<div class="custom-field-row <?php echo esc_attr( $classes ); ?>">
+			<p><label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $label ); ?></label></p>
+			<p><input id="<?php echo esc_attr( $id ); ?>" type="text" name="<?php echo esc_attr( $name ); ?>" value="<?php echo $value; ?>"/></p>
+			<p class="description"><?php echo esc_html( $description ); ?></p>
+		</div>
+
 	<?php
+	} else if ( 'engagement_image' == $field_args['id'] ) {
+		
+		$classes     = $field->row_classes();
+		$id          = $field->args( 'id' );
+		$label       = $field->args( 'name' );
+		$name        = $field->args( '_name' );
+		$value       = $field->escaped_value();
+		$description = $field->args( 'description' );
+
+		//var_dump( $field );
+
+		$has_image = false;
+		//if we're on an existing engagement, look for featured image
+		if( gettype( $field->object_id ) == "integer" ){
+			$has_image = has_post_thumbnail( $field->object_id );
+			$image_url = get_the_post_thumbnail_url( $field->object_id );
+			//var_dump( $has_image );
+			//var_dump( $image_url );
+		}
+		?>
+		<div class="cmb-row cmb-type-text cmb2-id-engagement-image table-layout <?php echo esc_attr( $classes ); ?>" data-fieldtype="text">
+			<div class="cmb-th">
+				<label for="<?php echo esc_attr( $id ); ?>">Set Featured Image</label>
+			</div>
+			<div class="cmb-td">
+			<?php if( $has_image ){ ?>
+				<p><strong>
+					Current file selected: <?php echo "<a class='yellow-text' href='" . $image_url . "'>" . $image_url . "</a>"; ?>
+				</strong></p>
+			<?php } ?>
+				<input type="file" class="regular-text" name="<?php echo esc_attr( $id ); ?>" id="<?php echo esc_attr( $id ); ?>" value="<?php echo $image_url; ?>"/>
+			<p class="cmb2-metabox-description"><?php echo esc_html( $description ); ?></p>
+
+			</div>
+		</div>
+		<?php
+	
+	}
 }
 
 /**
@@ -916,8 +943,8 @@ function muext_handle_frontend_new_post_form_submission() {
 	 
 	$sanitized_values = $cmb->get_sanitized_values( $_POST );
 	// Set our post data arguments
-	$post_data['post_title']   = $sanitized_values['_muext_title'];
-	unset( $sanitized_values['_muext_title'] );
+	$post_data['post_title'] = $sanitized_values['_muext_title'];
+	//unset( $sanitized_values['_muext_title'] );
 	
 	$post_data['post_content'] = $sanitized_values['content'];
 	unset( $sanitized_values['content'] );
