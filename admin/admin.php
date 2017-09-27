@@ -212,8 +212,8 @@ function muext_program_info_meta_box() {
 		// 'repeatable'  => false, // use false if you want non-repeatable group
 		'options'     => array(
 			'group_title'   => __( 'Contact {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
-			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Another Contact', 'muext-engagement' ),
-			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove This Contact', 'muext-engagement' ),
+			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Contact', 'muext-engagement' ),
+			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove/Clear', 'muext-engagement' ),
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
@@ -222,7 +222,7 @@ function muext_program_info_meta_box() {
 
 	// Id's for group's fields only need to be unique for the group. Prefix is not needed.
 	$cmb->add_group_field( $contact_group_field_id, array(
-		'name' => 'Name',
+		'name' => 'Contact Name',
 		'id'   => $prefix . 'contact_name',
 		'type' => 'text',
 		//'render_row_cb' => __NAMESPACE__ . '\\muext_render_row_cb',
@@ -281,8 +281,8 @@ function muext_program_info_meta_box() {
 		// 'repeatable'  => false, // use false if you want non-repeatable group
 		'options'     => array(
 			'group_title'   => __( 'Location {#}', 'muext-engagement' ), // since version 1.1.4, {#} gets replaced by row number
-			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Another Location', 'muext-engagement' ),
-			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove This Location', 'muext-engagement' ),
+			'add_button'    => __( '<span class="fa fa-plus"></span>&nbsp;&nbsp;Add Location', 'muext-engagement' ),
+			'remove_button' => __( '<span class="fa fa-trash"></span>&nbsp;&nbsp;Remove Location', 'muext-engagement' ),
 			'sortable'      => true, // beta
 			// 'closed'     => true, // true to have the groups closed by default
 		),
@@ -445,7 +445,7 @@ function muext_program_info_meta_box() {
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
 		'name'       => __( 'Set Featured Image', 'muext-engagement' ),
 		'id'         => 'engagement_image',
-		'desc'		 => 'Must be .png, .gif or .jpg format. Minumum recommended resolution: 560px (width) x 315px (height).',
+		'desc'		 => 'Must be .png, .gif or .jpg format. Minimum recommended resolution: 560px (width) x 315px (height).',
 		'type'       => 'text',
 		'attributes' => array(
 			'type' => 'file', // Let's use a standard file upload field
@@ -503,7 +503,7 @@ function muext_program_info_meta_box() {
 	/** WHEN **/
 	$cmb->add_field( array(
 		'name' => esc_html__( 'Start Date', 'muext-engagement' ),
-		'desc' => esc_html__( 'Select the rought date that this engagement occurred.', 'cmb2' ),
+		'desc' => esc_html__( 'Select the approximate date that this engagement started.', 'cmb2' ),
 		'id'   => $prefix . 'start_date',
 		'type' => 'text_date',
 		'date_format' => 'Y-m-d',
@@ -639,7 +639,7 @@ function muext_before_row_cb( $field_args, $field ) {
 		echo '<div class="question-type">HOW</div>';
 	} else if( '_muext_outcome_text' == $field_args['id'] ){
 		//add button
-		echo '<button id="show-outcomes-box" class="button">Add Outcomes or Success Stories</button>';
+		echo '<button id="show-outcomes-box" class="button"><span class="fa fa-plus"></span>&nbsp;Add Outcomes or Success Stories</button>';
 		
 	}
 	
