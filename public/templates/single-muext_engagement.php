@@ -36,7 +36,7 @@ get_header(); ?>
 								<button id="edit-button" class="button">Edit this Engagement</button>
 							</div>
 						
-							<div id="edit-cmb2-content" class="hidden">
+							<div id="edit-engagement-section" class="hidden">
 							<?php
 							
 								//get the shortcode
