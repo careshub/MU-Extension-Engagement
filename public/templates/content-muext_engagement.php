@@ -133,57 +133,61 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 		</div>
 
 		
-		<div class="engagement-meta">
-			<?php if ( $contact ) { 
-			
-				if( is_array( $contact ) ){ ?>
+		<?php if ( is_single() ) { ?>
+			<div class="engagement-meta">
+		<?php } else { ?>
+			<div class="engagement-meta end-of-single">
+		<?php } ?>
+				<?php if ( $contact ) { 
 				
+					if( is_array( $contact ) ){ ?>
+					
+						<div class="inset-contents">
+							<h4>Contacts</h4>
+							<?php 
+							foreach( $contact as $one_contact ){ ?>
+								
+									<?php echo $one_contact["_muext_contact_name"]; ?>
+										<?php if ( $one_contact["_muext_contact_email"] ) : ?>
+											&emsp;<a href="mailto:<?php echo $one_contact["_muext_contact_email"]; ?>"><span class="fa fa-envelope"></span></a>
+										<?php endif; ?>
+										<?php if ( $one_contact["_muext_contact_phone"] ) : ?>
+											&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $one_contact["_muext_contact_phone"]; ?></a>
+										<?php endif; ?>
+										<br />
+							<?php } ?>
+						</div>
+					<?php
+					} else { ?>
+						<div class="inset-contents">
+							<h4>Contact</h4>
+							<?php echo $contact; ?>
+								<?php if ( $email ) : ?>
+									&emsp;<a href="mailto:<?php echo $email; ?>"><span class="fa fa-envelope"></span></a>
+								<?php endif; ?>
+								<?php if ( $phone ) : ?>
+									&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $phone; ?></a>
+								<?php endif; ?>
+						</div>
+					<?php } ?>
+					
+				<?php } //endif ?>
+				
+				<?php if ( $website ) { ?>
 					<div class="inset-contents">
-						<h4>Contacts</h4>
-						<?php 
-						foreach( $contact as $one_contact ){ ?>
-							
-								<?php echo $one_contact["_muext_contact_name"]; ?>
-									<?php if ( $one_contact["_muext_contact_email"] ) : ?>
-										&emsp;<a href="mailto:<?php echo $one_contact["_muext_contact_email"]; ?>"><span class="fa fa-envelope"></span></a>
-									<?php endif; ?>
-									<?php if ( $one_contact["_muext_contact_phone"] ) : ?>
-										&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $one_contact["_muext_contact_phone"]; ?></a>
-									<?php endif; ?>
-									<br />
-						<?php } ?>
-					</div>
-				<?php
-				} else { ?>
-					<div class="inset-contents">
-						<h4>Contact</h4>
-						<?php echo $contact; ?>
-							<?php if ( $email ) : ?>
-								&emsp;<a href="mailto:<?php echo $email; ?>"><span class="fa fa-envelope"></span></a>
-							<?php endif; ?>
-							<?php if ( $phone ) : ?>
-								&emsp;<a href="tel:<?php echo $phone; ?>"><?php echo $phone; ?></a>
-							<?php endif; ?>
+						<h4>Website</h4>
+						<?php echo '<a href="' . $website . '" title="' . get_the_title() . '">' . $website . '</a>'; ?>
 					</div>
 				<?php } ?>
 				
-			<?php } //endif ?>
-			
-			<?php if ( $website ) { ?>
-				<div class="inset-contents">
-					<h4>Website</h4>
-					<?php echo '<a href="' . $website . '" title="' . get_the_title() . '">' . $website . '</a>'; ?>
-				</div>
-			<?php } ?>
-			
-			<?php if ( is_single() && $this_aff_str ) { ?>
-				<div class="inset-contents">
-					<h4>Affiliation</h4>
-					<?php echo $this_aff_str; ?>
-				</div>
-			<?php } ?>
-			
-		</div>
+				<?php if ( is_single() && $this_aff_str ) { ?>
+					<div class="inset-contents">
+						<h4>Affiliation</h4>
+						<?php echo $this_aff_str; ?>
+					</div>
+				<?php } ?>
+				
+			</div>
 
 		<?php if ( is_single() ) : ?>
 			<div class="engagement-meta end-of-single">
