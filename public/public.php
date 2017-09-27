@@ -337,5 +337,15 @@ function muext_category_has_parent($catid){
     return false;
 }
 
+function muext_comma_separate_tax( $incoming_terms ){
+	//init striong
+	$this_comma_sep_str = "";
+	foreach ( $incoming_terms as $term ){
+		$this_comma_sep_str .= $term->name . ', ';
+	}
+	//trim that last comma
+	$this_comma_sep_str = rtrim ( $this_comma_sep_str, ', ' );
 
+	return $this_comma_sep_str;
+}
 

@@ -563,7 +563,7 @@ function muext_program_info_meta_box() {
 	//OUTREACH TYPE
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Outreach Type', 'muext-engagement' ),
+		'name'       => __( 'Engagement Type', 'muext-engagement' ),
 		'id'         => 'type',
 		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
 		'type'       => 'pw_multiselect',

@@ -10,6 +10,9 @@
  * @version 1.0
  */
 
+// importing function from Public_Facing
+use function MU_Ext_Engagement\Public_Facing\muext_comma_separate_tax as muext_comma_separate_tax;
+
 // Set up post meta.
 $post_id  = get_the_ID();
 
@@ -29,18 +32,20 @@ $phone    = get_post_meta( $post_id, '_muext_contact_phone', true );
 $url      = get_post_meta( $post_id, '_muext_url', true );
 $date     = get_post_meta( $post_id, '_muext_start_date', true );
 $end_date = get_post_meta( $post_id, '_muext_end_date', true );
-$outcome  = get_post_meta( $post_id, '_muext_outcome_text', true );
 $website  = get_post_meta( $post_id, '_muext_url', true );
 
 $affiliation_terms = wp_get_post_terms( $post_id, 'muext_program_affiliation' );
 
 //get those affiliations into a comma-separated string
-$this_aff_str = "";
-foreach ( $affiliation_terms as $term ){
-	$this_aff_str .= $term->name . ', ';
-}
-//trim that last comma
-$this_aff_str = rtrim ( $this_aff_str, ', ' );
+$this_aff_str = muext_comma_separate_tax( $affiliation_terms );
+
+
+//outcomes, impact and audience section
+$outcome  = get_post_meta( $post_id, '_muext_outcome_text', true );
+$audience_terms = wp_get_post_terms( $post_id, 'muext_program_audience' );
+$audience_str = muext_comma_separate_tax( $audience_terms );
+$impact_terms = wp_get_post_terms( $post_id, 'muext_program_impact_area' );
+$impact_str = muext_comma_separate_tax( $impact_terms );
 
 
 // Convert dates that are stored in 2017-05-26 format to May 26, 2017 format for readability.
@@ -128,9 +133,8 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 		</div>
 
 		
-
 		<?php //if ( is_single() ) : ?>
-			<div class="engagement-meta end-of-single">
+			<div class="engagement-meta">
 				<?php if ( $contact ) { 
 				
 					if( is_array( $contact ) ){ ?>
@@ -180,6 +184,35 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 					</div>
 				<?php } ?>
 				
+			</div>
+			<div class="engagement-meta end-of-single">
+				<?php if( $outcome || $audience_str || $impact_str ){ ?>
+
+					<div class="inset-contents">
+						<h4>Outcomes</h4>
+
+					</div>
+					
+					<?php if( $outcome ){ ?>
+						<p><?php echo $outcome; ?> </p>
+					<?php } ?>
+					
+					<?php if( $audience_str ){ ?>
+						<div class="inset-contents">
+							<h4>Audience</h4>
+							<?php echo $audience_str; ?>
+						</div>
+					<?php } ?>
+					
+					<?php if( $impact_str ){ ?>
+						<div class="inset-contents">
+							<h4>Impact</h4>
+							<?php echo $impact_str; ?>
+						</div>
+					<?php } ?>
+
+				<?php } ?>
+
 			</div>
 		<?php //endif; ?>
 
