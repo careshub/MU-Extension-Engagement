@@ -192,14 +192,12 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 		<?php if ( is_single() ) : ?>
 			<div class="engagement-meta end-of-single">
 				<?php if( $outcome || $audience_str || $impact_str ){ ?>
-
-					<div class="inset-contents">
-						<h4>Outcomes</h4>
-
-					</div>
 					
 					<?php if( $outcome ){ ?>
-						<p><?php echo $outcome; ?> </p>
+						<div class="inset-contents">
+							<h4>Outcomes</h4>
+							<p><?php echo $outcome; ?> </p>
+						</div>
 					<?php } ?>
 					
 					<?php if( $audience_str ){ ?>
