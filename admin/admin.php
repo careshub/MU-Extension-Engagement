@@ -516,7 +516,8 @@ function muext_program_info_meta_box() {
 		'id'   => $prefix . 'end_date',
 		'type' => 'text_date',
 		'date_format' => 'Y-m-d',
-		'on_front'	 => false,
+		//'on_front'	 => false,
+		'classes' => 'hidden',
 	) );
 
 	$cmb->add_field( array(
