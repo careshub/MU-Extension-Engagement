@@ -32,7 +32,9 @@ function muext_render_filters_box() {
 	<div id="engagements-filters-container" class="muext-filters toggle-container <?php echo $toggle_class; ?>">
 		<span class="arrow"></span><a href="#engagements-filters" id="engagements-filter-toggle" class="toggle-trigger">Filter <?php echo $eng_obj->labels->name; ?></a>
 		<form id="engagements-filters" action="" method="GET" class="toggle-content engagements-filters clear">
+			<!--
 			<input id="search-form-engagements" class="search-field" placeholder="<?php echo $eng_obj->labels->search_items; ?>&hellip;" value="<?php echo $search_terms ?>" name="s" type="search">
+			-->
 			<div class="Grid Grid--full">
 				<?php
 				// Provide filters for related taxonomies
@@ -45,13 +47,13 @@ function muext_render_filters_box() {
 					<div class="Grid-cell Grid--full">
 					
 						<div class="inset-contents">
-							<fieldset class="taxonomy-terms toggle-container ">
+							<fieldset class="taxonomy-terms toggle-container <?php echo $toggle_class; ?>">
 								<!--<legend><?php echo $tax_object->labels->name; ?></legend>-->
-								<legend>
+								<!--<legend>-->
 									<span class="arrow"></span>
 									<a href="#filter-<?php echo $tax_object->name; ?>" id="filter-<?php echo $tax_object->name; ?>-toggle" class="toggle-trigger"><?php echo $tax_object->labels->name; ?>
 									</a>
-								</legend>
+								<!--</legend>-->
 								<?php
 								// Get all the terms in the taxonomy, to build the checklist.
 								$terms = get_terms( array(

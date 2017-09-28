@@ -4,15 +4,17 @@
 	// Set toggle indicators and add ARIA attributes on page load.
 		$( "#page .toggle-container" ).each( function( i, item ){
 			var expanded = $( item ).hasClass( "toggle-open" ),
-				trigger  = $( item ).find( ".toggle-trigger" ),
-				content  = $( item ).find( ".toggle-content" ),
+
+				//on top level, ignore child class? - Mel isn't thinking this through - only 2 levels now
+				trigger  = $( item ).children( ".toggle-trigger" ),
+				content  = $( item ).children( ".toggle-content" ),
 				hash     = new Date().getTime() + "-" + i;
 
 			// Set the toggle indicator arrows.
 			if ( expanded ) {
-				$( item ).find( ".arrow" ).addClass( "arrow-down" );
+				$( item ).children( ".arrow" ).addClass( "arrow-down" );
 			} else {
-				$( item ).find( ".arrow" ).addClass( "arrow-right" );
+				$( item ).children( ".arrow" ).addClass( "arrow-right" );
 			}
 
 			// Make sure that the content container has a unique ID.
@@ -40,7 +42,9 @@
 		// Open and close the content container on click.
 		$( "#page" ).on( "click", ".toggle-trigger", function(e) {
 			e.preventDefault();
-			var toggleable = $( this ).parents( ".toggle-container" ),
+			//var toggleable = $( this ).parents( ".toggle-container" ), 
+			//changing the abilities here - stricter child/parent stuff
+			var toggleable = $( this ).parent( ".toggle-container" ),
 				was_expanded   = toggleable.hasClass( "toggle-open" );
 
 			// Toggle the content display and arrow direction classes.
