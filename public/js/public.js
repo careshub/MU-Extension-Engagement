@@ -57,4 +57,5 @@
 				element.attr( "id", "toggleable-content-container-" + new Date().getTime() + "-" + i );
 			}
 		}
+	
 }(jQuery));

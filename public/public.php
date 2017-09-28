@@ -26,6 +26,7 @@ add_action( 'template_redirect', __NAMESPACE__ . '\\reformat_get_string', 11 );
 // filter the Engagement Theme tag cloud to add highlight class and to count child posts and only display top-level
 //add_filter( 'wp_tag_cloud_args', __NAMESPACE__ . '\\filter_engagement_theme_tag_cloud_args' );
 add_filter('wp_generate_tag_cloud_data', __NAMESPACE__ . '\\muext_tag_cloud_class_active');
+//add_filter('wp_footer', __NAMESPACE__ . '\\muext_tag_cloud_class_active_from_body');
 
 //add shortcode to render form in admin/admin
 add_shortcode( 'cmb-frontend', 'MU_Ext_Engagement\Admin\muext_frontend_form_submission_shortcode' );
@@ -266,6 +267,7 @@ function muext_tag_cloud_class_active($tags_data) {
 			
 			//if we are on this tag's/category's page, add an active class to the tag cloud element
             if( in_array('term-' . $tag['id'], $body_class )) {
+		
                 $tags_data[$key]['class'] =  $tags_data[$key]['class'] . " active-tag";
             }
 			
@@ -279,13 +281,18 @@ function muext_tag_cloud_class_active($tags_data) {
 				$current_count = muext_get_postcount( $tag['id'] );
 			}
 			
-			//var_dump( $current_count );
         }
 		
-		
-		
-		//var_dump( $tags_data );
         return $tags_data;
+}
+
+//TODO: trying to figure out when body_class is all set.  This fires too soon..
+function muext_tag_cloud_class_active_from_body(){
+
+	$body_class = get_body_class();
+
+	var_dump( $body_class );
+
 }
 
 
@@ -338,10 +345,12 @@ function muext_category_has_parent($catid){
 }
 
 function muext_comma_separate_tax( $incoming_terms ){
-	//init striong
+	//init string
 	$this_comma_sep_str = "";
 	foreach ( $incoming_terms as $term ){
-		$this_comma_sep_str .= $term->name . ', ';
+		$this_term_link = get_term_link( $term->term_id );
+		//$this_comma_sep_str .= $term->name . ', ';
+		$this_comma_sep_str .= '<a href="' . $this_term_link . '">' . $term->name . '</a>, ';
 	}
 	//trim that last comma
 	$this_comma_sep_str = rtrim ( $this_comma_sep_str, ', ' );

@@ -41,7 +41,7 @@ get_header(); ?>
 			<?php if ( is_user_logged_in() ) : ?>
 				<?php
 				// Render the filters/search box interface.
-				muext_render_filters_box();
+				//muext_render_filters_box();
 
 				if ( have_posts() ) : ?>
 					<?php
