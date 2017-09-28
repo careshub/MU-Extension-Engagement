@@ -508,16 +508,7 @@ function muext_program_info_meta_box() {
 		'type' => 'text_date',
 		'date_format' => 'Y-m-d',
 		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
-	) );
-
-	$cmb->add_field( array(
-		'name' => esc_html__( 'End Date', 'muext-engagement' ),
-		'desc' => esc_html__( 'If the event spanned more than one day, select the end date.', 'cmb2' ),
-		'id'   => $prefix . 'end_date',
-		'type' => 'text_date',
-		'date_format' => 'Y-m-d',
-		//'on_front'	 => false,
-		'classes' => 'hidden',
+		'classes' => 'inline-desktop',
 	) );
 
 	$cmb->add_field( array(
@@ -531,6 +522,17 @@ function muext_program_info_meta_box() {
 			'ongoing'   => __( 'ongoing/continuous', 'cmb2' ),
 			'ended'     => __( 'ended', 'cmb2' ),
 		),
+		'classes' => 'inline-desktop',
+	) );
+
+	$cmb->add_field( array(
+		'name' => esc_html__( 'End Date', 'muext-engagement' ),
+		'desc' => esc_html__( 'If the event spanned more than one day, select the end date.', 'cmb2' ),
+		'id'   => $prefix . 'end_date',
+		'type' => 'text_date',
+		'date_format' => 'Y-m-d',
+		//'on_front'	 => false,
+		'classes' => 'hidden',
 	) );
 	
 	$cmb->add_field( array(
