@@ -341,7 +341,23 @@ function muext_registration_to_author_role( $user_id ) {
 
 
 /***** utility functions *****/
+//TODO: this doesn't work w/o the taxonomy name - how do we get that from tag_cloud?
+function muext_get_postcount( $id ){
 
+	/*$child_terms = get_term_children( $id );
+	//return count of post in category child of ID 15
+	$count = 0;
+	$taxonomy = 'category';
+	$args = array(
+		'child_of' => $id,
+	);
+	
+	$child_tax_terms = get_terms( $id, '', $args );
+	foreach ( $child_terms as $tax_term ) {
+		$count += $tax_term->count;
+	}
+	return $child_terms;*/
+}
 function muext_category_has_parent($catid){
 	
     $category = get_category($catid);
