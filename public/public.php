@@ -33,6 +33,13 @@ add_shortcode( 'cmb-frontend', 'MU_Ext_Engagement\Admin\muext_frontend_form_subm
 //edit SAML users (@missouri.edu) to automagically have Author role (not subscriber)
 add_action( 'user_register', __NAMESPACE__ . '\\muext_registration_to_author_role', 10, 1 );
 
+//non-administrators/non-editors should not see wp-admin, they should be redirected to homepage
+add_action( 'init', __NAMESPACE__ . '\\muext_limit_wpadmin_access' );
+
+// hide admin bar for non-administrators/non-editors
+add_action('after_setup_theme', __NAMESPACE__ . '\\muext_hide_admin_bar');
+
+
 
 /**
  * Load the plugin text domain for translation.
@@ -320,7 +327,7 @@ function filter_engagement_theme_tag_cloud_args() {
  *
  * @param int. User Id.
  * @return bool. Success
-**/
+ **/
 function muext_registration_to_author_role( $user_id ) {
 
     // Get the WP_User object
@@ -337,6 +344,26 @@ function muext_registration_to_author_role( $user_id ) {
 		$user->remove_role( 'subscriber' );
 	}
 
+}
+
+/**
+ * Redirect non-admin || non-editor roles to homepage on login; disallow access to wp-admin
+ *
+ *
+ **/
+function muext_limit_wpadmin_access() {
+	if ( is_admin() && ! ( current_user_can('editor') || current_user_can('administrator') ) &&
+		! ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
+			wp_redirect( home_url() );
+			exit;
+	}
+}
+
+
+function muext_hide_admin_bar() {
+    if ( !( current_user_can('editor') || current_user_can('administrator') ) && !is_admin() ) {
+        show_admin_bar(false);
+    }
 }
 
 
