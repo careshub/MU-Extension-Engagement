@@ -31,7 +31,7 @@ add_filter('wp_generate_tag_cloud_data', __NAMESPACE__ . '\\muext_tag_cloud_clas
 add_shortcode( 'cmb-frontend', 'MU_Ext_Engagement\Admin\muext_frontend_form_submission_shortcode' );
 
 //edit SAML users (@missouri.edu) to automagically have Author role (not subscriber)
-add_action( 'user_register', 'muext_registration_to_author_role', 10, 1 );
+add_action( 'user_register', __NAMESPACE__ . '\\muext_registration_to_author_role', 10, 1 );
 
 
 /**
@@ -333,6 +333,8 @@ function muext_registration_to_author_role( $user_id ) {
 		// This will also reset all the caps and set them for the new role
 		$user->set_role( 'author' );
 
+		// Remove the Role from the user
+		$user->remove_role( 'subscriber' );
 	}
 
 }
