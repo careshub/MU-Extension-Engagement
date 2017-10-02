@@ -12,7 +12,6 @@ add_action( 'init', __NAMESPACE__ . '\\load_plugin_textdomain' );
 // Use templates provided by the plugin.
 add_filter( 'template_include', __NAMESPACE__ . '\\template_loader' );
 
-
 // Load public-facing style sheet and JavaScript.
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_styles_scripts' );
 // add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_scripts' ) );
@@ -28,9 +27,11 @@ add_action( 'template_redirect', __NAMESPACE__ . '\\reformat_get_string', 11 );
 add_filter('wp_generate_tag_cloud_data', __NAMESPACE__ . '\\muext_tag_cloud_class_active');
 //add_filter('wp_footer', __NAMESPACE__ . '\\muext_tag_cloud_class_active_from_body');
 
-//add shortcode to render form in admin/admin
+//add shortcode to render form (on front end) already existing in admin/admin
 add_shortcode( 'cmb-frontend', 'MU_Ext_Engagement\Admin\muext_frontend_form_submission_shortcode' );
 
+//edit SAML users (@missouri.edu) to automagically have Author role (not subscriber)
+add_action( 'user_register', 'muext_registration_to_author_role', 10, 1 );
 
 
 /**
@@ -314,25 +315,30 @@ function filter_engagement_theme_tag_cloud_args() {
 	return $args;
 }
 
+/**
+ * Change missouri.edu users to Author role after registration (wp_insert_user)
+ *
+ * @param int. User Id.
+ * @return bool. Success
+**/
+function muext_registration_to_author_role( $user_id ) {
+
+    // Get the WP_User object
+	$user = get_userdata( $user_id );
+
+	// The user exists
+	if( $user && $user->exists() ) {
+	  
+		// Remove all the previous roles from the user and add this one
+		// This will also reset all the caps and set them for the new role
+		$user->set_role( 'author' );
+
+	}
+
+}
+
 
 /***** utility functions *****/
-//TODO: this doesn't work w/o the taxonomy name - how do we get that from tag_cloud?
-function muext_get_postcount( $id ){
-
-	/*$child_terms = get_term_children( $id );
-	//return count of post in category child of ID 15
-	$count = 0;
-	$taxonomy = 'category';
-	$args = array(
-		'child_of' => $id,
-	);
-	
-	$child_tax_terms = get_terms( $id, '', $args );
-	foreach ( $child_terms as $tax_term ) {
-		$count += $tax_term->count;
-	}
-	return $child_terms;*/
-}
 
 function muext_category_has_parent($catid){
 	
