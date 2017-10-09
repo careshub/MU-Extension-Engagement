@@ -63,7 +63,7 @@ function register_muext_engagement_cpt() {
 		'label'                 => __( 'Engagement', 'muext-engagement' ),
 		'description'           => __( 'Stores information about ongoing engagements.', 'muext-engagement' ),
 		'labels'                => $labels,
-		'supports'              => array( 'title', 'thumbnail', 'revisions', ),
+		'supports'              => array( 'title', 'thumbnail', 'revisions', 'author' ),
 		'taxonomies'            => array(
 										'muext_program_category',
 										'muext_program_tag',
