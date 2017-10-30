@@ -183,6 +183,15 @@ function locationRepeatListener(){
 	
 };
 
+function outcomesBoxListener(){
+	//hide show outcomes button
+	jQuery(".wp-admin #program_information #show-outcomes-box").addClass("hidden");
+
+	// remove 'hidden' class from Outcomes/Success stories
+	jQuery(".wp-admin #program_information .cmb2-id--muext-outcome-text").removeClass("hidden");
+
+}
+
 
 (function ( $ ) {
 	"use strict";
@@ -191,6 +200,8 @@ function locationRepeatListener(){
 	$(document).ready(function() {
 
 		locationRepeatListener();
+
+		outcomesBoxListener();
 
 	});
 }(jQuery));
