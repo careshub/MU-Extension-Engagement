@@ -736,7 +736,7 @@ function muext_program_outcomes_meta_box() {
 	 */
 	$cmb = new_cmb2_box( array(
 		'id'            => 'program_outcomes',
-		'title'         => __( 'Program Outcomes', 'muext-engagement' ),
+		'title'         => __( 'Program Outcomes - OLD', 'muext-engagement' ),
 		'object_types'  => array( 'muext_engagement' ), // Post type
 		'context'       => 'normal',
 		'priority'      => 'high',

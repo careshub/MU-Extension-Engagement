@@ -82,3 +82,7 @@ function muext_archive_is_filtered_view() {
 	}
 	return false;
 }
+function muext_add_author_support_to_posts() {
+   add_post_type_support( 'muext_engagement', 'author' ); 
+}
+add_action( 'init', 'muext_add_author_support_to_posts' );
