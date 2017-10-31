@@ -82,7 +82,120 @@ function muext_archive_is_filtered_view() {
 	}
 	return false;
 }
-function muext_add_author_support_to_posts() {
-   add_post_type_support( 'muext_engagement', 'author' ); 
+
+
+/*
+ ** Add metabox for additional author(s) to Engagements post type
+ *
+ */
+add_action( 'add_meta_boxes', 'muext_add_metaboxes' ); // add meta box
+//add_filter( 'manage_post_posts_columns', 'muext_add_post_columns' ); // add custom columns for quick edit
+//add_action( 'quick_edit_custom_box', 'muext_quickedit_coauthor', 10, 2 ); // add quick edit meta box
+add_action( 'save_post', 'muext_save_coauthor_metabox' );
+ 
+function muext_add_post_columns( $columns ) {
+    $columns['coauthor'] = 'Co Author';
+    return $columns;
 }
-add_action( 'init', 'muext_add_author_support_to_posts' );
+
+function muext_add_metaboxes() {
+	// ad coauthor metabox
+    add_meta_box('muext-coauthor', 'Co-Author', 'muext_coauthor_callback', 'muext_engagement', 'normal', 'default');
+
+}
+// The Event Location Metabox
+
+function muext_coauthor_callback( $post ) {
+
+	// we're coming from WP, yes?
+	wp_create_nonce( basename(__FILE__) , 'muext_coauthor_callback_nonce');
+
+	// get users list, excluding admin
+	$args = array(
+		'exclude' => array(1),
+	);
+
+	$users = get_users( $args );
+
+	// now make your users dropdown
+	if ($users) { 
+		$this_coauthor_id =  get_post_meta( $post->ID, '_muext_coauthor', true );
+		?>
+		<select name="coauthor_select">
+			<option value="0"> -- Select -- </option>
+			<?php foreach ($users as $user) {
+				$selected = ( $user->ID == $this_coauthor_id ) ? "selected" : "";
+				echo '<option value="' . $user->ID . '" ' . $selected . '>' .$user->user_nicename .'</option>';
+			} ?>
+		</select>
+		<?php
+	}
+}
+
+/**
+ * Save meta box content.
+ *
+ * @param int $post_id Post ID
+ */
+function muext_save_coauthor_metabox( $post_id ) {
+
+    // Save the coauthor in a serialized array, because we may add more
+	if ( ! isset( $_POST['muext_coauthor_callback_nonce'] ) ) {
+        //return;
+    }
+
+	// Check the user's permissions.
+	if ( ! current_user_can( 'edit_post', $post_id ) ){
+		return;
+	}
+
+	if ( isset( $_POST['coauthor_select'] ) ) {
+		update_post_meta( $post_id, '_muext_coauthor', sanitize_text_field( $_POST['coauthor_select'] ) );
+	} else {
+
+		delete_post_meta( $post_id, '_muext_coauthor', sanitize_text_field( $_POST['coauthor_select'] ) );
+	
+	}
+
+}
+function muext_quickedit_coauthor( $column_name, $post_type ) {
+	if ($column_name != 'coauthor') return;
+	
+    static $printNonce = TRUE;
+	
+    if ( $printNonce ) {
+        $printNonce = FALSE;
+        wp_nonce_field( plugin_basename( __FILE__ ), 'muext_coauthor_quickedit_nonce' );
+    }
+	
+	?>
+		<fieldset class="inline-edit-col-left inline-edit-coauthor">
+			<div class="inline-edit-col column-<?php echo $column_name; ?>">
+		  
+				<?php
+					// get users list, excluding admin
+				$args = array(
+					'exclude' => array(1),
+				);
+
+				$users = get_users( $args );
+
+					// now make your users dropdown
+					if ($users) { 
+						$this_coauthor_id =  get_post_meta( $post->ID, '_muext_coauthor', true );
+						?>
+						<select name="coauthor_select">
+							<?php foreach ($users as $user) {
+								$selected = ( $user->ID == $this_coauthor_id ) ? "selected" : "";
+								echo '<option value="' . $user->ID . '" ' . $selected . '>' .$user->user_nicename .'</option>';
+							} ?>
+						</select>
+						<?php
+					} 
+				?>
+		
+			</div>
+		</fieldset>
+    <?php
+	
+}

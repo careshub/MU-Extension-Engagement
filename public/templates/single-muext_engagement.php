@@ -27,8 +27,10 @@ get_header(); ?>
 						comments_template();
 					endif;
 					
-					//make cmb form editable on post if current user is author
-					if (is_user_logged_in() && get_current_user_id() == $post->post_author)  {
+					$coauthor_id = get_post_meta( $post->ID, '_muext_coauthor', true );
+					
+					//make cmb form editable on post if current user is author OR coauthor
+					if (is_user_logged_in() && ( get_current_user_id() == $post->post_author ) || ( get_current_user_id() == $coauthor_id ) ) {
 					?>	
 					
 						<div id="edit-cmb2">
