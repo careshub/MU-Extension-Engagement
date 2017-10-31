@@ -125,7 +125,7 @@ function muext_coauthor_callback( $post ) {
 			<option value="0"> -- Select -- </option>
 			<?php foreach ($users as $user) {
 				$selected = ( $user->ID == $this_coauthor_id ) ? "selected" : "";
-				echo '<option value="' . $user->ID . '" ' . $selected . '>' .$user->display_name .'</option>';
+				echo '<option value="' . $user->ID . '" ' . $selected . '>' . $user->display_name . ' (' . $user->user_login . ') ' .'</option>';
 			} ?>
 		</select>
 		<?php
