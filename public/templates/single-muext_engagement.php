@@ -29,6 +29,9 @@ get_header(); ?>
 					
 					$coauthor_id = get_post_meta( $post->ID, '_muext_coauthor', true );
 					
+					echo "<div class='hidden' id='coauthor_id'>" . $coauthor_id . "</div>";
+					echo "<div class='hidden' id='currentuser_id'>" . get_current_user_id() . "</div>";
+					
 					//make cmb form editable on post if current user is author OR coauthor
 					if (is_user_logged_in() && ( get_current_user_id() == $post->post_author ) || ( get_current_user_id() == $coauthor_id ) ) {
 					?>	
