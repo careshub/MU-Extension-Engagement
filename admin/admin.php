@@ -293,11 +293,41 @@ function muext_program_info_meta_box() {
 	$cmb->add_group_field( $location_group_field_id, array(
 	//$cmb->add_field( array(
 		'name'       => __( 'Location', 'muext-engagement' ),
-		'desc'       => __( 'Enter an address or the city and state.', 'muext-engagement' ),
+		'desc'       => __( 'Enter the address where the engagement takes place (physical location).', 'muext-engagement' ),
 		'id'         => $prefix . 'location_text',
 		'type'       => 'text',
 		//'repeatable'  => false
 	) );
+	
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'             => __( 'Geographic Region', 'muext-engagement' ),
+		'desc'             => 'Select the type of region served by the engagement. <em>Note: for an engagement that serves multiple regions, 
+		please use the Add Location button to enter additional information</em>',
+		'id'               => $prefix . 'region',
+		'type'             => 'select',
+		'show_option_none' => false,
+		'default'          => 'city_town',
+		'options'          => array(
+			'city_town' 		=> __( 'City or Town', 'muext-engagement' ),
+			'county'  			=> __( 'County', 'muext-engagement' ),
+			'school_district'   => __( 'School District', 'muext-engagement' ),
+			'zipcode'   		=> __( 'ZIP Code', 'muext-engagement' ),
+			'state'   			=> __( 'State', 'muext-engagement' ),
+			'national'   		=> __( 'National', 'muext-engagement' ),
+			'other'   			=> __( 'Other', 'muext-engagement' ),
+		),
+	) );
+	
+	$cmb->add_group_field( $location_group_field_id, array(
+	//$cmb->add_field( array(
+		'name'       => __( 'Region - other', 'muext-engagement' ),
+		'desc'       => __( 'Describe the Region served.', 'muext-engagement' ),
+		'id'         => $prefix . 'region_other',
+		'type'       => 'text',
+		'classes'	 => 'hidden',
+		//'repeatable'  => false
+	) );
+	
 	// Regular text field
 	$cmb->add_field(  array(
 	//$cmb->add_field( array(
