@@ -41,6 +41,8 @@ add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_bo
 */
 function enqueue_admin_scripts_and_styles( $hook_suffix ) {
 	$screen = get_current_screen();
+	
+	var_dump( $screen );
 
 	// Enqueue items for single engagement edit screen.
 	if ( in_array( $hook_suffix, array( 'post.php', 'post-new.php' ) ) ) {
@@ -56,8 +58,8 @@ function enqueue_admin_scripts_and_styles( $hook_suffix ) {
 	}
 
     // Enqueue items for settings screen.
-	if ( ! empty( $screen->id ) && 'muext_engagement_page_muext-engagement' == $screen->id ) {
-		// wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version() );
+	if ( ( ! empty( $screen->id ) && 'muext_engagement_page_muext-engagement' == $screen->id ) || is_admin() ) {
+		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() .'-admin-styles', plugins_url( 'assets/css/admin.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version() );
 		// wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . 'settings-admin-script', plugins_url( 'assets/js/admin-settings.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
 	}
 }
