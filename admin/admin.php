@@ -731,6 +731,7 @@ function muext_render_row_cb( $field_args, $field ) {
 		if( gettype( $field->object_id ) == "integer" ){
 			$has_image = has_post_thumbnail( $field->object_id );
 			$image_url = get_the_post_thumbnail_url( $field->object_id );
+			$image_id = get_post_thumbnail_id( $field->object_id );
 			//var_dump( $has_image );
 			//var_dump( $image_url );
 		}
@@ -741,11 +742,21 @@ function muext_render_row_cb( $field_args, $field ) {
 			</div>
 			<div class="cmb-td">
 			<?php if( $has_image ){ ?>
-				<p><strong>
-					Current file selected: <?php echo "<a class='yellow-text' href='" . $image_url . "'>" . $image_url . "</a>"; ?>
-				</strong></p>
-			<?php } ?>
+				<div class="inner-form-box">
+					<p><strong>
+						Current image file selected: <?php echo "<a class='yellow-text' href='" . $image_url . "'>" . $image_url . "</a>"; ?>
+					</strong></p>
+					<p>
+						<strong>Remove Current image?</strong>
+						<input id="remove_image_check" type="checkbox" name="remove_featured_image" value="<?php echo $image_id; ?>">
+					</p>
+				</div>
+				<p><strong>Replace Current Image: </strong>
+					<input type="file" class="regular-text" name="<?php echo esc_attr( $id ); ?>" id="<?php echo esc_attr( $id ); ?>" value="<?php echo $image_url; ?>"/>
+				</p>
+			<?php } else { ?>
 				<input type="file" class="regular-text" name="<?php echo esc_attr( $id ); ?>" id="<?php echo esc_attr( $id ); ?>" value="<?php echo $image_url; ?>"/>
+			<?php } ?>
 			<p class="cmb2-metabox-description"><?php echo esc_html( $description ); ?></p>
 
 			</div>
@@ -1007,7 +1018,14 @@ function muext_handle_frontend_new_post_form_submission() {
 	unset( $post_data['post_type'] );
 	unset( $post_data['post_status'] );
 	
-	// Try to upload the featured image
+	if( isset( $_POST['remove_featured_image'] ) ){
+		// get the image attachement id
+		$image_id = $_POST['remove_featured_image'];
+		wp_delete_attachment( $image_id, true ); //true = force deletion
+
+	}
+
+	// Try to upload the featured image, if set
 	$img_id = muext_frontend_form_photo_upload( $new_submission_id, $post_data );
 	
 	// If our photo upload was successful, set the featured image
