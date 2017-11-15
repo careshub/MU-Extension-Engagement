@@ -42,7 +42,7 @@ add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_bo
 function enqueue_admin_scripts_and_styles( $hook_suffix ) {
 	$screen = get_current_screen();
 	
-	var_dump( $screen );
+	//var_dump( $screen );
 
 	// Enqueue items for single engagement edit screen.
 	if ( in_array( $hook_suffix, array( 'post.php', 'post-new.php' ) ) ) {
