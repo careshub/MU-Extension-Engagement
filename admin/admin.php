@@ -32,6 +32,11 @@ add_action( 'cmb2_after_init', __NAMESPACE__ . '\\muext_handle_frontend_new_post
 // Program outcomes
 add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_box' );
 
+// save engagement taxonomy from select2 fields in wp-admin backend
+add_action( 'save_post', __NAMESPACE__ . '\\update_engagement_tax', 10, 3 );
+
+
+
 /**
 * Register and enqueue admin-specific style sheets and javascript files.
 *
@@ -1093,9 +1098,44 @@ function muext_handle_frontend_new_post_form_submission() {
 	 * Redirect back to the form page with a query variable with the new post ID.
 	 * This will help double-submissions with browser refreshes
 	 */
-	wp_redirect( esc_url_raw( add_query_arg( 'post_submitted', $new_submission_id ) ) );
+	if ( $new_submission_id !== 0 ) {
+		wp_redirect( esc_url_raw( add_query_arg( 'post_submitted', $new_submission_id ) ) );
+	}
 	exit;
 }
+
+
+/**
+ * Save post metadata when a post is saved.
+ *
+ * @param int $post_id The post ID.
+ * @param post $post The post object.
+ * @param bool $update Whether this is an existing post being updated or not.
+ */
+function update_engagement_tax( $post_id, $post, $update ) {
+
+    /*
+     * In production code, $slug should be set only once in the plugin,
+     * preferably as a class property, rather than in each function that needs it.
+     */
+    $post_type = get_post_type($post_id);
+
+    // If this isn't a 'book' post, don't update it.
+    if ( "muext_engagement" != $post_type ) return;
+
+    // - Update the post's metadata.
+
+    if ( isset( $_POST['affiliation'] ) ) {
+		// will be array of tax ids
+		foreach( $_POST['affiliation'] as $one_id ){
+			// mel TODO: look at how to update tax terms!
+			//wp_set_object_terms( $post_id, $one_id , 'muext_program_affiliation' );
+		}
+        //update_post_meta( $post_id, 'book_author', sanitize_text_field( $_POST['book_author'] ) );
+    }
+
+}
+
 
 /**
  * Returns field values for a metabox object

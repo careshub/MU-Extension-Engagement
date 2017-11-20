@@ -61,5 +61,39 @@
 				element.attr( "id", "toggleable-content-container-" + new Date().getTime() + "-" + i );
 			}
 		}
+		
+	// form submission add engagement returning blank form with validation (cmb2, not sure what's up..)
+	$("form#program_information").on("submit", function(e){
+		var this_form_obj = $( this );
+		var validation_html = "";
+		var validation_error = false;
+		
+		// if no title, no proceed
+		if( $("#_muext_title").val() == "" ){
+			validation_html += "Error: Engagement requires a title. <br/>";
+			validation_error = true;
+		}
+		// if no description, no proceed
+		if( (!($.trim($('#content').val())==="")) ){
+			validation_html += "Error: Engagement requires a description. <br/>";
+			validation_error = true;
+		}
+		
+		//if no affiliation, no proceed
+		
+		// if no theme, no proceed
+		
+		
+		// if validation error, no proceed
+		if( validation_error == true ){
+			e.preventDefault();
+			console.log( validation_html );
+		}
+		
+	});
+	
+	
+	
+	
 	
 }(jQuery));
