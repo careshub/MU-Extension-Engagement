@@ -294,7 +294,7 @@ function muext_program_info_meta_box() {
 	// Regular text field
 	$cmb->add_group_field( $location_group_field_id, array(
 	//$cmb->add_field( array(
-		'name'       => __( 'Location', 'muext-engagement' ),
+		'name'       => __( 'Location *', 'muext-engagement' ),
 		'desc'       => __( 'Enter the address where the engagement takes place (physical location).', 'muext-engagement' ),
 		'id'         => $prefix . 'location_text',
 		'type'       => 'text',
@@ -488,7 +488,7 @@ function muext_program_info_meta_box() {
 	
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Affiliation', 'muext-engagement' ),
+		'name'       => __( 'Affiliation *', 'muext-engagement' ),
 		'id'         => 'affiliation',
 		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
 		'type'       => 'pw_multiselect',
@@ -501,7 +501,7 @@ function muext_program_info_meta_box() {
 	//THEME
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Theme', 'muext-engagement' ),
+		'name'       => __( 'Theme *', 'muext-engagement' ),
 		'id'         => 'theme',
 		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
 		'type'       => 'pw_multiselect',
@@ -598,13 +598,14 @@ function muext_program_info_meta_box() {
 	//OUTREACH TYPE
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Engagement Type', 'muext-engagement' ),
+		'name'       => __( 'Engagement Type *', 'muext-engagement' ),
 		'id'         => 'type',
 		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
 		'type'       => 'pw_multiselect',
 		'options'	 => muext_get_cmb_options_array_tax( 'muext_program_outreach_type' ),
 		//'taxonomy'   => 'muext_program_affiliation', // Taxonomy Slug
-		'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		//'before_row' => __NAMESPACE__ . '\\muext_before_row_cb',
+		//'before_row'	=> '<a name="engagement_type">&nbsp;</a>',
 		'attributes'  => array(
 			'placeholder' => '',
 		)
@@ -641,7 +642,21 @@ function muext_program_info_meta_box() {
 		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
 		'desc'    => esc_html__( 'Describe the outcomes of the Engagement', 'cmb2' ),
 		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
-		'type'    => 'textarea',
+		//'type'    => 'textarea',
+		'type'    => 'wysiwyg',
+		'options' => array(
+			'wpautop' => true, // use wpautop?
+			'media_buttons' => true, // show insert/upload button(s)
+			'textarea_name' => $editor_id, // set the textarea name to something different, square brackets [] can be used here
+			'textarea_rows' => get_option('default_post_edit_rows', 10), // rows="..."
+			'tabindex' => '',
+			'editor_css' => '', // intended for extra styles for both visual and HTML editors buttons, needs to include the `<style>` tags, can use "scoped".
+			'editor_class' => '', // add extra class(es) to the editor textarea
+			'teeny' => false, // output the minimal editor config used in Press This
+			'dfw' => false, // replace the default fullscreen with DFW (needs specific css)
+			//'tinymce' => true, // load TinyMCE, can be used to pass settings directly to TinyMCE using an array()
+			//'quicktags' => true // load Quicktags, can be used to pass settings directly to Quicktags using an array()
+		),
 		// 'options' => array( 'textarea_rows' => 10, ),
 		//'save_field' => false, // Disables the saving of this field.
 		'attributes'  => array(
@@ -665,13 +680,13 @@ function muext_program_info_meta_box() {
 function muext_before_row_cb( $field_args, $field ) {
 	//add headers to sections, add show/hide buttons
 	if ( 'content' == $field_args['id'] ) { //if we're before the Description section
-		echo '<div class="question-type">WHAT</div>';
+		echo '<div class="question-type">WHAT</div><a name="engagement-description">&nbsp;</a>';
 	} else if( '_muext_start_date' == $field_args['id'] ){
 		echo '<div class="question-type">WHEN</div>';
 	} else if( 'impact' == $field_args['id'] ){
 		echo '<div class="question-type">WHY</div>';
 	} else if( 'funding' == $field_args['id'] ){
-		echo '<div class="question-type">HOW</div>';
+		echo '<div class="question-type">HOW</div><a name="engagement-type">&nbsp;</a>'; //add anchor for required field
 	} else if( '_muext_outcome_text' == $field_args['id'] ){
 		//add button
 		echo '<button id="show-outcomes-box" class="button"><span class="fa fa-plus"></span>&nbsp;Add Outcomes or Success Stories</button>';
@@ -760,6 +775,8 @@ function muext_render_row_cb( $field_args, $field ) {
 			<p class="cmb2-metabox-description"><?php echo esc_html( $description ); ?></p>
 
 			</div>
+			
+			<a name="engagement-affiliation-theme">&nbsp;</a>
 		</div>
 		<?php
 	
@@ -974,13 +991,42 @@ function muext_handle_frontend_new_post_form_submission() {
 		return $cmb->prop( 'submission_error', new \WP_Error( 'security_fail', __( 'Security check failed.' ) ) );
 	}
 	
+	// create submission error string
+	$sub_errors = "";
+	
 	// Check title submitted
 	if ( empty( $_POST['_muext_title'] ) ) {
-		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'New Engagement requires a title.' ) ) );
+		//return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'New Engagement requires a title.' ) ) );
+		$sub_errors .= 'New Engagement requires a title. <br/>';
 	}
-	// Check title submitted
+	// Check description submitted
 	if ( empty( $_POST['content'] ) ) {
-		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( 'Engagement requires a description.' ) ) );
+		//return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( '<a href="#engagement-description">Engagement requires a description.</a>' ) ) );
+		$sub_errors .= '<a href="#engagement-description">Engagement requires a description.</a><br />';
+	}
+	
+	// Check affiliation submitted
+	if ( empty( $_POST['affiliation'] ) ) {
+		//return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( '<a href="#engagement-affiliation-theme">Engagement requires an affiliation.</a>' ) ) );
+		$sub_errors .= '<a href="#engagement-affiliation-theme">Engagement requires an affiliation.</a><br />';
+	}
+	
+	// Check theme submitted
+	if ( empty( $_POST['theme'] ) ) {
+		//return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( '<a href="#engagement-affiliation-theme">Engagement requires a theme.</a>' ) ) );
+		$sub_errors .= '<a href="#engagement-affiliation-theme">Engagement requires a theme.</a><br />';
+	}
+	
+	// Check type submitted
+	if ( empty( $_POST['type'] ) ) {
+		//return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( '<a href="#engagement-type">Engagement requires a type.</a>' ) ) );
+		$sub_errors .= '<a href="#engagement-type">Engagement requires a type.</a><br />';
+	}
+	
+	// if we have anything in the error string, return
+	if( $sub_errors != "" ){
+		return $cmb->prop( 'submission_error', new \WP_Error( 'post_data_missing', __( $sub_errors ) ) );
+	
 	}
 	
 	// And that the title is not the default title
@@ -1143,6 +1189,7 @@ function muext_select2_taxonomy_process( $post_id, $postmeta, $taxonomy ) {
         wp_set_object_terms( $post_id, $set_the_terms , $taxonomy );
  
     } elseif ( $get_the_terms && ! is_wp_error( $get_the_terms ) ) {
+		
         // If there's no post meta, we force the terms to be the default
         $get_post_meta = array();
         foreach( $get_the_terms as $term ) {

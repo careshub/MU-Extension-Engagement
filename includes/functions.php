@@ -83,6 +83,26 @@ function muext_archive_is_filtered_view() {
 	return false;
 }
 
+/**
+ * Email folks when muext_engagement published!
+ *
+ **/
+//  TODO: get the language and get this done!
+add_action( 'publish_muext_engagement', 'post_published_notification', 10, 2 );
+function post_published_notification( $ID, $post ) {
+    $author = $post->post_author; /* Post author ID. */
+    $name = get_the_author_meta( 'display_name', $author );
+    $email = get_the_author_meta( 'user_email', $author );
+    $title = $post->post_title;
+    $permalink = get_permalink( $ID );
+    $edit = get_edit_post_link( $ID, '' );
+    $to[] = sprintf( '%s <%s>', $name, $email );
+    $subject = sprintf( 'Published: %s', $title );
+    $message = sprintf ('Congratulations, %s! Your Engagement “%s” has been published to the MU Engagement Council Inventory.' . "\n\n", $name, $title );
+    $message .= sprintf( 'View: %s', $permalink );
+    $headers[] = '';
+    wp_mail( $to, $subject, $message, $headers );
+}
 
 /*
  ** Add metabox for additional author(s) to Engagements post type
@@ -158,6 +178,9 @@ function muext_save_coauthor_metabox( $post_id ) {
 	}
 
 }
+
+
+// TODO: make this happen!
 function muext_quickedit_coauthor( $column_name, $post_type ) {
 	if ($column_name != 'coauthor') return;
 	

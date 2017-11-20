@@ -51,10 +51,16 @@ function register_muext_engagement_cpt() {
 		'filter_items_list'     => __( 'Filter Engagements list', 'muext-engagement' ),
 	);
 	$capabilities = array(
-		'edit_post'             => 'edit_post',
-		'read_post'             => 'read_post',
-		'delete_post'           => 'delete_post',
-		'edit_posts'            => 'edit_posts',
+		//'edit_post'             => 'edit_post',
+		'edit_post'             => 'edit_muext_engagement',
+		//'read_post'             => 'read_post',
+		'read_post'             => 'read_muext_engagement',
+		//'delete_post'           => 'delete_post',
+		'delete_post'           => 'delete_muext_engagement',
+		//'delete_posts'           => 'delete_posts',
+		'delete_posts'           => 'delete_muext_engagements',
+		//'edit_posts'            => 'edit_posts',
+		'edit_posts'            => 'edit_muext_engagements',
 		'edit_others_posts'     => 'edit_others_posts',
 		'publish_posts'         => 'publish_posts',
 		'read_private_posts'    => 'read_private_posts',
@@ -274,7 +280,7 @@ function register_program_outreach_type() {
 	);
 	$args = array(
 		'labels'                     => $labels,
-		'hierarchical'               => false,
+		'hierarchical'               => true,
 		'public'                     => true,
 		'show_ui'                    => true,
 		'show_admin_column'          => true,
