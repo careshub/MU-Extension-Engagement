@@ -32,6 +32,10 @@ add_action( 'cmb2_after_init', __NAMESPACE__ . '\\muext_handle_frontend_new_post
 // Program outcomes
 add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_box' );
 
+// Save taxonomy when saving post
+add_action( 'save_post_muext_engagement', __NAMESPACE__ . '\\muext_save_taxonomy_select2_boxes' );
+
+
 /**
 * Register and enqueue admin-specific style sheets and javascript files.
 *
@@ -294,7 +298,7 @@ function muext_program_info_meta_box() {
 	// Regular text field
 	$cmb->add_group_field( $location_group_field_id, array(
 	//$cmb->add_field( array(
-		'name'       => __( 'Location', 'muext-engagement' ),
+		'name'       => __( 'Location *', 'muext-engagement' ),
 		'desc'       => __( 'Enter the address where the engagement takes place (physical location).', 'muext-engagement' ),
 		'id'         => $prefix . 'location_text',
 		'type'       => 'text',
@@ -395,6 +399,13 @@ function muext_program_info_meta_box() {
 		'type'       => 'hidden',
 	) );
 	
+	// returned from cares network API: https://services.engagementnetwork.org/?api=api-location
+	$cmb->add_field( array(
+		'name'       => __( 'geo_key', 'muext-engagement' ),
+		'id'         => $prefix . 'geo_key',
+		'type'       => 'hidden',
+	) );
+	
 	// Location details
 	// Return values from the API
 	// Street number => street_number
@@ -488,7 +499,7 @@ function muext_program_info_meta_box() {
 	
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Affiliation', 'muext-engagement' ),
+		'name'       => __( 'Affiliation *', 'muext-engagement' ),
 		'id'         => 'affiliation',
 		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
 		'type'       => 'pw_multiselect',
@@ -498,10 +509,11 @@ function muext_program_info_meta_box() {
 	) );
 	
 	
+	
 	//THEME
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Theme', 'muext-engagement' ),
+		'name'       => __( 'Theme *', 'muext-engagement' ),
 		'id'         => 'theme',
 		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
 		'type'       => 'pw_multiselect',
@@ -598,7 +610,7 @@ function muext_program_info_meta_box() {
 	//OUTREACH TYPE
 	$cmb->add_field( array(
 		//'default_cb' => 'yourprefix_maybe_set_default_from_posted_values',
-		'name'       => __( 'Engagement Type', 'muext-engagement' ),
+		'name'       => __( 'Engagement Type *', 'muext-engagement' ),
 		'id'         => 'type',
 		'desc' 		 => esc_html__( 'Select all that apply', 'muext-engagement' ),
 		'type'       => 'pw_multiselect',
@@ -867,7 +879,17 @@ function muext_show_meta_to_chosen_roles( $display, $meta_box ) {
 }
 //add_filter( 'cmb2_show_on', 'cmb_show_meta_to_chosen_roles', 10, 2 );
 
-
+function muext_save_taxonomy_select2_boxes( $post_id ){
+	
+	muext_select2_taxonomy_process( $post_id, 'affiliation', 'muext_program_affiliation' );
+	muext_select2_taxonomy_process( $post_id, 'audience', 'muext_program_audience' );
+	muext_select2_taxonomy_process( $post_id, 'impact', 'muext_program_impact_area' );
+	muext_select2_taxonomy_process( $post_id, 'theme', 'muext_program_category' );
+	muext_select2_taxonomy_process( $post_id, 'type', 'muext_program_outreach_type' );
+	muext_select2_taxonomy_process( $post_id, 'funding', 'muext_program_funding' );
+	
+	
+}
 
 
 /******* FRONT END FORM FUNCTIONALITY *******/
@@ -1040,6 +1062,7 @@ function muext_handle_frontend_new_post_form_submission() {
         muext_select2_taxonomy_process( $new_submission_id, 'impact', 'muext_program_impact_area' );
         muext_select2_taxonomy_process( $new_submission_id, 'theme', 'muext_program_category' );
         muext_select2_taxonomy_process( $new_submission_id, 'type', 'muext_program_outreach_type' );
+        muext_select2_taxonomy_process( $new_submission_id, 'funding', 'muext_program_funding' );
 		
     }
 	
@@ -1050,6 +1073,8 @@ function muext_handle_frontend_new_post_form_submission() {
 	wp_redirect( esc_url_raw( add_query_arg( 'post_submitted', $new_submission_id ) ) );
 	exit;
 }
+
+
 
 /**
  * Returns field values for a metabox object
@@ -1127,7 +1152,10 @@ function muext_frontend_form_photo_upload( $post_id, $attachment_post_data = arr
 function muext_select2_taxonomy_process( $post_id, $postmeta, $taxonomy ) {
  
     $get_post_meta = get_post_meta( $post_id, $postmeta, true );
+	error_log( 'get post meta: ' );
+	error_log( implode(",", $get_post_meta ) );
     $get_the_terms = get_the_terms( $post_id, $taxonomy );
+
  
     if ( is_array( $get_post_meta ) ) {
         // If we already have the post meta, then we should set the terms
@@ -1139,10 +1167,12 @@ function muext_select2_taxonomy_process( $post_id, $postmeta, $taxonomy ) {
             $term = get_term_by( 'id' , $term_id, $taxonomy );
             array_push( $set_the_terms, $term->slug );
         }
+		
+		error_log( 'setting object terms' );
  
         wp_set_object_terms( $post_id, $set_the_terms , $taxonomy );
  
-    } elseif ( $get_the_terms && ! is_wp_error( $get_the_terms ) ) {
+    } else if ( $get_the_terms && ! is_wp_error( $get_the_terms ) ) {
         // If there's no post meta, we force the terms to be the default
         $get_post_meta = array();
         foreach( $get_the_terms as $term ) {
@@ -1150,6 +1180,7 @@ function muext_select2_taxonomy_process( $post_id, $postmeta, $taxonomy ) {
             array_push( $get_post_meta, $term_id );
         }
         update_post_meta( $post_id, $postmeta, $get_post_meta );
+		
     }
  
 }
