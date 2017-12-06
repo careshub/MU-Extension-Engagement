@@ -61,5 +61,67 @@
 				element.attr( "id", "toggleable-content-container-" + new Date().getTime() + "-" + i );
 			}
 		}
+		
+	// form submission add engagement returning blank form with validation (cmb2, not sure what's up..)
+	$("form#program_information").on("submit", function(e){
+		//remove all error classes
+		$("form#program_information input").removeClass('validationError');
+		$("form#program_information textarea").removeClass('validationError');
+		
+		//clear messages
+		$("form#program_information #validation_message").remove();
+		
+		var this_form_obj = $( this );
+		var validation_html = "";
+		var validation_error = false;
+		
+		// if no title, no proceed
+		if( $("form#program_information #_muext_title").val() == "" ){
+			validation_html += "Error: Engagement requires a Title. <br/>";
+			validation_error = true;
+		}
+		// if no description, no proceed
+		if( ($.trim($('form#program_information #content').val())==="") ){
+			validation_html += "Error: Engagement requires a Description. <br/>";
+			validation_error = true;
+		}
+		
+		//if no affiliation, no proceed
+		if( $('form#program_information select#affiliation' ).val() == null ){
+			validation_html += "Error: Engagement requires an Affiliation. <br/>";
+			validation_error = true;
+		}
+		
+		// if no theme, no proceed
+		if( $('form#program_information select#type' ).val() == null ){
+			validation_html += "Error: Engagement requires an Engagement Type. <br/>";
+			validation_error = true;
+		}
+		
+		// if not engagement type
+		if( $('form#program_information select#theme' ).val() == null ){
+			validation_html += "Error: Engagement requires a Theme. <br/>";
+			validation_error = true;
+		}
+		
+		// if validation error, no proceed
+		if( validation_error == true ){
+			e.preventDefault();
+			console.log( validation_html );
+			
+			//attach validation message to end
+			var validation_html_container = "<div id='validation_message' class='form-message'>";
+			validation_html_container += validation_html;
+			validation_html_container += "</div>";
+			
+			$("form#program_information").append( validation_html_container );
+			
+		}
+		
+	});
+	
+	
+	
+	
 	
 }(jQuery));
