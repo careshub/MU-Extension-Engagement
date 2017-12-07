@@ -142,7 +142,7 @@
 			//done!
 			delete_post_ajax.done(function( data ) {
 				console.log( 'posted: ' + data );
-				//location.reload();
+				location.reload();
 			});
 				
 		}
