@@ -653,7 +653,7 @@ function muext_program_info_meta_box() {
 		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
 		'desc'    => esc_html__( 'Describe the outcomes of the Engagement', 'cmb2' ),
 		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
-		'type'    => 'textarea',
+		'type'    => 'wysiwyg',
 		// 'options' => array( 'textarea_rows' => 10, ),
 		//'save_field' => false, // Disables the saving of this field.
 		'attributes'  => array(
@@ -804,9 +804,9 @@ function muext_program_outcomes_meta_box() {
 		'name'    => esc_html__( 'Outcome', 'muext-engagement' ),
 		'desc'    => esc_html__( 'A text description of when this occurred. For reference only. (Do not update.)', 'cmb2' ),
 		'id'      => $prefix . 'outcome_text', // This will be saved as the main post content.
-		'type'    => 'textarea',
+		'type'    => 'wysiwyg',
 		// 'options' => array( 'textarea_rows' => 10, ),
-		'save_field' => false, // Disables the saving of this field.
+		// 'save_field' => false, // Disables the saving of this field.
 		// 'attributes' => array(
 		// 	'disabled' => 'disabled',
 		// 	'readonly' => 'readonly',
@@ -910,10 +910,17 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 	$user_id = get_current_user_id();
 	
 	if ( ! isset( $atts['post_id'] ) ) {
-		$object_id = 'fake-objectsub-id';
+		$object_id = wp_insert_post( array( 
+			'post_title'  => '', 
+			'post_type'   => 'muext_engagement',
+			'post_status' => 'auto-draft' 
+		) );
 	} else {
 		$object_id = absint( $atts['post_id'] );
 	}
+
+	// Enqueue the media uploader script, passing it the right post ID.
+	wp_enqueue_media( array( 'post' => $object_id ) );
 
 	// Initiate our output variable
 	$output = '';
@@ -937,8 +944,7 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 	//var_dump( $cmb );
 	// Get our form
 	$output .= cmb2_get_metabox_form( $metabox_id, $object_id, array( 'save_button' => __( 'Submit Engagement', 'muext-engagement' ) ) );
-	
-	
+
 	return $output;
 }
 //add_shortcode( 'cmb-frontend', 'muext_frontend_form_submission_shortcode' );

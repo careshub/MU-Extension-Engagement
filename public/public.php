@@ -39,6 +39,9 @@ add_action( 'init', __NAMESPACE__ . '\\muext_limit_wpadmin_access' );
 // hide admin bar for non-administrators/non-editors
 add_action('after_setup_theme', __NAMESPACE__ . '\\muext_hide_admin_bar');
 
+// Filter capabilities for this setup.
+add_filter( 'map_meta_cap', __NAMESPACE__ . '\\filter_map_meta_caps', 12, 4 );
+
 
 
 /**
@@ -407,5 +410,46 @@ function muext_comma_separate_tax( $incoming_terms ){
 	$this_comma_sep_str = rtrim ( $this_comma_sep_str, ', ' );
 
 	return $this_comma_sep_str;
+}
+
+/**
+ * Allow logged-in users to add engagements and media.
+ *
+ * @since 1.0.0
+ *
+ * @param array $caps Capabilities for meta capability
+ * @param string $cap Capability name
+ * @param int $user_id User id
+ * @param mixed $args Arguments
+ */
+function filter_map_meta_caps( $caps = array(), $cap = '', $user_id = 0, $args = array() ) {
+
+	switch ( $cap ) {
+		// @TODO: break out primitive caps for muext_engagements?
+		// case 'publish_muext_engagements':
+		// case 'read_muext_engagement':
+		// case 'read_private_muext_engagements':
+		// case 'edit_muext_engagement':
+		// case 'edit_muext_engagements':
+		// case 'edit_private_muext_engagements':
+		// case 'edit_published_muext_engagements':
+		// case 'edit_others_muext_engagements':
+		// case 'delete_muext_engagement':
+		// case 'delete_muext_engagements':
+		// case 'delete_private_muext_engagements':
+		// case 'delete_published_muext_engagements':
+		// case 'delete_others_muext_engagements':
+			// break;
+		case 'upload_files':
+			// Option: Refer to the post type setting.
+			// return user_can( 'edit_muext_engagement' )
+			// Simpler, just allow if logged in.
+			if ( $user_id ) {
+				$caps = array( 'exist' );
+			}
+			break;
+	}
+
+	return $caps;
 }
 

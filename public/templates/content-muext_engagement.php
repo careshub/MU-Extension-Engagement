@@ -41,7 +41,7 @@ $this_aff_str = muext_comma_separate_tax( $affiliation_terms );
 
 
 //outcomes, impact and audience section
-$outcome  = get_post_meta( $post_id, '_muext_outcome_text', true );
+$outcome  = apply_filters( 'the_content', get_post_meta( $post_id, '_muext_outcome_text', true ) );
 $audience_terms = wp_get_post_terms( $post_id, 'muext_program_audience' );
 $audience_str = muext_comma_separate_tax( $audience_terms );
 $impact_terms = wp_get_post_terms( $post_id, 'muext_program_impact_area' );
