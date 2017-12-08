@@ -962,30 +962,26 @@ function muext_handle_frontend_new_post_form_submission() {
 		return false;
 	}
 	
-	//instantiate post data array 
-	$post_data = array();
+	$object_id = intval( $_POST['object_id'] );
+
+	// Instantiate post data array.
+	$post_data = array( 'ID' => $object_id );
+	
+	/*
+	 * New posts have a status of "auto-draft" until first submitted. 
+	 * If the user can edit_others_posts, then use "publish."
+	 * If the submitter is just an author, set the status to "pending." 
+	 * But, if the post is already published, let it stay published (no matter who is editing it).
+	 */
+	$post_status = get_post_status( $object_id );
+	if ( 'publish' === $post_status || current_user_can( 'edit_others_posts' ) ) {
+		$post_data['post_status'] = 'publish';
+	} else {
+		$post_data['post_status'] = 'pending';
+	}
 	
 	// Get CMB2 metabox object
 	$metabox_id = 'program_information';
-
-	//if we don't have an incoming object id, make a fake one and don't publish!
-	if ( ! isset( $_POST['object_id'] ) ) {
-		$object_id = 'fake-objectsub-id';
-		$post_data['post_status'] = 'pending';
-	} else {
-		$object_id = absint( $_POST['object_id'] );
-
-		//if we have a post_id and it's > 1 (because absint/intval will return 1 for arrays, 0 for empty array)
-		if( is_int( $object_id ) && ( $object_id > 1 ) ){
-			$post_data['ID'] = $object_id;
-			$post_data['post_status'] = 'publish';
-
-		} else { //it's probably the string 'fake-object...'
-			$object_id = 'fake-objectsub-id';
-			$post_data['post_status'] = 'pending';
-		}
-	}
-	
 	//get our metabox object
 	$cmb = cmb2_get_metabox( $metabox_id, $object_id );
 	
