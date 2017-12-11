@@ -65,6 +65,14 @@ function enqueue_styles_scripts() {
 	// Scripts
 	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
 
+	wp_localize_script( 
+		\MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', 
+		'muext_restapi_details', 
+		array(
+			'rest_url' => esc_url_raw( rest_url() ),
+			'rest_nonce' => wp_create_nonce( 'wp_rest' )
+		) 
+	);
 	// Styles
 	//if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) || is_engagement_tax_archive() || is_front_page() ) {
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-style', plugins_url( 'css/public.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
