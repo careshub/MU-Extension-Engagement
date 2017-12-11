@@ -192,6 +192,62 @@ function outcomesBoxListener(){
 
 }
 
+	
+function submitEngagementlistener(){
+
+	// what engagement are we on?
+	var this_engagement_id = $("#post #post_ID").val();
+
+	// we are good to save, but first we need to create geo_key entry.  
+	var location_groups_all = $("#_muext_location_group_repeat"); //encompasses all location groups/items
+	var location_groups_each = $("#_muext_location_group_repeat .cmb-repeatable-grouping"); //encompasses EACH location groups/items
+	
+	var which_iterator = 0; //init var
+	
+	// for each location group:
+	$.each( location_groups_each, function(){
+		// which location group?
+		which_iterator = jQuery(this).attr('data-iterator');
+		
+		// find the region, get corresponding geo_key
+		var which_region = $( this ).find(".muext_region_class option").filter(":selected").val();
+		var geo_key = getGeoKey( which_region );
+		
+		console.log( which_iterator);
+		console.log( which_region);
+		console.log( geo_key);
+		
+		// assign geo_key to this location group's geo_key element
+		$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_key]']").val(geo_key);
+		
+		// assign taxonomies via wp rest api
+		
+		
+	});
+	
+}
+
+function getGeoKey( which_region ){
+	
+	switch( which_region ){
+		case 'city_town':
+		case 'other':
+			return '160';
+		case 'county':
+			return '050';
+		case 'school_district':
+			return '970';
+		case 'zipcode':
+			return '871';
+		case 'state':
+			return '040';
+		case 'national':
+			return '010';
+	}
+	
+}
+
+
 
 (function ( $ ) {
 	"use strict";
@@ -202,6 +258,8 @@ function outcomesBoxListener(){
 		locationRepeatListener();
 
 		outcomesBoxListener();
+		
+		// TODO: add submit engagement listener to... 
 
 	});
 }(jQuery));

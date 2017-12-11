@@ -1,6 +1,13 @@
 (function ( $ ) {
 	"use strict";
 
+	
+	// listen for form submit and interrupt to add geo_key/geo_id
+	$("form#program_information").on("submit", function(e){
+		//submitEngagementlistener();
+	});
+	
+	
 	// Set toggle indicators and add ARIA attributes on page load.
 	$( "#page .toggle-container" ).each( function( i, item ){
 		var expanded = $( item ).hasClass( "toggle-open" ),
@@ -116,10 +123,126 @@
 			
 			$("form#program_information").append( validation_html_container );
 			
+		} else {
+			
+			submitEngagementlistener(); // additional data to be added/api'd on form submit (geo_key, geoid taxonomy)
+			return false;
+			
 		}
 		
 	});
 	
+	
+	function submitEngagementlistener(){
+		
+		// what engagement are we on?
+		var this_engagement_id = $("form#program_information [name='object_id']").val(); // good thing we're setting the object id before submit!
+
+		// we are good to save, but first we need to create geo_key entry.  
+		var location_groups_all = $("#_muext_location_group_repeat"); //encompasses all location groups/items
+		var location_groups_each = $("#_muext_location_group_repeat .cmb-repeatable-grouping"); //encompasses EACH location groups/items
+		
+		var which_iterator = 0; //init var
+		
+		// for each location group:
+		$.each( location_groups_each, function(){
+			// which location group?
+			which_iterator = jQuery(this).attr('data-iterator');
+			
+			// find the region, get corresponding geo_key
+			var which_region = $( this ).find(".muext_region_class option").filter(":selected").val();
+			var geo_key = getGeoKey( which_region );
+			
+			console.log( which_iterator);
+			console.log( which_region);
+			console.log( geo_key);
+			
+			// assign geo_key to this location group's geo_key element
+			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_key]']").val(geo_key);
+			
+			// do we have a lat/long?
+			var latitude = $("[name='_muext_location_group[" + which_iterator + "][_muext_latitude]']").val();
+			var longitude = $("[name='_muext_location_group[" + which_iterator + "][_muext_longitude]']").val();
+			
+			// if we have lat, long and geo_key, get geoid
+			if( latitude && longitude && geo_key ){
+				//get geo id via engagements api
+				var services_params = {
+					lat		: latitude,
+					lon		: longitude
+				};
+					
+				services_api("get", "api-location/v1/geoid/" + geo_key, services_params, function (data) {
+					
+					console.log( data );
+					
+				});
+				
+				
+				// assign taxonomies via wp rest api
+				var update_geoid_ajax = $.ajax({
+					//method: "DELETE",
+					url: muext_restapi_details.rest_url + 'wp/v2/muext_engagement/' + this_engagement_id ,
+					beforeSend: function ( xhr ) {
+						xhr.setRequestHeader( 'X-WP-Nonce', muext_restapi_details.rest_nonce );
+					}
+				});
+				
+			}
+		});
+		
+		return false; //don't submit right now
+		
+		
+	}
+
+	// geokey lookup
+	function getGeoKey( which_region ){
+		switch( which_region ){
+			case 'county':
+				return '050';
+			case 'school_district':
+				return '970';
+			case 'zipcode':
+				return '871';
+			case 'state':
+				return '040';
+			case 'national':
+				return '010';
+			case 'city_town':
+			case 'other':
+				return '160';
+		}
+	}
+	
+	
+    /**
+    * Send a request to the services.engagementnetwork.org API service to get data.
+    * @param {string} service - API endpoint and parameters.
+    * @param {object} data - The data posted to API.
+    * @param {requestCallback} callback - The callback function to execute after the API request is succefully completed.
+    * @param {requestCallback} [fallback] - The callback function to execute when the API request returns an error.
+    */
+    function services_api(type, service, data, callback, fallback) {
+        var param = {
+            type: type,
+            url: "https://services.engagementnetwork.org/" + service,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            crossDomain: true,
+            success: callback,
+            error: fallback || $.noop
+        };
+        if (data && typeof data !== "undefined") {
+            if (type === "post") {
+                param.data = JSON.stringify(data);
+            } else {
+                param.url += "?" + $.param(data);
+            }
+        }
+        $.ajax(param);
+    }
+
 	
 	// front-end delete posts if author.  Can't use wp delete posts since we're restricting wp-admin and redirecting
 	$(".delete-engagement").on("click", function(e){
@@ -148,6 +271,9 @@
 		}
 	});
 	
+	
+	
+	// util lookup for geocode
 	
 	
 	
