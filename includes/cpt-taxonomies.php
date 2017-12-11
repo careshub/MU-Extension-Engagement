@@ -18,6 +18,8 @@ add_action( 'init', __NAMESPACE__ . '\\register_program_outreach_type' );
 add_action( 'init', __NAMESPACE__ . '\\register_program_affiliation' );
 // Register the engagement program funding source taxonomy.
 add_action( 'init', __NAMESPACE__ . '\\register_program_funding_source' );
+// Register the engagement's geoids.
+add_action( 'init', __NAMESPACE__ . '\\register_muext_geoid' );
 
 // Register Custom Post Type
 function register_muext_engagement_cpt() {
@@ -361,5 +363,45 @@ function register_program_funding_source() {
 		'rewrite'                    => array( 'slug' => 'funding_cource' ),
 	);
 	register_taxonomy( 'muext_program_funding', array( 'muext_engagement' ), $args );
+
+}
+
+// geoids for engagements stored as taxonomy b/c performance
+function register_muext_geoid() {
+
+	$labels = array(
+		'name'                       => _x( 'GEOID', 'Taxonomy General Name', 'muext-engagement' ),
+		'singular_name'              => _x( 'GEOID', 'Taxonomy Singular Name', 'muext-engagement' ),
+		'menu_name'                  => __( 'GEOID', 'muext-engagement' ),
+		'all_items'                  => __( 'All GEOIDs', 'muext-engagement' ),
+		'parent_item'                => __( 'Parent GEOID', 'muext-engagement' ),
+		'parent_item_colon'          => __( 'Parent GEOID', 'muext-engagement' ),
+		'new_item_name'              => __( 'New GEOID Name', 'muext-engagement' ),
+		'add_new_item'               => __( 'Add New GEOID', 'muext-engagement' ),
+		'edit_item'                  => __( 'Edit GEOID', 'muext-engagement' ),
+		'update_item'                => __( 'Update GEOID', 'muext-engagement' ),
+		'view_item'                  => __( 'View GEOID', 'muext-engagement' ),
+		'separate_items_with_commas' => __( 'Separate GEOIDs with commas', 'muext-engagement' ),
+		'add_or_remove_items'        => __( 'Add or remove GEOIDs', 'muext-engagement' ),
+		'choose_from_most_used'      => __( 'Choose from the most used', 'muext-engagement' ),
+		'popular_items'              => __( 'Popular GEOIDs', 'muext-engagement' ),
+		'search_items'               => __( 'Search GEOIDes', 'muext-engagement' ),
+		'not_found'                  => __( 'Not Found', 'muext-engagement' ),
+		'no_terms'                   => __( 'No affiliations', 'muext-engagement' ),
+		'items_list'                 => __( 'GEOIDs', 'muext-engagement' ),
+		'items_list_navigation'      => __( 'GEOID list navigation', 'muext-engagement' ),
+	);
+	$args = array(
+		'labels'                     => $labels,
+		'hierarchical'               => false,
+		'public'                     => true,
+		'show_ui'                    => true,
+		'show_admin_column'          => true,
+		'show_in_nav_menus'          => true,
+		'show_tagcloud'              => false,
+		'show_in_rest'               => true,
+		'rewrite'                    => array( 'slug' => 'geoid' ),
+	);
+	register_taxonomy( 'muext_geoid', array( 'muext_engagement' ), $args );
 
 }

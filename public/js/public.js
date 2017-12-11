@@ -2,11 +2,25 @@
 	"use strict";
 
 	
-	// listen for form submit and interrupt to add geo_key/geo_id
-	$("form#program_information").on("submit", function(e){
-		//submitEngagementlistener();
+	//listen for click inside of 'location' field (any) to Google listen
+	locationRepeatListener();
+	
+	// listen for 'other' in region select (id ends with muext_region)
+	jQuery("[id$='_muext_region']").on("click", function( ){
+		otherRegionListener( this );
 	});
 	
+	// add listener for location repeater (add button)
+	jQuery(".cmb-add-group-row").on("click", function(){
+		jQuery("[id$='_muext_region']").off("click", function( ){
+			otherRegionListener( this );
+		});
+		jQuery("[id$='_muext_region']").on("click", function( ){
+			otherRegionListener( this );
+		});
+	});
+		
+		
 	
 	// Set toggle indicators and add ARIA attributes on page load.
 	$( "#page .toggle-container" ).each( function( i, item ){
@@ -68,9 +82,17 @@
 			element.attr( "id", "toggleable-content-container-" + new Date().getTime() + "-" + i );
 		}
 	}
-		
+
+	// listen to region change OR location change to trigger geoid info
+	$("form#program_information .muext_region_class select").on("change", function(){
+		geoidlistener();
+	});
+	
+	
+	
 	// form submission add engagement returning blank form with validation (cmb2, not sure what's up..)
-	$("form#program_information").on("submit", function(e){
+	$("form#program_information").submit( function(e){
+		
 		//remove all error classes
 		$("form#program_information input").removeClass('validationError');
 		$("form#program_information textarea").removeClass('validationError');
@@ -125,15 +147,47 @@
 			
 		} else {
 			
-			submitEngagementlistener(); // additional data to be added/api'd on form submit (geo_key, geoid taxonomy)
-			return false;
+			// we're good to go!
 			
 		}
 		
 	});
 	
 	
-	function submitEngagementlistener(){
+	// front-end delete posts if author.  Can't use wp delete posts since we're restricting wp-admin and redirecting
+	$(".delete-engagement").on("click", function(e){
+		
+		// are they sure they want to delete?
+		if( confirm('Are you SURE you want to delete this Engagement?') ){
+			
+			// get the id
+			var this_engagement_id = jQuery( this ).attr("data-postid");
+			console.log( this_engagement_id);
+			
+			var delete_post_ajax = $.ajax({
+				method: "DELETE",
+				url: muext_restapi_details.rest_url + 'wp/v2/muext_engagement/' + this_engagement_id ,
+				beforeSend: function ( xhr ) {
+					xhr.setRequestHeader( 'X-WP-Nonce', muext_restapi_details.rest_nonce );
+				}
+			});
+			
+			//done!
+			delete_post_ajax.done(function( data ) {
+				console.log( 'posted: ' + data );
+				location.reload();
+			});
+				
+		}
+	});
+	
+	
+	
+}(jQuery));
+
+
+// listens to change to add geokey and geoid to 
+	function geoidlistener(){
 		
 		// what engagement are we on?
 		var this_engagement_id = $("form#program_information [name='object_id']").val(); // good thing we're setting the object id before submit!
@@ -175,10 +229,12 @@
 				services_api("get", "api-location/v1/geoid/" + geo_key, services_params, function (data) {
 					
 					console.log( data );
+					// add to front end for taxonomification
+					$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(data);
 					
 				});
 				
-				
+				/*
 				// assign taxonomies via wp rest api
 				var update_geoid_ajax = $.ajax({
 					//method: "DELETE",
@@ -187,33 +243,37 @@
 						xhr.setRequestHeader( 'X-WP-Nonce', muext_restapi_details.rest_nonce );
 					}
 				});
-				
+				//muext_geoid
+				*/
+			} else if ( geo_key == '010' ){ // default to US geoid if US geo_key and no lat/long 
+				var geoid = '01000US'
+				$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
+			} else if ( geo_key == '040' ){ // default to MO geoid if state geo_key and no lat/long 
+				var geoid = '04000US29'
+				$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
 			}
 		});
 		
-		return false; //don't submit right now
-		
-		
 	}
 
-	// geokey lookup
-	function getGeoKey( which_region ){
-		switch( which_region ){
-			case 'county':
-				return '050';
-			case 'school_district':
-				return '970';
-			case 'zipcode':
-				return '871';
-			case 'state':
-				return '040';
-			case 'national':
-				return '010';
-			case 'city_town':
-			case 'other':
-				return '160';
-		}
+// geokey lookup
+function getGeoKey( which_region ){
+	switch( which_region ){
+		case 'county':
+			return '050';
+		case 'school_district':
+			return '970';
+		case 'zipcode':
+			return '871';
+		case 'state':
+			return '040';
+		case 'national':
+			return '010';
+		case 'city_town':
+		case 'other':
+			return '160';
 	}
+}
 	
 	
     /**
@@ -243,38 +303,244 @@
         $.ajax(param);
     }
 
-	
-	// front-end delete posts if author.  Can't use wp delete posts since we're restricting wp-admin and redirecting
-	$(".delete-engagement").on("click", function(e){
+
+	/*
+	 * Instantiate globals for location api/fields
+	 */
+	var placeSearch, autocomplete, autocompletes = {};
+	var fieldPrefix = '_muext_';
+	var locationFields = {
+		street_number: 'short_name',
+		route: 'long_name',
+		locality: 'long_name',
+		administrative_area_level_2: 'long_name',
+		administrative_area_level_1: 'long_name',
+		country: 'long_name',
+		postal_code: 'short_name'
+	};
+
+	/*
+	 * google api functions, supporting functions 
+	 *
+	 */
+	function initAutocomplete() {
+		// Create the autocomplete object, restricting the search to geographical
+		// location types.
 		
-		// are they sure they want to delete?
-		if( confirm('Are you SURE you want to delete this Engagement?') ){
+		//trying to get this to listen to all location fields
+		//var location_fields = jQuery("[id^=_muext_location_text]:not([id$=_repeat]" ); //without group. repeat fields have a containing div ending in _repeat
+		//var location_fields = jQuery("[id^=_muext_location_group_0__muext_location_text]:not([id$=_repeat]" ); //repeat fields have a containing div ending in _repeat
+		var location_fields = jQuery("[id^=_muext_location_group_] [id$=_muext_location_text]" ); //repeat fields have a containing div ending in _repeat
+		
+		//for each location_fields, get thee to google
+		jQuery.each( location_fields, function( i, v ){
+			//do we have the has-autocomplete class? TODO: fix this!
+			if( jQuery(v).hasClass("has-autocomplete") ){
+				//return true; //go to next location in $.each
+				//console.log( 'jas');
+			}
 			
-			// get the id
-			var this_engagement_id = jQuery( this ).attr("data-postid");
-			console.log( this_engagement_id);
+			//get this location field id
+			var this_id = jQuery(v).attr("id");
+			//console.log( this_id );
 			
-			var delete_post_ajax = $.ajax({
-				method: "DELETE",
-				url: muext_restapi_details.rest_url + 'wp/v2/muext_engagement/' + this_engagement_id ,
-				beforeSend: function ( xhr ) {
-					xhr.setRequestHeader( 'X-WP-Nonce', muext_restapi_details.rest_nonce );
+			//get the trailing number (_muext_location_text_0)
+			var res = this_id.replace("__muext_location_text", "");
+			var under = res.lastIndexOf('_');
+			var int_maybe = parseInt( this_id.substring( under + 1 ) );
+			
+			//do we need this int check?  It's either an int (and therefore a repeated location field) or not (and therefore an original solo location field)
+			if( Number.isInteger( int_maybe ) ){
+				var digit = int_maybe;
+			} else {
+				var digit = "";
+			}
+			
+			autocompletes['autocomplete_' + digit] = new google.maps.places.Autocomplete(
+			//autocomplete = new google.maps.places.Autocomplete(
+			/** @type {!HTMLInputElement} */(document.getElementById( this_id )),
+			{types: ['geocode']});
+
+			// When the user selects an address from the dropdown, populate the address
+			// fields in the form.
+			//autocomplete.addListener('place_changed', placeChangedCallback);
+			autocompletes['autocomplete_' + digit].addListener('place_changed', function(){
+				
+				placeChangedCallbackNumbered( autocompletes['autocomplete_' + digit], digit );
+				
+			});
+			console.log( 'autocomplete is running' );
+			
+			//add class to input, to let us know not to autocomplete it if not
+			jQuery(v).addClass("has-autocomplete");
+			
+		});
+			
+	}
+
+	// Explicit callback for THIS location field out of many
+	function placeChangedCallbackNumbered( which_autocomplete, which_index ) {
+		// Get the place details from the autocomplete object.
+		var place = which_autocomplete.getPlace();
+		console.log( which_autocomplete );
+		
+		//group prefix string
+		var groupPrefix = '_muext_location_group_' + which_index + '_';
+		var region_select_id = '_muext_location_group_' + which_index + '__muext_region';
+		
+		//var regions_options = [ 'city_town', 'county', 'school_district', 'zipcode', 'state', 'other' ];
+		var address_options = [ 'street_number', 'route', 'locality', 'postal_code', 'administrative_area_level_2', 'administrative_area_level_1' ];
+		// crosswalk btw google api address_types and internal dropdown type
+		var regions_crosswalk = { 
+			street_number:					"city_town", 
+			route:							"city_town", 
+			locality:						"city_town", 
+			postal_code:					"zipcode", 
+			administrative_area_level_2:	"county", 
+			administrative_area_level_1:	"state"
+		};
+		
+		//get the trailing number, if any
+		//var under = which_autocomplete.lastIndexOf('_');
+		//var int_maybe = which_autocomplete.substring( under + 1 ); //may be empty string if original location (non repeater)
+		//console.log( int_maybe );
+		//if it's not an empty string, prepend with _
+		if( Number.isInteger( which_index ) ){
+			var field_suffix = '_' + which_index; 
+		} else {
+			var field_suffix = which_index; 
+		}
+		//console.log( 'place: ' + place ); //object
+
+		// Return values from the API
+		// Street number => street_number
+		// Street name => route
+		// City => locality
+		// County => administrative_area_level_2
+		// State => administrative_area_level_1
+		// Country => country
+		// ZIP code => postal_code
+		// The formatted address is dropped into the box.
+		for (var field in locationFields) {
+			
+			//console.log( groupPrefix + fieldPrefix + field ); // e.g.: '_muext_location_group_0__muext_street_number'
+			document.getElementById(groupPrefix + fieldPrefix + field).value = '';
+			document.getElementById(groupPrefix + fieldPrefix + field).disabled = false;
+		}
+		
+		if( typeof place !== 'undefined' ){
+			
+			// autofill in the dropdown for smallest region specified
+			var smallest_region = ''; 
+			var addressTypesArray = new Array();
+			
+			for (var i = 0; i < place.address_components.length; i++) {
+				console.log( place.address_components[i] );
+				var addressType = place.address_components[i].types[0];
+				
+				if (locationFields[addressType]) {
+					var val = place.address_components[i][locationFields[addressType]];
+					document.getElementById(groupPrefix + fieldPrefix + addressType).value = val;
+					
+					// get all addressTypes in array
+					addressTypesArray.push( addressType );
+				}
+				
+			}
+			
+			// check for smallest -> largest address type and auto-select appropriate regional dropdown in this group
+			console.log( addressTypesArray );
+			
+			// clear region option selection
+			jQuery( "#" + region_select_id + ' option').prop('selected', false);
+			
+			// go through array, testing for smaller => larger regions
+			jQuery.each( regions_crosswalk, function( region_index, region_value ){
+
+				var this_region = region_index;
+				var this_value = region_value;
+				
+				if( jQuery.inArray( this_region, addressTypesArray ) != -1 ){
+					
+					// set the region dropdown accordingly 
+					jQuery( "#" + region_select_id + ' option[value="' + this_value +'"]').prop('selected', true);
+					
+					return false;
 				}
 			});
 			
-			//done!
-			delete_post_ajax.done(function( data ) {
-				console.log( 'posted: ' + data );
-				location.reload();
-			});
-				
+
+			// Latitude and Longitude
+			document.getElementById(groupPrefix + fieldPrefix + "latitude").value = place.geometry.location.lat();
+			document.getElementById(groupPrefix + fieldPrefix + "longitude").value = place.geometry.location.lng();
+			
 		}
-	});
+		
+		// then get the geokey and geoid
+		geoidlistener();
+	}
+
+	// Google sample for grabbing details
+	function fillInAddress() {
+		// Get the place details from the autocomplete object.
+		var place = autocomplete.getPlace();
+
+		for (var component in componentForm) {
+			document.getElementById(component).value = '';
+			document.getElementById(component).disabled = false;
+		}
+
+		// Get each component of the address from the place details
+		// and fill the corresponding field on the form.
+		for (var i = 0; i < place.address_components.length; i++) {
+			var addressType = place.address_components[i].types[0];
+			if (componentForm[addressType]) {
+				var val = place.address_components[i][componentForm[addressType]];
+				document.getElementById(addressType).value = val;
+			}
+		}
+	}
+
+	function otherRegionListener( this_select ){
+
+		var this_select_id = jQuery(this_select).attr("id");
+		
+		var parent_row = jQuery("#" +  this_select_id).parent().parent();
+		
+		var other_text_field = parent_row.siblings("[class*='muext-region-other']");
+		
+		// if user has selected 'other' as the region option for a location group, make sure the 'other' text field shows
+		//if( jQuery("[id$='_muext_region'] option[value='other']").is(":selected") ){
+		if( jQuery( "#" +  this_select_id + " option[value='other']").is(":selected") ){
+			
+			// get the textfield for other (sibling of the cmb-row parent's parent of this select)
+			console.log( other_text_field);
+			jQuery( other_text_field ).removeClass("hidden");
+			
+			
+		} else {
+			
+			jQuery( other_text_field ).addClass("hidden");
+		}
+		
+		// listen for the add location button, too...somewhere
+		
+	}
+
+	function locationRepeatListener(){
+		
+		jQuery("[id^=_muext_location_group_]").on("click", function(){
+			initAutocomplete();
+		});
+		
+	};
+
+
+
+	//IE doesn't support Number.isInteger:
+	Number.isInteger = Number.isInteger || function(value) {
+		return typeof value === "number" && 
+			   isFinite(value) && 
+			   Math.floor(value) === value;
+	};
 	
-	
-	
-	// util lookup for geocode
-	
-	
-	
-}(jQuery));

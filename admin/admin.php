@@ -312,6 +312,7 @@ function muext_program_info_meta_box() {
 		'id'         => $prefix . 'location_text',
 		'type'       => 'text',
 		//'repeatable'  => false
+		'classes' => 'muext_loc_text',
 	) );
 	
 	$cmb->add_group_field( $location_group_field_id, array(
@@ -344,10 +345,17 @@ function muext_program_info_meta_box() {
 		//'repeatable'  => false
 	) );
 	
-	// assigned in js on form submit - geoid can then be returned from cares network API: https://services.engagementnetwork.org/?api=api-location
+	// assigned in js on form submit
 	$cmb->add_group_field( $location_group_field_id, array(
 		'name'       => __( 'geo_key', 'muext-engagement' ),
 		'id'         => $prefix . 'geo_key',
+		'type'       => 'hidden',
+	) );
+	
+	// populated in js (public or admin.js) on js form submit, temp to generate taxonomy on php submit
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'geo_id', 'muext-engagement' ),
+		'id'         => $prefix . 'geo_id',
 		'type'       => 'hidden',
 	) );
 	
@@ -1075,8 +1083,24 @@ function muext_handle_frontend_new_post_form_submission() {
         muext_select2_taxonomy_process( $new_submission_id, 'theme', 'muext_program_category' );
         muext_select2_taxonomy_process( $new_submission_id, 'type', 'muext_program_outreach_type' );
         muext_select2_taxonomy_process( $new_submission_id, 'funding', 'muext_program_funding' );
-		
     }
+	
+	// location-based geoid taxonomy.. for ANY geoid in this $_POST, set the 'geoid' taxonomy for the entire post
+	$geoid_terms = array();
+	foreach($_POST as $key => $value) {
+		
+		if ( !(strpos( $key, 'geo_id' ) === false) ) {
+			error_log('yes terms');
+			// geoid string exists in field name
+			array_push( $geoid_terms, $value );
+			
+		}
+		
+	}
+	error_log( 'tax terms: ');
+	error_log( implode( ',', $geoid_terms ) );
+	
+	//wp_set_object_terms( $object_id, $terms, $taxonomy, $append )
 	
 	/*
 	 * Redirect back to the form page with a query variable with the new post ID.
