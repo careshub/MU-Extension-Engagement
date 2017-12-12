@@ -416,6 +416,12 @@ function getGeoKey( which_region ){
 		for (var field in locationFields) {
 			
 			//console.log( groupPrefix + fieldPrefix + field ); // e.g.: '_muext_location_group_0__muext_street_number'
+			// if it doesn't exist yet, create it (on new location groups)
+			if( !document.getElementById(groupPrefix + fieldPrefix + field) ){
+				var new_field = '<input class="cmb2-hidden" name="_muext_location_group[' + which_index + '][' + fieldPrefix + field + ']" id="' + groupPrefix + fieldPrefix + field + '" value="" data-groupid="_muext_location_group" data-iterator="' + which_index + '" type="hidden">';
+				$("#program_information").append( new_field );
+			}
+			
 			document.getElementById(groupPrefix + fieldPrefix + field).value = '';
 			document.getElementById(groupPrefix + fieldPrefix + field).disabled = false;
 		}
@@ -462,6 +468,14 @@ function getGeoKey( which_region ){
 			});
 			
 			// Latitude and Longitude
+			if( !document.getElementById(groupPrefix + fieldPrefix + "latitude") ){
+				var new_field = '<input class="cmb2-hidden" name="_muext_location_group[' + which_index + '][' + fieldPrefix + "latitude" + ']" id="' + groupPrefix + fieldPrefix + "latitude" + '" value="" data-groupid="_muext_location_group" data-iterator="' + which_index + '" type="hidden">';
+				$("#program_information").append( new_field );
+			}
+			if( !document.getElementById(groupPrefix + fieldPrefix + "longitude") ){
+				var new_field = '<input class="cmb2-hidden" name="_muext_location_group[' + which_index + '][' + fieldPrefix + "longitude" + ']" id="' + groupPrefix + fieldPrefix + "longitude" + '" value="" data-groupid="_muext_location_group" data-iterator="' + which_index + '" type="hidden">';
+				$("#program_information").append( new_field );
+			}
 			document.getElementById(groupPrefix + fieldPrefix + "latitude").value = place.geometry.location.lat();
 			document.getElementById(groupPrefix + fieldPrefix + "longitude").value = place.geometry.location.lng();
 			
