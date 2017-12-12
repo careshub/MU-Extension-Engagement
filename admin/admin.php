@@ -34,6 +34,7 @@ add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_bo
 
 // Save taxonomy when saving post
 add_action( 'save_post_muext_engagement', __NAMESPACE__ . '\\muext_save_taxonomy_select2_boxes' );
+add_action( 'save_post_muext_engagement', __NAMESPACE__ . '\\muext_update_geoid_taxonomy' );
 
 
 /**
@@ -53,6 +54,15 @@ function enqueue_admin_scripts_and_styles( $hook_suffix ) {
 		if ( ! empty( $screen->post_type ) && 'muext_engagement' == $screen->post_type ) {
 			wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', plugins_url( 'assets/js/admin-edit.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version() );
 
+			wp_localize_script( 
+				\MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', 
+				'muext_admin_restapi', 
+				array(
+					'rest_url' => esc_url_raw( rest_url() ),
+					'rest_nonce' => wp_create_nonce( 'wp_rest' )
+				) 
+			);
+	
 			// Localize the script with new data
 			$api_key = get_option( 'muext-google-location-apikey' );
 			wp_localize_script( \MU_Ext_Engagement\get_plugin_slug() . '-admin-edit-script', 'muext_js_data', array( 'google_api_key' => $api_key ) );
@@ -303,6 +313,7 @@ function muext_program_info_meta_box() {
 		'id'         => $prefix . 'location_text',
 		'type'       => 'text',
 		//'repeatable'  => false
+		'classes' => 'muext_loc_text',
 	) );
 	
 	$cmb->add_group_field( $location_group_field_id, array(
@@ -312,6 +323,7 @@ function muext_program_info_meta_box() {
 		'id'               => $prefix . 'region',
 		'type'             => 'select',
 		'show_option_none' => false,
+		'classes'          => 'muext_region_class',
 		'default'          => 'city_town',
 		'options'          => array(
 			'city_town' 		=> __( 'City or Town', 'muext-engagement' ),
@@ -332,6 +344,20 @@ function muext_program_info_meta_box() {
 		'type'       => 'text',
 		'classes'	 => 'hidden',
 		//'repeatable'  => false
+	) );
+	
+	// assigned in js on form submit
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'geo_key', 'muext-engagement' ),
+		'id'         => $prefix . 'geo_key',
+		'type'       => 'hidden',
+	) );
+	
+	// populated in js (public or admin.js) on js form submit, temp to generate taxonomy on php submit
+	$cmb->add_group_field( $location_group_field_id, array(
+		'name'       => __( 'geo_id', 'muext-engagement' ),
+		'id'         => $prefix . 'geo_id',
+		'type'       => 'hidden',
 	) );
 	
 	// Regular text field
@@ -399,12 +425,6 @@ function muext_program_info_meta_box() {
 		'type'       => 'hidden',
 	) );
 	
-	// returned from cares network API: https://services.engagementnetwork.org/?api=api-location
-	$cmb->add_field( array(
-		'name'       => __( 'geo_key', 'muext-engagement' ),
-		'id'         => $prefix . 'geo_key',
-		'type'       => 'hidden',
-	) );
 	
 	// Location details
 	// Return values from the API
@@ -891,6 +911,30 @@ function muext_save_taxonomy_select2_boxes( $post_id ){
 	
 }
 
+/**
+ * on post save (in wp-admin), updates the geoid taxonomy per the fields in the form
+ *
+ **/
+function muext_update_geoid_taxonomy( $post_id ){
+	
+	// location-based geoid taxonomy.. for ANY geoid in this $_POST, set the 'geoid' taxonomy for the entire post
+	$geoid_terms = array();
+	
+	foreach($_POST['_muext_location_group'] as $index => $array) { // e.g., $_POST['_muext_location_group'][0]['_muext_geo_id']
+		
+		foreach( $array as $key => $value){
+			if ( strpos( $key, 'geo_id' ) !== false ) {
+				// geoid string exists in field name
+				array_push( $geoid_terms, $value );
+				//error_log( $value );
+			}
+		}
+	}
+	
+	wp_set_object_terms( $post_id, $geoid_terms, 'muext_geoid' );
+	
+}
+
 
 /******* FRONT END FORM FUNCTIONALITY *******/
 
@@ -947,7 +991,6 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 
 	return $output;
 }
-//add_shortcode( 'cmb-frontend', 'muext_frontend_form_submission_shortcode' );
 
 
 /**
@@ -1028,7 +1071,6 @@ function muext_handle_frontend_new_post_form_submission() {
 	// Create the new post
 	$new_submission_id = wp_insert_post( $post_data, true );
 	
-	
 	// If we hit a snag, update the user
 	if ( is_wp_error( $new_submission_id ) ) {
 		return $cmb->prop( 'submission_error', $new_submission_id );
@@ -1065,8 +1107,10 @@ function muext_handle_frontend_new_post_form_submission() {
         muext_select2_taxonomy_process( $new_submission_id, 'theme', 'muext_program_category' );
         muext_select2_taxonomy_process( $new_submission_id, 'type', 'muext_program_outreach_type' );
         muext_select2_taxonomy_process( $new_submission_id, 'funding', 'muext_program_funding' );
-		
     }
+	
+	// location-based geoid taxonomy.. for ANY geoid in this $_POST, set the 'geoid' taxonomy for the entire post
+	muext_update_geoid_taxonomy( $object_id );
 	
 	/*
 	 * Redirect back to the form page with a query variable with the new post ID.
@@ -1154,8 +1198,8 @@ function muext_frontend_form_photo_upload( $post_id, $attachment_post_data = arr
 function muext_select2_taxonomy_process( $post_id, $postmeta, $taxonomy ) {
  
     $get_post_meta = get_post_meta( $post_id, $postmeta, true );
-	error_log( 'get post meta: ' );
-	error_log( implode(",", $get_post_meta ) );
+	//error_log( 'get post meta: ' );
+	//error_log( implode(",", $get_post_meta ) );
     $get_the_terms = get_the_terms( $post_id, $taxonomy );
 
  
@@ -1170,7 +1214,7 @@ function muext_select2_taxonomy_process( $post_id, $postmeta, $taxonomy ) {
             array_push( $set_the_terms, $term->slug );
         }
 		
-		error_log( 'setting object terms' );
+		//error_log( 'setting object terms' );
  
         wp_set_object_terms( $post_id, $set_the_terms , $taxonomy );
  
