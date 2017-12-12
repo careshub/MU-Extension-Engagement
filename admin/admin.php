@@ -34,6 +34,7 @@ add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_bo
 
 // Save taxonomy when saving post
 add_action( 'save_post_muext_engagement', __NAMESPACE__ . '\\muext_save_taxonomy_select2_boxes' );
+add_action( 'save_post_muext_engagement', __NAMESPACE__ . '\\muext_update_geoid_taxonomy' );
 
 
 /**
@@ -910,6 +911,30 @@ function muext_save_taxonomy_select2_boxes( $post_id ){
 	
 }
 
+/**
+ * on post save (in wp-admin), updates the geoid taxonomy per the fields in the form
+ *
+ **/
+function muext_update_geoid_taxonomy( $post_id ){
+	
+	// location-based geoid taxonomy.. for ANY geoid in this $_POST, set the 'geoid' taxonomy for the entire post
+	$geoid_terms = array();
+	
+	foreach($_POST['_muext_location_group'] as $index => $array) { // e.g., $_POST['_muext_location_group'][0]['_muext_geo_id']
+		
+		foreach( $array as $key => $value){
+			if ( strpos( $key, 'geo_id' ) !== false ) {
+				// geoid string exists in field name
+				array_push( $geoid_terms, $value );
+				//error_log( $value );
+			}
+		}
+	}
+	
+	wp_set_object_terms( $post_id, $geoid_terms, 'muext_geoid' );
+	
+}
+
 
 /******* FRONT END FORM FUNCTIONALITY *******/
 
@@ -966,7 +991,6 @@ function muext_frontend_form_submission_shortcode( $atts = array() ) {
 
 	return $output;
 }
-//add_shortcode( 'cmb-frontend', 'muext_frontend_form_submission_shortcode' );
 
 
 /**
@@ -1086,21 +1110,7 @@ function muext_handle_frontend_new_post_form_submission() {
     }
 	
 	// location-based geoid taxonomy.. for ANY geoid in this $_POST, set the 'geoid' taxonomy for the entire post
-	$geoid_terms = array();
-	foreach($_POST as $key => $value) {
-		
-		if ( !(strpos( $key, 'geo_id' ) === false) ) {
-			error_log('yes terms');
-			// geoid string exists in field name
-			array_push( $geoid_terms, $value );
-			
-		}
-		
-	}
-	error_log( 'tax terms: ');
-	error_log( implode( ',', $geoid_terms ) );
-	
-	//wp_set_object_terms( $object_id, $terms, $taxonomy, $append )
+	muext_update_geoid_taxonomy( $object_id );
 	
 	/*
 	 * Redirect back to the form page with a query variable with the new post ID.

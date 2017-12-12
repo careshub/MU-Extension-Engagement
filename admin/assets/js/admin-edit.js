@@ -145,6 +145,10 @@ function placeChangedCallbackNumbered( which_autocomplete, which_index ) {
 		document.getElementById(groupPrefix + fieldPrefix + "longitude").value = place.geometry.location.lng();
 		
 	}
+	
+	// then get the geokey and geoid
+	geoidlistener( which_index );
+	
 }
 
 // Google sample for grabbing details
@@ -172,12 +176,8 @@ function locationRepeatListener(){
 	
 	//jQuery(".cmb-add-group-row").on("click", function(){ //no, this happens before the field is added, duh
 	jQuery("[id^=_muext_location_group_]").on("click", function(){
-		console.log( 'add loc click' );
-		//are we on a location box?
-		//if( jQuery(this).attr("data-selector") == "_muext_location_group_repeat" ){
 			
-			initAutocomplete();
-		//}
+		initAutocomplete();
 		
 	});
 	
@@ -192,11 +192,12 @@ function outcomesBoxListener(){
 
 }
 
-	
-function submitEngagementlistener(){
 
+// listens to change to add geokey and geoid to 
+function geoidlistener( data_iter ){
+	
 	// what engagement are we on?
-	var this_engagement_id = $("#post #post_ID").val();
+	var this_engagement_id = $("form#program_information [name='object_id']").val(); // good thing we're setting the object id before submit!
 
 	// we are good to save, but first we need to create geo_key entry.  
 	var location_groups_all = $("#_muext_location_group_repeat"); //encompasses all location groups/items
@@ -205,12 +206,14 @@ function submitEngagementlistener(){
 	var which_iterator = 0; //init var
 	
 	// for each location group:
-	$.each( location_groups_each, function(){
+	//$.each( location_groups_each, function(){
 		// which location group?
-		which_iterator = jQuery(this).attr('data-iterator');
+		//which_iterator = jQuery(this).attr('data-iterator');
+		which_iterator = data_iter;
 		
 		// find the region, get corresponding geo_key
-		var which_region = $( this ).find(".muext_region_class option").filter(":selected").val();
+		//var which_region = $( this ).find(".muext_region_class option").filter(":selected").val();
+		var which_region = $("#_muext_location_group_" + which_iterator + "__muext_region option").filter(":selected").val();
 		var geo_key = getGeoKey( which_region );
 		
 		console.log( which_iterator);
@@ -220,19 +223,51 @@ function submitEngagementlistener(){
 		// assign geo_key to this location group's geo_key element
 		$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_key]']").val(geo_key);
 		
-		// assign taxonomies via wp rest api
+		// do we have a lat/long?
+		var latitude = $("[name='_muext_location_group[" + which_iterator + "][_muext_latitude]']").val();
+		var longitude = $("[name='_muext_location_group[" + which_iterator + "][_muext_longitude]']").val();
 		
-		
-	});
+		// if we have lat, long and geo_key, get geoid
+		if( latitude && longitude && geo_key ){
+			//get geo id via engagements api
+			var services_params = {
+				lat		: latitude,
+				lon		: longitude
+			};
+				
+			services_api("get", "api-location/v1/geoid/" + geo_key, services_params, function (data) {
+				
+				console.log( data );
+				// add to front end for taxonomification
+				$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(data);
+				
+			});
+			
+			/*
+			// assign taxonomies via wp rest api
+			var update_geoid_ajax = $.ajax({
+				//method: "DELETE",
+				url: muext_restapi_details.rest_url + 'wp/v2/muext_engagement/' + this_engagement_id ,
+				beforeSend: function ( xhr ) {
+					xhr.setRequestHeader( 'X-WP-Nonce', muext_restapi_details.rest_nonce );
+				}
+			});
+			//muext_geoid
+			*/
+		} else if ( geo_key == '010' ){ // default to US geoid if US geo_key and no lat/long 
+			var geoid = '01000US'
+			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
+		} else if ( geo_key == '040' ){ // default to MO geoid if state geo_key and no lat/long 
+			var geoid = '04000US29'
+			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
+		}
+	//});
 	
 }
 
+// geokey lookup
 function getGeoKey( which_region ){
-	
 	switch( which_region ){
-		case 'city_town':
-		case 'other':
-			return '160';
 		case 'county':
 			return '050';
 		case 'school_district':
@@ -243,15 +278,42 @@ function getGeoKey( which_region ){
 			return '040';
 		case 'national':
 			return '010';
+		case 'city_town':
+		case 'other':
+			return '160';
 	}
-	
 }
 
+/**
+* Send a request to the services.engagementnetwork.org API service to get data.
+* @param {string} service - API endpoint and parameters.
+* @param {object} data - The data posted to API.
+* @param {requestCallback} callback - The callback function to execute after the API request is succefully completed.
+* @param {requestCallback} [fallback] - The callback function to execute when the API request returns an error.
+*/
+function services_api(type, service, data, callback, fallback) {
+	var param = {
+		type: type,
+		url: "https://services.engagementnetwork.org/" + service,
+		dataType: "json",
+		contentType: "application/json; charset=utf-8",
+		crossDomain: true,
+		success: callback,
+		error: fallback || $.noop
+	};
+	if (data && typeof data !== "undefined") {
+		if (type === "post") {
+			param.data = JSON.stringify(data);
+		} else {
+			param.url += "?" + $.param(data);
+		}
+	}
+	$.ajax(param);
+}
 
 
 (function ( $ ) {
 	"use strict";
-	
 	
 	$(document).ready(function() {
 
@@ -259,7 +321,11 @@ function getGeoKey( which_region ){
 
 		outcomesBoxListener();
 		
-		// TODO: add submit engagement listener to... 
-
+		// listen to region change (OR location change in google places api code) to trigger geoid info
+		$("#program_information .muext_region_class select").on("change", function(){
+			var dataiter = jQuery(this).parents(".cmb-repeatable-grouping").attr("data-iterator");
+			geoidlistener( dataiter );
+		});
+	
 	});
 }(jQuery));
