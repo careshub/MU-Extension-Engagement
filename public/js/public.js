@@ -479,7 +479,7 @@ function getGeoKey( which_region ){
 				}
 			});
 			
-			// Latitude and Longitude
+			// Latitude and Longitude: test for existance before assignment
 			if( !document.getElementById(groupPrefix + fieldPrefix + "latitude") ){
 				var new_field = '<input class="cmb2-hidden" name="_muext_location_group[' + which_index + '][' + fieldPrefix + "latitude" + ']" id="' + groupPrefix + fieldPrefix + "latitude" + '" value="" data-groupid="_muext_location_group" data-iterator="' + which_index + '" type="hidden">';
 				$("#program_information").append( new_field );
