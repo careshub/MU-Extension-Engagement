@@ -214,7 +214,19 @@ function geoidlistener( dataiter ){
 		console.log( which_region);
 		console.log( geo_key);
 		
-		// assign geo_key to this location group's geo_key element
+		// assign geo_key after testing for input existance (b/c cmb2 not adding geo_key and id for repeater group..)
+		if( $("[name='_muext_location_group[" + which_iterator + "][_muext_geo_key]']").length == 0 ){
+			//cmb2 not adding this field!  Why..
+			var new_geo_key_field = '<input class="cmb2-hidden" name="_muext_location_group[' + which_iterator + '][_muext_geo_key]" id="_muext_location_group_' + which_iterator + '__muext_geo_key" value="" data-groupid="_muext_location_group" data-iterator="' + which_iterator + '" type="hidden">';
+			console.log( new_geo_key_field );
+			$("#program_information").append( new_geo_key_field );
+		}
+		if( $("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").length == 0 ){
+			//cmb2 not adding this field!  Why..
+			var new_geo_id_field = '<input class="cmb2-hidden" name="_muext_location_group[' + which_iterator + '][_muext_geo_id]" id="_muext_location_group_' + which_iterator + '__muext_geo_id" value="" data-groupid="_muext_location_group" data-iterator="' + which_iterator + '" type="hidden">';
+			$("#program_information").append( new_geo_id_field );
+		}
+		// assign geo_key to this location group's geo_key element:
 		$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_key]']").val(geo_key);
 		
 		// do we have a lat/long?
