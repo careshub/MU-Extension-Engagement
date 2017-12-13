@@ -257,7 +257,10 @@ function geoidlistener( data_iter ){
 		var longitude = $("[name='_muext_location_group[" + which_iterator + "][_muext_longitude]']").val();
 		
 		// if we have lat, long and geo_key, get geoid
-		if( latitude && longitude && geo_key ){
+		if ( geo_key == '010' ){ // default to US geoid if US geo_key and no lat/long 
+			var geoid = '01000US'
+			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
+		} else if( latitude && longitude && geo_key ){
 			//get geo id via engagements api
 			var services_params = {
 				lat		: latitude,
@@ -272,20 +275,6 @@ function geoidlistener( data_iter ){
 				
 			});
 			
-			/*
-			// assign taxonomies via wp rest api
-			var update_geoid_ajax = $.ajax({
-				//method: "DELETE",
-				url: muext_restapi_details.rest_url + 'wp/v2/muext_engagement/' + this_engagement_id ,
-				beforeSend: function ( xhr ) {
-					xhr.setRequestHeader( 'X-WP-Nonce', muext_restapi_details.rest_nonce );
-				}
-			});
-			//muext_geoid
-			*/
-		} else if ( geo_key == '010' ){ // default to US geoid if US geo_key and no lat/long 
-			var geoid = '01000US'
-			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
 		} else if ( geo_key == '040' ){ // default to MO geoid if state geo_key and no lat/long 
 			var geoid = '04000US29'
 			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);

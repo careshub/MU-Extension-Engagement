@@ -234,7 +234,10 @@ function geoidlistener( dataiter ){
 		var longitude = $("[name='_muext_location_group[" + which_iterator + "][_muext_longitude]']").val();
 		
 		// if we have lat, long and geo_key, get geoid
-		if( latitude && longitude && geo_key ){
+		if ( geo_key == '010' ){ // default to US geoid if US geo_key and no lat/long 
+			var geoid = '01000US'
+			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
+		} else if( latitude && longitude && geo_key ){
 			//get geo id via engagements api
 			var services_params = {
 				lat		: latitude,
@@ -249,9 +252,6 @@ function geoidlistener( dataiter ){
 				
 			});
 			
-		} else if ( geo_key == '010' ){ // default to US geoid if US geo_key and no lat/long 
-			var geoid = '01000US'
-			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
 		} else if ( geo_key == '040' ){ // default to MO geoid if state geo_key and no lat/long 
 			var geoid = '04000US29'
 			$("[name='_muext_location_group[" + which_iterator + "][_muext_geo_id]']").val(geoid);
