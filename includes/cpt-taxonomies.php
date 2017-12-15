@@ -405,3 +405,109 @@ function register_muext_geoid() {
 	register_taxonomy( 'muext_geoid', array( 'muext_engagement' ), $args );
 
 }
+
+/**
+ * Change the REST API response so that it includes important meta for engagement items.
+ *
+ * @since    1.8.2
+ *
+ * @return   void
+ */
+function rest_read_meta() {
+	register_rest_field( 'muext_engagement',
+		'eng_theme', // Note that these ids do not match the tax name exactly-to avoid collisions in the REST response.
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_taxonomy_info',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+	register_rest_field( 'muext_engagement',
+		'eng_type',
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_taxonomy_info',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+	register_rest_field( 'muext_engagement',
+		'eng_affiliation',
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_taxonomy_info',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+	register_rest_field( 'muext_engagement',
+		'eng_featured_image',
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_featured_image',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+}
+
+/**
+ * Include taxonomy term info in the response.
+ *
+ * @param array $object Details of current post.
+ * @param string $field_name Name of field.
+ * @param WP_REST_Request $request Current request
+ *
+ * @return array
+ */
+function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
+	switch ( $field_name ) {
+		case 'eng_theme':
+			$tax_name = 'muext_program_category';
+			break;
+		case 'eng_type' :
+			$tax_name = 'muext_program_outreach_type';
+			break;
+		case 'eng_affiliation' :
+			$tax_name = 'muext_program_affiliation';
+			break;
+		default:
+			return null;
+			break;
+	}
+
+	$taxonomy_terms = get_the_terms( $object[ 'id' ], $tax_name );
+	$raw = array();
+	$rendered = array();
+	foreach ( $taxonomy_terms as $term ) {
+		$raw[] = array(
+			'term_id'   => $term->term_id,
+			'name'      => $term->name,
+			'slug'      => $term->slug,
+			'taxonomy'  => $term->taxonomy,
+			'parent'    => $term->parent,
+			'count'     => $term->count,
+			'term_link' => get_term_link( $term, $tax_name )
+		);
+		$rendered[] = $term->name;
+	}
+
+	$rendered = esc_html( implode( ', ', $rendered ) );
+
+	return array(
+		'raw' => $raw,
+		'rendered' => $rendered
+	);
+}
+
+/**
+ * Add the featured image url to the response.
+ *
+ * @param array $object Details of current post.
+ * @param string $field_name Name of field.
+ * @param WP_REST_Request $request Current request
+ *
+ * @return string URL of image.
+ */
+function rest_get_engagement_featured_image( $object, $field_name, $request ) {
+	$featured_image_id = get_post_thumbnail_id( $object[ 'id' ] );
+	// @Todo: specify a different size of thumbnail if needed.
+	return wp_get_attachment_url( $featured_image_id, 'medium' );
+}

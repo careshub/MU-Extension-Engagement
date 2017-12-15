@@ -42,6 +42,9 @@ add_action('after_setup_theme', __NAMESPACE__ . '\\muext_hide_admin_bar');
 // Filter capabilities for this setup.
 add_filter( 'map_meta_cap', __NAMESPACE__ . '\\filter_map_meta_caps', 12, 4 );
 
+// Change the REST API response so that it includes important info muext_engagement items.
+add_action( 'rest_api_init', 'MU_Ext_Engagement\CPT_Tax\\rest_read_meta' );
+
 
 
 /**
