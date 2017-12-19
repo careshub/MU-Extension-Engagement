@@ -511,3 +511,57 @@ function rest_get_engagement_featured_image( $object, $field_name, $request ) {
 	// @Todo: specify a different size of thumbnail if needed.
 	return wp_get_attachment_url( $featured_image_id, 'medium' );
 }
+
+/** 
+ * Register custom REST API routes.
+ *
+ * @since 1.0.0 
+ */
+function add_custom_rest_routes() {
+    //Path to meta query route
+    register_rest_route( 'wp/v2', '/engagement-region-other/', array(
+            'methods' => 'GET', 
+            'callback' => __NAMESPACE__ . '\\engagement_region_other_query' 
+    ) );
+}
+
+/** 
+ * Handle custom REST API route requests for engagements with
+ * region of "other."
+ *
+ * @since 1.0.0
+ *
+ * @return array
+ */
+function engagement_region_other_query() {
+    $data = array();
+
+    // The "other" region data is currently stored in serialized post meta.
+	$args = array(
+		'meta_key'     => '_muext_location_group',
+		'meta_value'   => '_muext_region";s:5:"other',
+		'meta_compare' => 'LIKE',
+		'post_type'    => 'muext_engagement',
+		// Disable pagination--we think there will be not too many of these.
+		'posts_per_page' => -1,
+	);
+	$meta_query = new \WP_Query( $args );
+
+	if ( $meta_query->have_posts() ) {
+		while ( $meta_query->have_posts() ) {
+			$meta_query->the_post();
+			$post = get_post();
+			$data[] = array(
+				'ID'          => $post->ID,
+	            'post_author' => $post->post_author,
+	            'post_date'   => $post->post_date,
+	            'post_title'  => $post->post_title,
+	            'post_link'   => get_permalink(),
+	            'longitude'   => get_post_meta( $post->ID, '_muext_longitude', true ),
+	            'latitude'    => get_post_meta( $post->ID, '_muext_latitude', true ),
+			);
+		}
+	}
+
+	return $data;
+}
