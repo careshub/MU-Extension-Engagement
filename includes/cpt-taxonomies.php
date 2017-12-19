@@ -409,7 +409,7 @@ function register_muext_geoid() {
 /**
  * Change the REST API response so that it includes important meta for engagement items.
  *
- * @since    1.8.2
+ * @since    1.0.0
  *
  * @return   void
  */
@@ -538,9 +538,22 @@ function engagement_region_other_query() {
 
     // The "other" region data is currently stored in serialized post meta.
 	$args = array(
-		'meta_key'     => '_muext_location_group',
-		'meta_value'   => '_muext_region";s:5:"other',
-		'meta_compare' => 'LIKE',
+		'meta_query' => array(
+			'relation' => 'AND', // Must satisfy all requirements
+			array( 
+				'key'     => '_muext_location_group',
+				'value'   => '_muext_region";s:5:"other',
+				'compare' => 'LIKE',
+			),
+			array( 
+				'key'     => '_muext_longitude',
+				'compare' => 'EXISTS',
+			),
+			array( 
+				'key'     => '_muext_latitude',
+				'compare' => 'EXISTS',
+			),
+		),
 		'post_type'    => 'muext_engagement',
 		// Disable pagination--we think there will be not too many of these.
 		'posts_per_page' => -1,
