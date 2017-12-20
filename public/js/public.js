@@ -268,7 +268,7 @@ function getGeoKey( which_region ){
 		case 'school_district':
 			return '970';
 		case 'zipcode':
-			return '871';
+			return '860';
 		case 'state':
 			return '040';
 		case 'national':
