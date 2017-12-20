@@ -405,3 +405,176 @@ function register_muext_geoid() {
 	register_taxonomy( 'muext_geoid', array( 'muext_engagement' ), $args );
 
 }
+
+/**
+ * Change the REST API response so that it includes important meta for engagement items.
+ *
+ * @since    1.0.0
+ *
+ * @return   void
+ */
+function rest_read_meta() {
+	register_rest_field( 'muext_engagement',
+		'eng_theme', // Note that these ids do not match the tax name exactly-to avoid collisions in the REST response.
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_taxonomy_info',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+	register_rest_field( 'muext_engagement',
+		'eng_type',
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_taxonomy_info',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+	register_rest_field( 'muext_engagement',
+		'eng_affiliation',
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_taxonomy_info',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+	register_rest_field( 'muext_engagement',
+		'eng_featured_image',
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_featured_image',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
+}
+
+/**
+ * Include taxonomy term info in the response.
+ *
+ * @param array $object Details of current post.
+ * @param string $field_name Name of field.
+ * @param WP_REST_Request $request Current request
+ *
+ * @return array
+ */
+function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
+	switch ( $field_name ) {
+		case 'eng_theme':
+			$tax_name = 'muext_program_category';
+			break;
+		case 'eng_type' :
+			$tax_name = 'muext_program_outreach_type';
+			break;
+		case 'eng_affiliation' :
+			$tax_name = 'muext_program_affiliation';
+			break;
+		default:
+			return null;
+			break;
+	}
+
+	$taxonomy_terms = get_the_terms( $object[ 'id' ], $tax_name );
+	$raw = array();
+	$rendered = array();
+	foreach ( $taxonomy_terms as $term ) {
+		$raw[] = array(
+			'term_id'   => $term->term_id,
+			'name'      => $term->name,
+			'slug'      => $term->slug,
+			'taxonomy'  => $term->taxonomy,
+			'parent'    => $term->parent,
+			'count'     => $term->count,
+			'term_link' => get_term_link( $term, $tax_name )
+		);
+		$rendered[] = $term->name;
+	}
+
+	$rendered = esc_html( implode( ', ', $rendered ) );
+
+	return array(
+		'raw' => $raw,
+		'rendered' => $rendered
+	);
+}
+
+/**
+ * Add the featured image url to the response.
+ *
+ * @param array $object Details of current post.
+ * @param string $field_name Name of field.
+ * @param WP_REST_Request $request Current request
+ *
+ * @return string URL of image.
+ */
+function rest_get_engagement_featured_image( $object, $field_name, $request ) {
+	$featured_image_id = get_post_thumbnail_id( $object[ 'id' ] );
+	// @Todo: specify a different size of thumbnail if needed.
+	return wp_get_attachment_url( $featured_image_id, 'medium' );
+}
+
+/** 
+ * Register custom REST API routes.
+ *
+ * @since 1.0.0 
+ */
+function add_custom_rest_routes() {
+    //Path to meta query route
+    register_rest_route( 'wp/v2', '/engagement-region-other/', array(
+            'methods' => 'GET', 
+            'callback' => __NAMESPACE__ . '\\engagement_region_other_query' 
+    ) );
+}
+
+/** 
+ * Handle custom REST API route requests for engagements with
+ * region of "other."
+ *
+ * @since 1.0.0
+ *
+ * @return array
+ */
+function engagement_region_other_query() {
+    $data = array();
+
+    // The "other" region data is currently stored in serialized post meta.
+	$args = array(
+		'meta_query' => array(
+			'relation' => 'AND', // Must satisfy all requirements
+			array( 
+				'key'     => '_muext_location_group',
+				'value'   => '_muext_region";s:5:"other',
+				'compare' => 'LIKE',
+			),
+			array( 
+				'key'     => '_muext_longitude',
+				'compare' => 'EXISTS',
+			),
+			array( 
+				'key'     => '_muext_latitude',
+				'compare' => 'EXISTS',
+			),
+		),
+		'post_type'    => 'muext_engagement',
+		// Disable pagination--we think there will be not too many of these.
+		'posts_per_page' => -1,
+	);
+	$meta_query = new \WP_Query( $args );
+
+	if ( $meta_query->have_posts() ) {
+		while ( $meta_query->have_posts() ) {
+			$meta_query->the_post();
+			$post = get_post();
+			$data[] = array(
+				'ID'          => $post->ID,
+	            'post_author' => $post->post_author,
+	            'post_date'   => $post->post_date,
+	            'post_title'  => $post->post_title,
+	            'post_link'   => get_permalink(),
+	            'longitude'   => get_post_meta( $post->ID, '_muext_longitude', true ),
+	            'latitude'    => get_post_meta( $post->ID, '_muext_latitude', true ),
+			);
+		}
+	}
+
+	return $data;
+}
