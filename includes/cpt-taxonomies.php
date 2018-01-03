@@ -458,9 +458,11 @@ function rest_read_meta() {
  * @return array
  */
 function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
+	$include_top_level_terms = false;
 	switch ( $field_name ) {
 		case 'eng_theme':
 			$tax_name = 'muext_program_category';
+			$include_top_level_terms = true;
 			break;
 		case 'eng_type' :
 			$tax_name = 'muext_program_outreach_type';
@@ -474,8 +476,7 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 	}
 
 	$taxonomy_terms = get_the_terms( $object[ 'id' ], $tax_name );
-	$raw = array();
-	$rendered = array();
+	$associated_term_ids = $raw = $rendered = array();
 	foreach ( $taxonomy_terms as $term ) {
 		$raw[] = array(
 			'term_id'   => $term->term_id,
@@ -487,14 +488,44 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 			'term_link' => get_term_link( $term, $tax_name )
 		);
 		$rendered[] = $term->name;
+		$associated_term_ids[] = $term->term_id;
 	}
 
-	$rendered = esc_html( implode( ', ', $rendered ) );
-
-	return array(
-		'raw' => $raw,
-		'rendered' => $rendered
+	$associated = array(
+		'raw'      => $raw,
+		'rendered' => esc_html( implode( ', ', $rendered ) ),
 	);
+
+	if ( $include_top_level_terms ) {
+		// Find the top-level terms.
+		$raw = $rendered = array();
+		foreach ( $associated_term_ids as $term_id ) {
+			$term = get_top_level_parent_term( $term_id, $tax_name );
+			// Set keys to avoid adding duplicates. We'll drop them later.
+			$raw[$term->term_id] = array(
+				'term_id'   => $term->term_id,
+				'name'      => $term->name,
+				'slug'      => $term->slug,
+				'taxonomy'  => $term->taxonomy,
+				'parent'    => $term->parent,
+				'count'     => $term->count,
+				'term_link' => get_term_link( $term, $tax_name )
+			);
+			$rendered[$term->term_id] = $term->name;
+		}
+
+		$top_level = array(
+			'raw' => array_values( $raw ),
+			'rendered' => esc_html( implode( ', ', array_values( $rendered ) ) ),
+		);
+
+		return array(
+			'associated' => $associated,
+			'top-level'  => $top_level,
+		);
+	} else {
+		return $associated;
+	}
 }
 
 /**
@@ -577,4 +608,20 @@ function engagement_region_other_query() {
 	}
 
 	return $data;
+}
+
+// Helper functions
+/** 
+ * Find the top-level parent of a term.
+ *
+ * @since 1.0.0
+ *
+ * @return WP_Term object
+ */
+function get_top_level_parent_term( $term_id, $taxonomy ) {
+    $term = get_term_by( 'id', $term_id, $taxonomy );
+    while ( $term->parent != 0 ){
+        $term = get_term_by( 'id', $term->parent, $taxonomy);
+    }
+    return $term;
 }
