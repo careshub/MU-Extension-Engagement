@@ -125,7 +125,7 @@ function register_program_categories() {
 		'show_admin_column'          => true,
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
-		'show_in_rest'               => false,
+		'show_in_rest'               => true,
 		'rewrite'                    => array( 'slug' => 'themes' ),
 	);
 	register_taxonomy( 'muext_program_category', array( 'muext_engagement' ), $args );
@@ -282,7 +282,7 @@ function register_program_outreach_type() {
 		'show_admin_column'          => true,
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
-		'show_in_rest'               => false,
+		'show_in_rest'               => true,
 		'rewrite'                    => array( 'slug' => 'outreach-type' ),
 	);
 	register_taxonomy( 'muext_program_outreach_type', array( 'muext_engagement' ), $args );
@@ -321,7 +321,7 @@ function register_program_affiliation() {
 		'show_admin_column'          => true,
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
-		'show_in_rest'               => false,
+		'show_in_rest'               => true,
 		'rewrite'                    => array( 'slug' => 'affilation' ),
 	);
 	register_taxonomy( 'muext_program_affiliation', array( 'muext_engagement' ), $args );
