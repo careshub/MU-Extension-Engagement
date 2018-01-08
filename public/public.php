@@ -415,9 +415,9 @@ function muext_get_postcount( $id ){
 }
 function muext_category_has_parent($catid){
 	
-    $category = get_category($catid);
-	
-    if ($category->category_parent > 0){
+    $category = get_term( (int) $catid );
+
+    if ( $category && $category->parent > 0){
         return true;
     }
     return false;

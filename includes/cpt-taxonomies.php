@@ -125,7 +125,7 @@ function register_program_categories() {
 		'show_admin_column'          => true,
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
-		'show_in_rest'               => false,
+		'show_in_rest'               => true,
 		'rewrite'                    => array( 'slug' => 'themes' ),
 	);
 	register_taxonomy( 'muext_program_category', array( 'muext_engagement' ), $args );
@@ -282,7 +282,7 @@ function register_program_outreach_type() {
 		'show_admin_column'          => true,
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
-		'show_in_rest'               => false,
+		'show_in_rest'               => true,
 		'rewrite'                    => array( 'slug' => 'outreach-type' ),
 	);
 	register_taxonomy( 'muext_program_outreach_type', array( 'muext_engagement' ), $args );
@@ -321,7 +321,7 @@ function register_program_affiliation() {
 		'show_admin_column'          => true,
 		'show_in_nav_menus'          => true,
 		'show_tagcloud'              => true,
-		'show_in_rest'               => false,
+		'show_in_rest'               => true,
 		'rewrite'                    => array( 'slug' => 'affilation' ),
 	);
 	register_taxonomy( 'muext_program_affiliation', array( 'muext_engagement' ), $args );
@@ -446,6 +446,14 @@ function rest_read_meta() {
 			'schema'          => null,
 		)
 	);
+	register_rest_field( 'muext_engagement',
+		'eng_post_meta_fields',
+		array(
+			'get_callback'    => __NAMESPACE__ . '\\rest_get_engagement_post_meta',
+			'update_callback' => null,
+			'schema'          => null,
+		)
+	);
 }
 
 /**
@@ -458,9 +466,11 @@ function rest_read_meta() {
  * @return array
  */
 function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
+	$include_top_level_terms = false;
 	switch ( $field_name ) {
 		case 'eng_theme':
 			$tax_name = 'muext_program_category';
+			$include_top_level_terms = true;
 			break;
 		case 'eng_type' :
 			$tax_name = 'muext_program_outreach_type';
@@ -474,8 +484,7 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 	}
 
 	$taxonomy_terms = get_the_terms( $object[ 'id' ], $tax_name );
-	$raw = array();
-	$rendered = array();
+	$associated_term_ids = $raw = $rendered = array();
 	foreach ( $taxonomy_terms as $term ) {
 		$raw[] = array(
 			'term_id'   => $term->term_id,
@@ -487,14 +496,44 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 			'term_link' => get_term_link( $term, $tax_name )
 		);
 		$rendered[] = $term->name;
+		$associated_term_ids[] = $term->term_id;
 	}
 
-	$rendered = esc_html( implode( ', ', $rendered ) );
-
-	return array(
-		'raw' => $raw,
-		'rendered' => $rendered
+	$associated = array(
+		'raw'      => $raw,
+		'rendered' => esc_html( implode( ', ', $rendered ) ),
 	);
+
+	if ( $include_top_level_terms ) {
+		// Find the top-level terms.
+		$raw = $rendered = array();
+		foreach ( $associated_term_ids as $term_id ) {
+			$term = get_top_level_parent_term( $term_id, $tax_name );
+			// Set keys to avoid adding duplicates. We'll drop them later.
+			$raw[$term->term_id] = array(
+				'term_id'   => $term->term_id,
+				'name'      => $term->name,
+				'slug'      => $term->slug,
+				'taxonomy'  => $term->taxonomy,
+				'parent'    => $term->parent,
+				'count'     => $term->count,
+				'term_link' => get_term_link( $term, $tax_name )
+			);
+			$rendered[$term->term_id] = $term->name;
+		}
+
+		$top_level = array(
+			'raw' => array_values( $raw ),
+			'rendered' => esc_html( implode( ', ', array_values( $rendered ) ) ),
+		);
+
+		return array(
+			'associated' => $associated,
+			'top-level'  => $top_level,
+		);
+	} else {
+		return $associated;
+	}
 }
 
 /**
@@ -522,6 +561,18 @@ function add_custom_rest_routes() {
     register_rest_route( 'wp/v2', '/engagement-region-other/', array(
             'methods' => 'GET', 
             'callback' => __NAMESPACE__ . '\\engagement_region_other_query' 
+    ) );
+    //Path to meta query route: post content and meta
+    register_rest_route( 'wp/v2', '/engagement-contentmeta/(?P<post_id>\d+)', array(
+            'methods' => 'GET', 
+            'callback' => __NAMESPACE__ . '\\rest_get_engagement_post_content_meta',
+			'args' => array(
+				'id' => array(
+					'validate_callback' => function($param, $request, $key) {
+						return is_numeric( $param );
+					}
+				),
+			),
     ) );
 }
 
@@ -577,4 +628,45 @@ function engagement_region_other_query() {
 	}
 
 	return $data;
+}
+
+
+
+/**
+ * Handle single post request (meta, content)
+ *
+ * @param array $object Details of current post.
+ * @param string $field_name Name of field.
+ * @param WP_REST_Request $request Current request
+ *
+ * @return string URL of image.
+ */
+function rest_get_engagement_post_content_meta( $request ) {
+
+	$post_id = $request['post_id'];
+	$post_object = \get_post( $post_id );
+
+	$data['postmeta'] = \get_post_meta( $post_id );
+	
+	$data['content'] = $post_object->post_content;
+
+	return $data;
+
+}
+
+
+// Helper functions
+/** 
+ * Find the top-level parent of a term.
+ *
+ * @since 1.0.0
+ *
+ * @return WP_Term object
+ */
+function get_top_level_parent_term( $term_id, $taxonomy ) {
+    $term = get_term_by( 'id', $term_id, $taxonomy );
+    while ( $term->parent != 0 ){
+        $term = get_term_by( 'id', $term->parent, $taxonomy);
+    }
+    return $term;
 }
