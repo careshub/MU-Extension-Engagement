@@ -21,6 +21,9 @@ add_action( 'init', __NAMESPACE__ . '\\register_program_funding_source' );
 // Register the engagement's geoids.
 add_action( 'init', __NAMESPACE__ . '\\register_muext_geoid' );
 
+// Do some magic to keep "advancement"-themed engagements out of the REST API responses.
+add_action( 'rest_muext_engagement_query', __NAMESPACE__ . '\\disallow_advancement_themed_eng', 10, 2 );
+
 // Register Custom Post Type
 function register_muext_engagement_cpt() {
 	$labels = array(
@@ -467,16 +470,28 @@ function rest_read_meta() {
  */
 function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 	$include_top_level_terms = false;
+	$ignore_terms = array();
 	switch ( $field_name ) {
 		case 'eng_theme':
 			$tax_name = 'muext_program_category';
 			$include_top_level_terms = true;
+			// We want to ignore the advancement theme and its children
+			$parent = get_term_by( 'slug', 'advancement', 'muext_program_category' );
+			$ignore_terms = get_terms( array( 
+				'taxonomy'   => 'muext_program_category',
+				'child_of'   => $parent->term_id,
+				'fields'     => 'ids',
+				'hide_empty' => false
+			) );
+			$ignore_terms[] = $parent->term_id;
 			break;
 		case 'eng_type' :
 			$tax_name = 'muext_program_outreach_type';
+			$include_top_level_terms = true;
 			break;
 		case 'eng_affiliation' :
 			$tax_name = 'muext_program_affiliation';
+			$include_top_level_terms = true;
 			break;
 		default:
 			return null;
@@ -486,6 +501,10 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 	$taxonomy_terms = get_the_terms( $object[ 'id' ], $tax_name );
 	$associated_term_ids = $raw = $rendered = array();
 	foreach ( $taxonomy_terms as $term ) {
+		// Skip terms that we're ignoring.
+		if ( in_array( $term->term_id, $ignore_terms, true ) ) {
+			continue;
+		}
 		$raw[] = array(
 			'term_id'   => $term->term_id,
 			'name'      => $term->name,
@@ -653,6 +672,37 @@ function rest_get_engagement_post_content_meta( $request ) {
 
 }
 
+/**
+ * Filter out engagements that only have a theme of "advancement" (and its children).
+ *
+ * @param array           $args    Key value array of query var to query value.
+ * @param WP_REST_Request $request The request used.
+ */
+function disallow_advancement_themed_eng( $args, $request ) {
+	/* 
+	 * If no themes have been specified as part of the request, 
+	 * we limit results to non-advancement themed engagements,
+	 * by limiting found engagments to acceptably themed engagements.
+	 */
+	if ( empty( $_GET['muext_program_category'] ) && empty( $_GET['muext_program_category_exclude'] ) ) {
+		$parent = get_term_by( 'slug', 'advancement', 'muext_program_category' );
+		$non_advancement_themes = get_terms( array( 
+			'taxonomy' => 'muext_program_category',
+			'exclude_tree'   => $parent->term_id,
+			'fields'  => 'ids',
+			'hide_empty' => false
+		) );
+		if ( $non_advancement_themes ) {
+			$args['tax_query'][] = array(
+				'taxonomy'         => 'muext_program_category',
+				'field'            => 'term_id',
+				'terms'            => $non_advancement_themes,
+			);
+		}
+	}
+
+	return $args;
+}
 
 // Helper functions
 /** 
