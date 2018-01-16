@@ -129,7 +129,9 @@ function template_loader( $template ) {
 	}
 
 	if ( is_front_page() ){
-		$default_file = 'home-muext_engagement.php';
+		//$default_file = 'home-muext_engagement.php';
+		//$default_file = 'home-eci.php';
+		$default_file = 'home-engagement_council.php';
 	} elseif ( is_singular( 'muext_engagement' ) ) {
 		$default_file = 'single-muext_engagement.php';
 	} elseif ( is_post_type_archive( 'muext_engagement' ) ) {
