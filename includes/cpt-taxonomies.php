@@ -474,9 +474,11 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 			break;
 		case 'eng_type' :
 			$tax_name = 'muext_program_outreach_type';
+			$include_top_level_terms = true;
 			break;
 		case 'eng_affiliation' :
 			$tax_name = 'muext_program_affiliation';
+			$include_top_level_terms = true;
 			break;
 		default:
 			return null;
