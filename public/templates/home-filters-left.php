@@ -71,9 +71,16 @@
 				</fieldset>
 			</div>
 			
-			<?php if( !is_user_logged_in() ) { ?>
-			<a href="<?php echo get_home_url(); ?>/wp-login.php?action=use-sso">Log In</a>
-			<?php } ?>
+				<div class='side-menu'>
+				<?php if( !is_user_logged_in() ) { ?>
+					<a href="<?php echo get_home_url(); ?>/wp-login.php?action=use-sso">Log In</a>
+				<?php } else { 
+					 wp_nav_menu( array(
+						'theme_location' => 'top-logged-in',
+						'menu_id'        => 'top-menu-logged-in',
+					) );
+				} ?>
+				</div>
 			</div>
 			
 			
