@@ -60,10 +60,10 @@
 			</fieldset>
 			
 				<div class='side-menu'>
-				<h4>Go To:</h4>
 				<?php if( !is_user_logged_in() ) { ?>
-					<a href="<?php echo get_home_url(); ?>/wp-login.php?action=use-sso">Log In</a>
+					<a class="nolist-link" href="<?php echo get_home_url(); ?>/wp-login.php?action=use-sso">Log In</a>
 				<?php } else { 
+					echo "<h4>Go To:</h4>";
 					 wp_nav_menu( array(
 						'theme_location' => 'top-logged-in',
 						'menu_id'        => 'top-menu-logged-in',

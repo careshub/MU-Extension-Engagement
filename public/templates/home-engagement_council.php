@@ -121,4 +121,4 @@
 
 </div> <!-- /.eci-wrap -->
 		
-<?php get_footer('eci');
+<?php get_footer();
