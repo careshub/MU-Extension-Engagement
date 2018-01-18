@@ -14,7 +14,7 @@
 
 <div class="eci-wrap contentclass" role="document">
 	<?php
-		\Engagement_Council\ECI_Main\get_template_part( 'home', 'filters-left' );
+		\MU_Ext_Engagement\Public_Facing\get_template_part( 'home', 'filters-left' );
 		echo '<input type="hidden" id="plugin-file-path" value="' . plugin_dir_url(dirname(__FILE__)) . '" />';
 	?>
 	
@@ -36,7 +36,7 @@
 				<div class="content-outermargin" itemprop="mainContentOfPage" itemscope itemtype="http://schema.org/WebPageElement">
 
 					<?php
-						\Engagement_Council\ECI_Main\get_template_part( 'home', 'map-selector' );
+						\MU_Ext_Engagement\Public_Facing\get_template_part( 'home', 'map-selector' );
 					?>
 					
 					<div class="row">
@@ -65,7 +65,7 @@
 									</div>
 							</div>
 
-							<div id="engagements-list">
+							<div id="engage-list">
 							</div>	
 						</div>
 					</div>

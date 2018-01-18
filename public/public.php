@@ -14,7 +14,7 @@ add_filter( 'template_include', __NAMESPACE__ . '\\template_loader' );
 
 // Load public-facing style sheet and JavaScript.
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_styles_scripts' );
-// add_action( 'login_enqueue_scripts', array( $this, 'enqueue_login_scripts' ) );
+add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_ecistyles_scripts' );
 
 // We may want to apply some GET params to the query on the DVT archive.
 add_action( 'pre_get_posts', __NAMESPACE__ . '\\filter_archive_query' );
@@ -48,6 +48,10 @@ add_action( 'rest_api_init', 'MU_Ext_Engagement\CPT_Tax\\rest_read_meta' );
 // Add custom route to the REST API to get lat/long of engagements with region "other."
 add_action( 'rest_api_init', 'MU_Ext_Engagement\CPT_Tax\\add_custom_rest_routes' );
 
+// ajax for modal loading
+add_action( 'wp_ajax_nopriv_ajax_single_card', __NAMESPACE__ . '\\ajax_single_card' );
+add_action( 'wp_ajax_ajax_single_card', __NAMESPACE__ . '\\ajax_single_card' );
+
 /**
  * Load the plugin text domain for translation.
  *
@@ -69,17 +73,6 @@ function enqueue_styles_scripts() {
 	// Scripts
 	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'js/public.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
 
-	/*
-	wp_localize_script( 
-		\MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', 
-		'muext_restapi_details', 
-		array(
-			'rest_url' => esc_url_raw( rest_url() ),
-			'rest_nonce' => wp_create_nonce( 'wp_rest' )
-		) 
-	);
-	*/
-	
 	// Localize the google scripts
 	$api_key = get_option( 'muext-google-location-apikey' );
 	wp_localize_script( 
@@ -91,13 +84,43 @@ function enqueue_styles_scripts() {
 	wp_enqueue_script( 'google_places_api', "https://maps.googleapis.com/maps/api/js?key={$api_key}&libraries=places&callback=initAutocomplete", array( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script' ), '1.0.0', true );
 	
 	// Styles
-	//if ( is_singular( 'muext_engagement' ) || is_post_type_archive( 'muext_engagement' ) || is_engagement_tax_archive() || is_front_page() ) {
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-style', plugins_url( 'css/public.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
 		wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-fontawesome-style', plugins_url( 'font-awesome-4.7.0/css/font-awesome.min.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
 
-	//}
 }
 
+
+/**
+ * Register and enqueue ECI scripts and styles
+ *
+ * @since    1.0.0
+ */
+function enqueue_ecistyles_scripts() {
+	// Scripts
+	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-eciplugin-script', plugins_url( 'js/eci_main.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
+
+	wp_localize_script(
+		\MU_Ext_Engagement\get_plugin_slug() . '-eciplugin-script',
+		'eci_ajax',
+		array(
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'ajax_nonce' => wp_create_nonce( 'eci_ajax_nonce' )
+		)
+	);
+
+	wp_enqueue_script('leaflet-script', 'https://unpkg.com/leaflet@1.2.0/dist/leaflet.js', array( 'jquery' ), '1.2.0');
+	wp_enqueue_script( 'esri-leaflet-script', 'https://unpkg.com/esri-leaflet@2.1.0/dist/esri-leaflet.js', array( 'jquery' ), '2.1.0');
+	wp_enqueue_script( 'esri-leaflet-geocoder-script', 'https://unpkg.com/esri-leaflet-geocoder@2.2.8/dist/esri-leaflet-geocoder-debug.js', array(), '2.2.8');
+	wp_enqueue_script( 'highchart-script', 'https://code.highcharts.com/5.0.7/highcharts.js', array(), '5.0.7');
+	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-ecimodal-script', plugins_url( 'js/modalonlybootstrap/bootstrap.min.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), 'all' );
+
+	// Styles
+	wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-eciplugin-style', plugins_url( 'css/eci_main.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
+	wp_enqueue_style( 'leaflet-style', 'https://unpkg.com/leaflet@1.2.0/dist/leaflet.css', array(), '1.2.0' );
+	wp_enqueue_style( 'font-awesome-style', plugins_url( 'css/font-awesome/css/font-awesome.min.css', __FILE__ ), array(), '', 'all' );
+	wp_enqueue_style( 'esri-leaflet-geocoder-style', 'https://unpkg.com/esri-leaflet-geocoder@2.2.8/dist/esri-leaflet-geocoder.css', array(), '2.2.8', 'all' );
+	wp_enqueue_style( \MU_Ext_Engagement\get_plugin_slug() . '-ecimodal-style', plugins_url( 'css/modalonlybootstrap/bootstrap.min.css', __FILE__ ), array(), \MU_Ext_Engagement\get_plugin_version(), 'all' );
+}
 
 /**
  * Register and enqueue public-facing style sheet.
@@ -333,7 +356,6 @@ function muext_tag_cloud_class_active_from_body(){
 
 }
 
-
 /**
  * Filter tag cloud output if Engagement Themes selected 
  * to only show top layer.
@@ -478,5 +500,38 @@ function filter_map_meta_caps( $caps = array(), $cap = '', $user_id = 0, $args =
 	}
 
 	return $caps;
+}
+
+
+/** 
+ * Get single engagement card template for ajax printing to screen
+ *
+ * @return template html
+**/
+function ajax_single_card() {
+
+	if( !isset( $_POST['post_id'] ) ){
+		$data['message'] = "No post id specified.";
+		echo json_encode( $data );
+		wp_die();
+	}
+
+    $post_id = $_POST['post_id'];
+	
+	$query_vars = array(
+		'post_type'	=> 'muext_engagement',
+		'p'		=> (int)$post_id
+	);
+
+	$posts = new \WP_Query( $query_vars );
+
+	if( $posts->have_posts() ) {
+		while ( $posts->have_posts() ) { 
+			$posts->the_post();
+			get_template_part( 'single', 'engagement_carddetails');
+		}
+	}
+
+    die();
 }
 

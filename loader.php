@@ -39,6 +39,11 @@ require_once( $basepath . 'includes/template-tags.php' );
 // The main class
 require_once( $basepath . 'public/public.php' );
 
+
+// Helper functions for ECI functions
+require_once( $basepath . 'includes/eci-functions.php' );
+
+
 // The Custom Post Type and Taxonomy class
 require_once( $basepath . 'includes/cpt-taxonomies.php' );
 
