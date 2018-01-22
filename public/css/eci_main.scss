@@ -134,6 +134,10 @@ $border: #8F8884;
 }
 
 #filter-selections {
+    #filter-help {
+        margin-bottom: 1em;
+    }
+
     fieldset {
         margin-bottom: 2em;
         border: 1px solid $border;
@@ -171,13 +175,6 @@ $border: #8F8884;
                 vertical-align: top;
                 margin-left: 0.5em;
                 line-height: 2em;
-            }
-        }
-
-        .inactive {
-            color: $border;
-            i {
-                color: $border;
             }
         }
     }

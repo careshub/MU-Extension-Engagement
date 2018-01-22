@@ -30,7 +30,7 @@
 			} ?>
 		</ul>
 
-    <div id="content" class="container homepagecontent ecpp" style="padding-top:0px;">
+    <div id="content" class="container homepagecontent ecpp open-leftmenu" style="padding-top:0px;">
    		<div class="row">
           	<div class="main col-md-12" role="main">
 				<div class="content-outermargin" itemprop="mainContentOfPage" itemscope itemtype="http://schema.org/WebPageElement">
