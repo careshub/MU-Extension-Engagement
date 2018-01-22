@@ -13,6 +13,7 @@ jQuery(document).ready(function ($) {
         cssGeog: '.ecpp-geog',
         selectcssGeogID: 'filters-container-regions',
         filterGeog: '#filter-geography',
+        filters: ["theme", "type", "affiliation"],
         igeog: 0,
         geoid: [],
         geog: [{
@@ -116,6 +117,9 @@ jQuery(document).ready(function ($) {
         // set filters collapsible
         collapsible();
 
+        // get geoid's taxonomy ID 
+        //getGeoidTaxonomy();
+
         //********************* EVENT HANDLERS ******************//
 
         // select change of the dropdown list in 'My Community' filter
@@ -145,13 +149,6 @@ jQuery(document).ready(function ($) {
             selectFeature(e.latlng);
         });
 
-        // when map container is resized via a css transition, we need to resize map
-        $("#" + ECI.map + "-container").on("mresize", function (e) {
-            map.invalidateSize();
-            var chart = $("#overview-chart").highcharts();
-            if (chart) chart.reflow();
-        });
-
         // attach search result
         $("#address-search").on('click', searchLocation);
 
@@ -166,7 +163,6 @@ jQuery(document).ready(function ($) {
         $("#list-geography").on("change", function (e) {
             var geoid = $(this).val();
             if (geoid !== "" && $.inArray(geoid, ECI.geoid) === -1) {
-                console.log(geoid)
                 layerSelect.query()             // merge with queryFeature() function???
                     .layer(ECI.geog[ECI.igeog].select_ids[0])
                     .within(ECI.bounds)
@@ -286,20 +282,6 @@ jQuery(document).ready(function ($) {
             populateGeographyList();
         }
 
-		/**
-		 * Zoom to geographic selection, but wait for 500 ms if the map is being resized.
-		 * ECI.resizing is set to true in selectFeature()
-		 */
-        function zoomToSelection() {
-            console.log('ECI.resizing', ECI.resizing);
-            if (ECI.resizing) {
-                setTimeout(zoomToSelection, 500);
-                delete ECI.resizing;
-            } else {
-                map.flyToBounds(ECI.selectionBounds);
-            }
-        }
-
         /**
          * Set all selection layers to no selection
          */
@@ -342,15 +324,6 @@ jQuery(document).ready(function ($) {
          * @param {any} latLng - The point location on map to select geography for.
          */
         function selectFeature(latLng) {
-            // show filter pane if hidden
-            if (!$(".open-leftmenu").length) {
-                ECI.resizing = true;
-                $("#content").addClass("open-leftmenu");
-                $("#filters-container-left").show();
-                $("#filter-theme").show();
-                $("#logo").find(".hamburger").addClass("highlight");
-            }
-
             // get census tract number
             layerSelect.identify()
                 .at(latLng)
@@ -473,7 +446,7 @@ jQuery(document).ready(function ($) {
                         ECI.selectionBounds = featureBounds;
                     }
 
-                    zoomToSelection();
+                    map.flyToBounds(ECI.selectionBounds);
                 }
             }
 
@@ -626,13 +599,14 @@ jQuery(document).ready(function ($) {
             brew.setNumClasses(4);
             var breaks = brew.classify();
 
-            //ECI.colors.grades = [0];
-            //for (var i = 1; i < breaks.length - 1; i++) {
-            //    ECI.colors.grades.push(breaks[i]);
-            //}
+            ECI.colors.grades = [0];
+            for (var i = 0; i < breaks.length - 1; i++) {
+                ECI.colors.grades.push(breaks[i]);
+            }
 
-            ECI.colors.grades = brew.classify();
-            ECI.colors.grades.splice(0, 0, 0);      // add 0 as the first element
+            //ECI.colors.grades = brew.classify();
+            //ECI.colors.grades.splice(0, 0, 0);      // add 0 as the first element
+            //ECI.colors.grades.splice(ECI.colors.grades.length - 1, 1);  // remove the last one
         }
 
         /**
@@ -705,14 +679,14 @@ jQuery(document).ready(function ($) {
 
             // reset engagement posts selection
             ECI.posts = {
-                "theme": {},
-                "type": {},
-                "affiliation": {},
                 "engagements": {},
 				"viewed": [] //has been viewed in current modal context 
             };
-            if (ECI.filterPosts) delete ECI.filterPosts;
-            updateContent(ECI.posts, hasGeog);
+            $.each(ECI.filters, function (i, ft) {
+                ECI.posts[ft] = {};
+            });
+            showFilters(ECI.posts, hasGeog);
+            $("#engage-loading").toggle(hasGeog);
 
             // get all engagements based on current geography selection
             if (hasGeog) {
@@ -729,9 +703,9 @@ jQuery(document).ready(function ($) {
                 if (!ECI.summary) {
                     // get summary info from WP REST API
                     ECI.summary = {};
-                    retrieveSummary(1, "muext_program_category", "theme");
+                    retrieveSummary(1, "muext_program_category", ECI.filters[0]);
                 } else {
-                    updateContent(ECI.summary);
+                    showFilters(ECI.summary);
                 }
             }
 
@@ -748,7 +722,7 @@ jQuery(document).ready(function ($) {
 			var url = "https://engagements.missouri.edu/wp-json/wp/v2/" + category;
             var perPage = 100;
             var param = { "parent": 0, "per_page": perPage, "page": iPage, "orderby": "id" };
-            if (filter === "theme") param.exclude = 2;      // exclude 'Advancement'
+            if (filter === ECI.filters[0]) param.exclude = 2;      // exclude 'Advancement'
 
             api("get", url, param, function (response) {
 				ECI.summary[filter] = ECI.summary[filter] || {};
@@ -763,13 +737,13 @@ jQuery(document).ready(function ($) {
 					    if (ECI.summary.affiliation) {
 						    // got all summary counts. Now update the filters, unless the user has already selected a geography.
 						    if ( !ECI.geoid || ECI.geoid.length === 0 ) {
-							    updateContent(ECI.summary);
+                                showFilters(ECI.summary);
 						    }
 					    } else {
-						    retrieveSummary(iPage, "muext_program_affiliation", "affiliation");
+						    retrieveSummary(iPage, "muext_program_affiliation", ECI.filters[2]);
 					    }
 				    } else {
-					    retrieveSummary(iPage, "muext_program_outreach_type", "type");
+					    retrieveSummary(iPage, "muext_program_outreach_type", ECI.filters[1]);
 				    }
 				} else {
 					// get next batch
@@ -791,7 +765,7 @@ jQuery(document).ready(function ($) {
             api("get", url, { "filter[muext_geoid]": list.join(","), "filter[posts_per_page]": postsPerPage, "page": iPage }, function (response) {
                 console.log(response);
 
-                // update ECI
+                // update ECI filters' post ID lists
                 $.each(response, function (i, v) {
                     ECI.posts.engagements[v.id] = {
                         "title": v.title.rendered,
@@ -799,14 +773,17 @@ jQuery(document).ready(function ($) {
                         "image": v.eng_featured_image
                     };
 
-                    updateECIFilters(v.eng_theme["top-level"], "theme", v.id);
-                    updateECIFilters(v.eng_type["top-level"], "type", v.id);
-                    updateECIFilters(v.eng_affiliation["top-level"], "affiliation", v.id);
+                    getFilterData(v.eng_theme["top-level"], ECI.filters[0], v.id);
+                    getFilterData(v.eng_type["top-level"], ECI.filters[1], v.id);
+                    getFilterData(v.eng_affiliation["top-level"], ECI.filters[2], v.id);
                 });
 
                 if (response.length < postsPerPage) {
                     console.log(ECI.posts);
-                     updateContent(ECI.posts);
+
+                    // move post IDs of the selected geographies to front in ECI.posts.theme 
+
+                    showFilters(ECI.posts);
                 } else {
                    iPage++;
                     retrievePosts(list, iPage);
@@ -931,14 +908,12 @@ jQuery(document).ready(function ($) {
 		 * @return {int} postID
 		 **/
         function nextModalPostID(currentPostID, currentPostTheme) {
-            var posts = ECI.filterPosts || ECI.posts;
-
 			// get current index w/in this ECI.posts.theme
-			var current_index = posts.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
+            var current_index = ECI.posts.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
 
 			// if we're not at the end of this theme in ECI.posts, stay w/in theme
-			if( ( current_index + 1 ) < posts.theme[currentPostTheme].length ){
-				var next_id = posts.theme[currentPostTheme][current_index + 1]; //index++
+            if ((current_index + 1) < ECI.posts.theme[currentPostTheme].length ){
+                var next_id = ECI.posts.theme[currentPostTheme][current_index + 1]; //index++
 
 				// if we've already viewed this post_id, go to next post_id
 				if( ECI.posts.viewed.indexOf( next_id ) != -1 ){
@@ -946,15 +921,15 @@ jQuery(document).ready(function ($) {
 				}
 
 			} else { // we are at the end of this theme, go to next theme
-				nextPostTheme = getNextKey( posts.theme, currentPostTheme);
+                nextPostTheme = getNextKey(ECI.posts.theme, currentPostTheme);
 
 				if( nextPostTheme ){
 					//do we have any posts in this theme?
-					if( posts.theme[currentPostTheme].length == 0 ){
-						nextPostTheme = getNextKey( posts.theme, currentPostTheme);
+                    if (ECI.posts.theme[currentPostTheme].length == 0 ){
+                        nextPostTheme = getNextKey(ECI.posts.theme, currentPostTheme);
 					} else {
 						//start from the beginning
-						current_id = posts.theme[nextPostTheme][0];
+                        current_id = ECI.posts.theme[nextPostTheme][0];
 
 						// if we've already viewed this post_id, go to next post_id
 						if( ECI.posts.viewed.indexOf( current_id ) != -1 ){
@@ -981,26 +956,24 @@ jQuery(document).ready(function ($) {
 		 * @return {int} postID
 		 **/
         function prevModalPostID(currentPostID, currentPostTheme) {
-            var posts = ECI.filterPosts || ECI.posts;
-
 			// get current index w/in this ECI.posts.theme
-			var current_index = posts.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
+            var current_index = ECI.posts.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
 
 			// if we're not at the beginning of this theme in ECI.posts, stay w/in theme
 			if( !( ( current_index - 1 ) < 0 ) ){
-				var prev_id = posts.theme[currentPostTheme][current_index - 1]; //index++
+                var prev_id = ECI.posts.theme[currentPostTheme][current_index - 1]; //index++
 
 
 			} else { // we are at the end of this theme, go to next theme
-				prevPostTheme = getPreviousKey( posts.theme, currentPostTheme);
+                prevPostTheme = getPreviousKey(ECI.posts.theme, currentPostTheme);
 
 				if( prevPostTheme ){
 					//do we have any posts in this theme?
-					if( posts.theme[currentPostTheme].length == 0 ){
-						prevPostTheme = getPreviousKey( posts.theme, currentPostTheme);
+                    if (ECI.posts.theme[currentPostTheme].length == 0 ){
+                        prevPostTheme = getPreviousKey(ECI.posts.theme, currentPostTheme);
 					} else {
 						//start from the end
-						current_id = posts.theme[prevPostTheme].length;
+                        current_id = ECI.posts.theme[prevPostTheme].length;
 
 						// if we've already viewed this post_id, go to next post_id
 						//if( ECI.posts.viewed.indexOf( current_id ) != -1 ){
@@ -1044,22 +1017,19 @@ jQuery(document).ready(function ($) {
 			return nextKey;
 		};
 
-
-
-
-
-
-
         /**
          * Populate filter properties in ECI.posts - theme, type, affiliation 
          * @param {any} postProperty - The property of the engagement post 
          * @param {any} filterType - filter type: theme, type, affiliation
          * @param {any} id - The ID of the engagement post
          */
-        function updateECIFilters(postProperty, filterType, id) {
+        function getFilterData(postProperty, filterType, id) {
             if (postProperty && postProperty.raw) {
+
+                ECI.posts.engagements[id][filterType] = [];
                 for (var t = 0; t < postProperty.raw.length; t++) {
                     var name = postProperty.raw[t].name;
+                    ECI.posts.engagements[id][filterType].push(name);
 
                     // store post ID in ECI.posts
                     ECI.posts[filterType][name] = ECI.posts[filterType][name] || [];
@@ -1070,20 +1040,47 @@ jQuery(document).ready(function ($) {
             }
         }
 
-        /**
-         * Update theme/type/affiliation filters, chart and engagement listing content
-         * @param {any} data - The engagement data
-         */
-        function updateContent(data, showLoading) {
-        	setContainerState();
+        function getGeoidTaxonomy(callback) {
+            callback = callback || $.noop;
 
+            if (!ECI.geoTID) {
+                ECI.geoTID = {};
+
+                var getGeoTID = function (page) {
+                    var url = "https://engagements.missouri.edu/wp-json/wp/v2/muext_geoid";
+                    var perPage = 100;
+                    api("get", url, { "per_page": perPage, "page": page }, function (response) {
+                        $.each(response, function (i, v) {
+                            ECI.GeoID[v.name] = v.id;
+                        })
+                    });
+
+                    if (Response.length < perPage) {
+                        page++;
+                        getGeoTID(page);
+                    } else {
+                        callback();
+                    }
+                }
+
+                getGeoTID(1);
+            } else {
+                callback();
+            }
+        }
+
+        /**
+         * List all filters for theme, type, and affiliation
+         * @param {any} data
+         * @param {any} showLoading
+         */
+        function showFilters(data, showLoading) {
             // update theme, type, affiliation filters
             var filterCount = {};           // store counts for chart
             var hasPosts = (data.engagements);
-            var iconStyle = (hasPosts) ? "fa-times-circle" : "fa-circle";
-            var filters = ["theme", "type", "affiliation"];
+            //var iconStyle = (hasPosts) ? "fa-square-o" : "fa-check-square";
 
-            $.each(filters, function (i, v) {
+            $.each(ECI.filters, function (i, v) {
                 if (data[v]) {
                     filterCount[v] = {};
 
@@ -1106,24 +1103,23 @@ jQuery(document).ready(function ($) {
                         if (data[v].hasOwnProperty(key)) {
                             var count = $.isArray(data[v][key]) ? data[v][key].length : data[v][key];
                             filterCount[v][key] = count;
-                            var filterName = key;
-                            var iconStyle2 = iconStyle;
-                            var liCss = "";
+                            //var filterName = key;
+                            //var iconStyle2 = iconStyle;
 
-                            if (count === 0) {
-                                iconStyle2 = "fa-plus-circle";
-                                liCss = "inactive";
-                            } else {
-                                filterName += " (" + count + ")";
-                            }
+                            //if (count === 0) {
+                            //    iconStyle2 = "fa-check-square";
+                            //} else {
+                            //    iconStyle2 = "fa-check-square";
+                            //    filterName += " (" + count + ")";
+                            //}
 
                             var $filterText = (isFilterLinked) ? $("<a />", { "href": "javascript:void(0)" }) : $("<span />");
 
                             $filter.append(
-                                $("<li />", { "data-id": key, "data-type": v, "class": liCss })
-                                    .append($("<i />", { "class": "fa " + iconStyle2 + " fa-2x" }))
+                                $("<li />", { "data-id": key })
+                                    .append($("<i />", { "class": "fa fa-square-o fa-2x" }))
                                     .append(
-                                        $filterText.append(filterName)
+                                    $filterText.append(key + " (" + count + ")")
                                     )
                             );
                             hasProp = true;
@@ -1143,63 +1139,56 @@ jQuery(document).ready(function ($) {
                         );
                     }
 
-                    // attach filter 'remove' or 'add' click
+                    // attach filter click event handler
                     if (hasPosts) {
                         $filter.find("i").on("click", function () {
-                            // use ECI.filterPosts to keep track of removed filters
-                            if (!ECI.filterPosts) {
-                                clonePosts();
-                            }
+                            // toggle icon
+                            $(this).toggleClass("fa-square-o").toggleClass("fa-check-square");
 
+                            var selectCss = "filter-active";
                             var $li = $(this).parent();
-                            var filterValue = $li.attr("data-id");          // e.g. 'Youth and Family', etc.
-                            var filterType = $li.attr("data-type");     // e.g. 'theme', 'type', 'affiliation'
+                            $li.toggleClass(selectCss);
 
-                            if ($li.hasClass("inactive")) {
-                                // adding back the filter - we need to restore the filter's post ID list
-                                ECI.filterPosts[filterType][filterValue] = $.extend(true, [], ECI.posts[filterType][filterValue]);
-                            } else {
-                                // removing the filter - just need to empty filter's post ID list
-                                ECI.filterPosts[filterType][filterValue] = [];
-                            }
+                            // get all filters
+                            var filterList = {};
+                            $.each(ECI.filters, function (i, v) {
+                                filterList[v] = [];
 
-                            // now update other filter types - first, get the post items still in the remaining filters' ID list
-                            var remainPosts = [];
-                            for (var x in ECI.posts[filterType]) {
-                                $.merge(remainPosts, ECI.filterPosts[filterType][x]);
-                            }
-
-                            // if we just removed the last filter, we need to add all filters back
-                            if (remainPosts.length === 0) {
-                                // reset all filters
-                                clonePosts();
-                            } else {
-                                // update other filter groups - remove the post item if it's not in the remaining filters' ID list
-                                $.each(filters, function (j, w) {
-                                    if (w !== filterType) {
-                                        // loop through each filter within this type
-                                        for (var x in ECI.filterPosts[w]) {
-                                            // rebuild the ID list for the filter
-                                            ECI.filterPosts[w][x] = [];
-
-                                            // loop through each post ID within this filter
-                                            for (var k = 0; k < ECI.posts[w][x].length; k++) {
-                                                // if the ID is in the remaining post list, keep it
-                                                if ($.inArray(ECI.posts[w][x][k], remainPosts) !== -1) {
-                                                    ECI.filterPosts[w][x].push(ECI.posts[w][x][k]);
-                                                }
-                                            }
-                                        }
-                                    }
+                                var $filter = $("#filter-" + v);
+                                $filter.find("li." + selectCss).each(function (el) {
+                                    var fValue = $(this).attr("data-id");
+                                    filterList[v].push(fValue);
                                 });
-                            }
+                            });
+                            updateFilter(filterList);
 
-                            updateContent(ECI.filterPosts);
+                            var themeCount = {};
+                            for (var f in ECI.posts.theme) {
+                                themeCount[f] = ECI.posts.theme[f].length;
+                            }
+                            updateContent(ECI.posts, themeCount);
+
+                            // update filter counts
+                            $.each(ECI.filters, function (iType, fType) {
+                                var $filter = $("#filter-" + fType);
+                                var tag = (iType === 0) ? "a" : "span";
+                                var countAll = ($filter.find("." + selectCss).length === 0);
+
+                                $filter.find("li").each(function (el) {
+                                    var $text = $(this).find(tag);
+                                    var fValue = $(this).attr("data-id");
+                                    var num = ECI.posts[fType][fValue] ? ECI.posts[fType][fValue].length : 0;
+                                    if (countAll || $(this).hasClass(selectCss)) fValue += " (" + num + ")";
+                                    $text.html(fValue);
+                                });
+                            });
                         });
                     }
-
                 }
             });
+
+            // now update chart and contents
+            updateContent(data, filterCount.theme);
 
             // attach theme 'link' click
             $("#filter-theme").find("a").on("click", function (e) {
@@ -1212,6 +1201,17 @@ jQuery(document).ready(function ($) {
                     return false;
                 }
             });
+        }
+
+
+        /**
+         * Update theme/type/affiliation filters, chart and engagement listing content
+         * @param {any} data - The engagement data
+         */
+        function updateContent(data, themeCount) {
+            setContainerState();
+
+            $("#engage-loading").hide();
 
             // update chart
 
@@ -1236,11 +1236,11 @@ jQuery(document).ready(function ($) {
             }
 
             var chartData = [];
-            for (var x in data.theme) {
-                if (filterCount.theme[x] > 0) {
+            for (var x in themeCount) {
+                if (themeCount[x] > 0) {
                     chartData.push({
                         name: x,
-                        y: filterCount.theme[x]
+                        y: themeCount[x]
                     });
                 }
             }
@@ -1316,15 +1316,80 @@ jQuery(document).ready(function ($) {
         }
 
         /**
-         * Clone ECI.posts to ECI.filterPosts
+         * 
+         * @param {any} arrTheme
+         * @param {any} arrType
+         * @param {any} arrAffiliation
          */
-        function clonePosts() {
-            ECI.filterPosts = {
-                "theme": $.extend(true, {}, ECI.posts.theme),
-                "type": $.extend(true, {}, ECI.posts.type),
-                "affiliation": $.extend(true, {}, ECI.posts.affiliation),
-                "engagements": true
-            };
+        function updateFilter(filterList) {
+            // convert ECI.posts.engagements to an array
+            var temp = [];
+            for (var id in ECI.posts.engagements) {
+                var obj = { "id": id };
+                $.each(ECI.filters, function (i, v) {
+                    obj[v] = ECI.posts.engagements[id][v];
+                });
+                temp.push(obj);
+            }
+
+            // apply filters
+            temp = temp.filter(function (obj) {
+                for (var x in filterList) {
+                    // if the post's themes/types/affiliations are not matching any selected themes/types/affiliations
+                    if (filterList[x].length > 0 && !hasCommonItems(filterList[x], obj[x])) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            // assemble ID lists again
+            $.each(ECI.filters, function (i, v) {
+                ECI.posts[v] = {};
+
+                // loop through each post item
+                $.each(temp, function (j, item) {
+                    var postId = parseInt(item.id);
+
+                    // loop through the filter list of the item
+                    $.each(item[v], function (k, z) {
+
+                        // z - a theme/type/affiliation name
+                        ECI.posts[v][z] = ECI.posts[v][z] || [];
+                        if ($.inArray(item.id, ECI.posts[v][z]) === -1) {
+                            ECI.posts[v][z].push(postId);
+                        }
+                    });
+                });
+            });
+
+            // if we have theme filters, need to remove IDs from not-selected themes
+            var t = ECI.filters[0];
+            if (filterList[t].length > 0) {
+                for (var f in ECI.posts[t]) {
+                    if ($.inArray(f, filterList[t]) === -1) {
+                        ECI.posts[t][f] = [];
+                    }
+                }
+            }
+        }
+
+
+        /**
+         * Find common elements in two arrays
+         * @param {any} a
+         * @param {any} b
+         */
+        function hasCommonItems(a, b) {
+            var newArr = [];
+            newArr = a.filter(function (v) {
+                return b.indexOf(v) >= 0;
+            }).concat(b.filter(function (v) {
+                return a.indexOf(v) >= 0;
+            }));
+
+            return newArr.length > 0;
         }
 
         /**
@@ -1339,7 +1404,7 @@ jQuery(document).ready(function ($) {
             var style = $("#list-view").hasClass("active") ? " list-group-item" : "";
 
             // show up to 6 posts
-            var postIDs = ECI.filterPosts ? ECI.filterPosts.theme[theme] : ECI.posts.theme[theme];
+            var postIDs = ECI.posts.theme[theme];
             var posts = ECI.posts.engagements;
             var stockImg = getPluginPath("images");
             for (var p = startIndex; p < Math.min(postIDs.length, stopIndex); p++) {
@@ -1354,13 +1419,10 @@ jQuery(document).ready(function ($) {
 					};
 					var $item = addItem(item, pId, style, false);
 
-					//TODO: move this to Yan's flow
 					$item.on("click", function( e ){
 						var post_id = $(this).attr("data-id");
-						//console.log( ECI.posts );
 						//retrievePostContentMeta( post_id );
 						loadSingleEngTemplate( post_id, true, theme );
-
 					});
 
                     $container.append($item);
@@ -1420,9 +1482,8 @@ jQuery(document).ready(function ($) {
          * Set display state of filter, engagement, chart containers.
          */
         function setContainerState() {
-            var posts = ECI.filterPosts || ECI.posts;
             var hasGeog = (ECI.geoid.length > 0);
-            var hasPosts = hasGeog && !$.isEmptyObject(posts.theme);
+            var hasPosts = hasGeog && !$.isEmptyObject(ECI.posts.theme);
             $("#style-container").toggle(hasPosts);
             $("#engage-list").toggle(hasPosts);
             $("#impact-container").toggle(hasGeog && ECI.igeog !== 1);
@@ -1513,55 +1574,6 @@ jQuery(document).ready(function ($) {
         }
     }
 });
-
-/**
-* Event based jQuery element resize - to detect a div element resize event.
-* The script does not use any kind of timer(s) to detect size changes. It uses the resize event on (invincible) iframe(s)
-* which makes it perform much better than other solutions which use timers to poll element size.
-* The script detects size changes made from JS, CSS, animations etc. and it works on any element able to contain other elements (e.g. div, p, li etc.).
-* -- source: http://manos.malihu.gr/event-based-jquery-element-resize/
-*/
-(function (factory) {
-
-    if (typeof define === "function" && define.amd) {
-        define(["jquery"], factory); //AMD
-    } else if (typeof exports === "object") {
-        module.exports = factory; //Browserify
-    } else {
-        factory(jQuery); //globals
-    }
-
-}(function ($) {
-
-    $.event.special.mresize = {
-        add: function () {
-            var el = $(this);
-            if (el.data("mresize")) return;
-            if (el.css("position") === "static") el.css("position", "relative");
-            el
-                .append("<div class='resize' style='position:absolute; width:auto; height:auto; top:0; right:0; bottom:0; left:0; margin:0; padding:0; overflow:hidden; visibility:hidden; z-index:-1'><iframe style='width:100%; height:0; border:0; visibility:visible; margin:0' /><iframe style='width:0; height:100%; border:0; visibility:visible; margin:0' /></div>")
-                .data("mresize", { "w": el.width(), "h": el.height(), t: null, throttle: 100 })
-                .find(".resize iframe").each(function () {
-                    $(this.contentWindow || this).on("resize", function () {
-                        var d = el.data("mresize");
-                        if (d.w !== el.width() || d.h !== el.height()) {
-                            if (d.t) clearTimeout(d.t);
-                            d.t = setTimeout(function () {
-                                el.triggerHandler("mresize");
-                                d.w = el.width();
-                                d.h = el.height();
-                            }, d.throttle);
-                        }
-                    });
-                });
-        },
-        remove: function () {
-            $(this).removeData("mresize").find(".resize").remove();
-        }
-    };
-
-    }));
-
 
 /**
 * Generate Jenks Natural Breaks, modified from 'classybrew' github repository

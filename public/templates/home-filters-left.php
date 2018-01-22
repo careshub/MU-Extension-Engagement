@@ -12,15 +12,15 @@
 			<fieldset class="collapsible">
 			<legend><h6><i class="fa fa-chevron-up icon"></i> MY COMMUNITY</h6></legend>
 			<div>
+			<div id="filter-help" class="mb-2">
+				Looking for engagement programs and activities occurring in your community? 
+				Select your community from the list or map to find out!
+			</div>
+
 			<select id="filters-container-regions" class="form-control">
 			</select>
 			<select id="list-geography" class="form-control">
 			</select>
-
-			<div id="filter-help">
-				Looking for engagement programs and activities occurring in your community? 
-				Select your community from the list or map to find out!
-			</div>
 
 			<ul id="filter-geography">
 			</ul>
@@ -30,7 +30,7 @@
 			<fieldset class="collapsible">
 			<legend><h6><i class="fa fa-chevron-up icon"></i> ENGAGEMENT IMPACT AREA</h6></legend>
 			<div>
-			<ul id="filter-theme">
+			<ul id="filter-theme" data-type="theme">
 			</ul>
 			</div>
 			</fieldset>
@@ -38,7 +38,7 @@
 			<fieldset class="collapsible collapsed">
 			<legend><h6><i class="fa fa-chevron-down icon"></i> ENGAGEMENT TYPE</h6></legend>
 			<div>
-			<ul id="filter-type">
+			<ul id="filter-type" data-type="type">
 			</ul>
 			</div>
 			</fieldset>
@@ -46,7 +46,7 @@
 			<fieldset class="collapsible collapsed">
 			<legend><h6><i class="fa fa-chevron-down icon"></i> AFFILIATION</h6></legend>
 			<div>
-			<ul id="filter-affiliation">
+			<ul id="filter-affiliation" data-type="affiliation">
 			</ul>
 			</div>
 			</fieldset>

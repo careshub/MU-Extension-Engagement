@@ -102,6 +102,9 @@
         border: 1px solid #ccc;
         background: #f1b82d; }
 
+#filter-selections #filter-help {
+  margin-bottom: 1em; }
+
 #filter-selections fieldset {
   margin-bottom: 2em;
   border: 1px solid #8F8884;
@@ -131,10 +134,6 @@
       vertical-align: top;
       margin-left: 0.5em;
       line-height: 2em; }
-  #filter-selections ul .inactive {
-    color: #8F8884; }
-    #filter-selections ul .inactive i {
-      color: #8F8884; }
 
 #filter-selections i:hover {
   color: #333;
@@ -202,6 +201,9 @@
 
 #engage-subtitle {
   text-align: center; }
+
+#engage-loading i {
+  color: #f1b82d; }
 
 .icon {
   color: #f1b82d; }
