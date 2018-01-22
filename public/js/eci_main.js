@@ -1078,7 +1078,8 @@ jQuery(document).ready(function ($) {
             // update theme, type, affiliation filters
             var filterCount = {};           // store counts for chart
             var hasPosts = (data.engagements);
-            //var iconStyle = (hasPosts) ? "fa-square-o" : "fa-check-square";
+
+            var iconStyle = (hasPosts) ? "fa-square-o" : "fa-circle";
 
             $.each(ECI.filters, function (i, v) {
                 if (data[v]) {
@@ -1087,7 +1088,7 @@ jQuery(document).ready(function ($) {
                     var $filter = $("#filter-" + v);
                     $filter.empty();
 
-                    // sort the keys
+                    // sort the filters by name
                     var keys = [];
                     for (var t in data[v]) {
                         keys.push(t);
@@ -1103,21 +1104,12 @@ jQuery(document).ready(function ($) {
                         if (data[v].hasOwnProperty(key)) {
                             var count = $.isArray(data[v][key]) ? data[v][key].length : data[v][key];
                             filterCount[v][key] = count;
-                            //var filterName = key;
-                            //var iconStyle2 = iconStyle;
-
-                            //if (count === 0) {
-                            //    iconStyle2 = "fa-check-square";
-                            //} else {
-                            //    iconStyle2 = "fa-check-square";
-                            //    filterName += " (" + count + ")";
-                            //}
 
                             var $filterText = (isFilterLinked) ? $("<a />", { "href": "javascript:void(0)" }) : $("<span />");
 
                             $filter.append(
                                 $("<li />", { "data-id": key })
-                                    .append($("<i />", { "class": "fa fa-square-o fa-2x" }))
+                                    .append($("<i />", { "class": "fa fa-2x " + iconStyle }))
                                     .append(
                                     $filterText.append(key + " (" + count + ")")
                                     )
@@ -1126,6 +1118,8 @@ jQuery(document).ready(function ($) {
                             sorted[key] = data[v][key];
                         }
                     }
+
+                    // keep filters sorted by name
                     data[v] = sorted;
 
                     // show a loading icon

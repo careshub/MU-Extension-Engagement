@@ -184,6 +184,11 @@ $border: #8F8884;
         cursor: pointer;
     }
 
+    i.fa-circle:hover {
+        color: $gold;
+        cursor: initial;
+    }
+
     select {
         margin-bottom: 1em;
     }

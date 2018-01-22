@@ -139,6 +139,10 @@
   color: #333;
   cursor: pointer; }
 
+#filter-selections i.fa-circle:hover {
+  color: #f1b82d;
+  cursor: initial; }
+
 #filter-selections select {
   margin-bottom: 1em; }
 
