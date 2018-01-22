@@ -449,6 +449,7 @@ function rest_read_meta() {
 			'schema'          => null,
 		)
 	);
+	/*
 	register_rest_field( 'muext_engagement',
 		'eng_post_meta_fields',
 		array(
@@ -456,7 +457,7 @@ function rest_read_meta() {
 			'update_callback' => null,
 			'schema'          => null,
 		)
-	);
+	);*/
 }
 
 /**
