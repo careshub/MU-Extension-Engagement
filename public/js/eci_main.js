@@ -686,6 +686,7 @@ jQuery(document).ready(function ($) {
                 ECI.posts[ft] = {};
             });
             showFilters(ECI.posts, hasGeog);
+            $("#engage-loading").toggle(hasGeog);
 
             // get all engagements based on current geography selection
             if (hasGeog) {
@@ -1209,7 +1210,9 @@ jQuery(document).ready(function ($) {
          */
         function updateContent(data, themeCount) {
             setContainerState();
-           
+
+            $("#engage-loading").hide();
+
             // update chart
 
             // add to chart subtitle
@@ -1347,13 +1350,15 @@ jQuery(document).ready(function ($) {
 
                 // loop through each post item
                 $.each(temp, function (j, item) {
+                    var postId = parseInt(item.id);
+
                     // loop through the filter list of the item
                     $.each(item[v], function (k, z) {
 
                         // z - a theme/type/affiliation name
                         ECI.posts[v][z] = ECI.posts[v][z] || [];
                         if ($.inArray(item.id, ECI.posts[v][z]) === -1) {
-                            ECI.posts[v][z].push(item.id);
+                            ECI.posts[v][z].push(postId);
                         }
                     });
                 });

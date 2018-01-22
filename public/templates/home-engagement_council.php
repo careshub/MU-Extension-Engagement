@@ -54,6 +54,10 @@
 								<h3>MU Engagement</h3>
 							</div>
 
+							<div id="engage-loading">
+							<i class="fa fa-spinner fa-spin fa-2x"></i> Loading...
+							</div>
+
 							<div class="row" id="chart-container">
 								<div id="engage-subtitle">
 									<h4 class="col-xs-12 modal-theme">Engagements by Impact Areas</h4>
