@@ -40,10 +40,7 @@
     background-image: url(../images/mo.png);
     background-color: #f1b82d;
     background-position: center;
-    background-repeat: no-repeat;
-    width: 27px;
-    height: 27px;
-    cursor: pointer; }
+    background-repeat: no-repeat; }
   #impact-map-container .leaflet-map-pane svg {
     z-index: 1; }
   #impact-map-container iframe {
@@ -100,7 +97,8 @@
       justify-content: center; }
       #impact-map-container .input-group .input-group-btn .btn {
         border: 1px solid #ccc;
-        background: #f1b82d; }
+        background: #f1b82d;
+        box-shadow: 2px 2px 2px #bbb; }
 
 #filter-selections #filter-help {
   margin-bottom: 1em; }
@@ -138,6 +136,10 @@
 #filter-selections i:hover {
   color: #333;
   cursor: pointer; }
+
+#filter-selections i.fa-circle:hover {
+  color: #f1b82d;
+  cursor: initial; }
 
 #filter-selections select {
   margin-bottom: 1em; }
