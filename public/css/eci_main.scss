@@ -227,7 +227,6 @@ $border: #8F8884;
         border: 1px solid #ccc;
         background: #f9f9f9;
         padding: 5px;
-        height: 345px;
 
         .img-container {
             background-size: 100%;
@@ -262,17 +261,17 @@ $border: #8F8884;
             height: auto;
 
             .img-container {
-                margin-bottom: 0px;
-                float: left;
-                margin-right: 10px;
-                width: 300px;
-                max-height: 185px;
+                margin: 0 auto;
+			    float: none;
+			    width: 300px;
+		  	    max-height: 100px; 
+			    border: 1px solid #cccccc;
+			    border-radius: 4px;
             }
 
             .text-below {
-                text-align: left;
-                float: left;
-                width: auto;
+                text-align: center;
+				width: auto;
                 .desc {
                     display: block;
                 }
@@ -280,9 +279,14 @@ $border: #8F8884;
         }
     }
 }
-
+#impact-list .engagement-item {
+	height:218px;
+}
 #engage-list {
     border-top: 1px solid #ccc;
+}
+#engage-list .engagement-item {
+	height: 345px; 
 }
 
 #engage-subtitle {

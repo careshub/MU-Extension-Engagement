@@ -163,7 +163,11 @@
   border: 1px solid #ccc;
   background: #f9f9f9;
   padding: 5px;
+}
+#engage-list .engagement-item {
   height: 345px; }
+#impact-list .engagement-item {
+  height: 218px; }
   #impact-list .engagement-item .img-container, #engage-list .engagement-item .img-container {
     background-size: 100%;
     background-position: center;
@@ -183,17 +187,17 @@
   #impact-list .list-group-item:after, #engage-list .list-group-item:after {
     clear: both; }
   #impact-list .list-group-item .engagement-item, #engage-list .list-group-item .engagement-item {
-    max-height: 200px;
+    max-height: 232px;
     height: auto; }
     #impact-list .list-group-item .engagement-item .img-container, #engage-list .list-group-item .engagement-item .img-container {
-      margin-bottom: 0px;
-      float: left;
-      margin-right: 10px;
+      margin: 0 auto;
+      float: none;
       width: 300px;
-      max-height: 185px; }
+      max-height: 100px; 
+	  border: 1px solid #cccccc;
+	  border-radius: 4px;}
     #impact-list .list-group-item .engagement-item .text-below, #engage-list .list-group-item .engagement-item .text-below {
-      text-align: left;
-      float: left;
+      text-align: center;
       width: auto; }
       #impact-list .list-group-item .engagement-item .text-below .desc, #engage-list .list-group-item .engagement-item .text-below .desc {
         display: block; }
