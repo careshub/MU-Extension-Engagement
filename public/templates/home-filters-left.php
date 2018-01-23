@@ -9,16 +9,13 @@
 		<div id="filters-container-left" class="col-xs-12 clearfix filter-box">
 			<div id="filter-selections" class="clearfix">
 
-			<fieldset class="collapsible">
+			<fieldset class="collapsible" style="background: #FCF1D6;">
 			<legend><h6><i class="fa fa-chevron-up icon"></i> MY COMMUNITY</h6></legend>
 			<div>
-			<div id="filter-help" class="mb-2">
-				Looking for engagement programs and activities occurring in your community? 
-				Select your community from the list or map to find out!
-			</div>
 
-			<select id="filters-container-regions" class="form-control">
-			</select>
+			<ul id="filters-container-regions" class="list-group">
+			</ul>
+
 			<select id="list-geography" class="form-control">
 			</select>
 

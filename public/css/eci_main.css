@@ -100,9 +100,6 @@
         background: #f1b82d;
         box-shadow: 2px 2px 2px #bbb; }
 
-#filter-selections #filter-help {
-  margin-bottom: 1em; }
-
 #filter-selections fieldset {
   margin-bottom: 2em;
   border: 1px solid #8F8884;
@@ -158,6 +155,51 @@
 #filter-selections .collapsible legend {
   cursor: pointer;
   padding-left: 10px; }
+
+#filter-selections .list-group {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  padding-left: 0;
+  margin-bottom: 1em; }
+  #filter-selections .list-group .list-group-item {
+    position: relative;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-flow: row wrap;
+    -ms-flex-flow: row wrap;
+    flex-flow: row wrap;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    line-height: 2em;
+    font-size: 14px;
+    margin-bottom: -1px;
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    cursor: pointer; }
+    #filter-selections .list-group .list-group-item:hover {
+      background: #8F8884;
+      color: #f1b82d; }
+    #filter-selections .list-group .list-group-item:first-child {
+      border-top-right-radius: .25rem;
+      border-top-left-radius: .25rem; }
+    #filter-selections .list-group .list-group-item:last-child {
+      margin-bottom: 0;
+      border-bottom-right-radius: .25rem;
+      border-bottom-left-radius: .25rem; }
+  #filter-selections .list-group .active {
+    background: #333;
+    color: #f1b82d; }
 
 #impact-list .engagement-item, #engage-list .engagement-item {
   border: 1px solid #ccc;
