@@ -58,9 +58,6 @@ $border: #8F8884;
         background-color: $gold;
         background-position: center;
         background-repeat: no-repeat;
-        width: 27px;
-        height: 27px;
-        cursor: pointer;
     }
 
     .leaflet-map-pane svg {
@@ -128,6 +125,7 @@ $border: #8F8884;
             .btn {
                 border: 1px solid #ccc;
                 background: $gold;
+                box-shadow: 2px 2px 2px #bbb;
             }
         }
     }

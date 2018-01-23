@@ -69,6 +69,17 @@ jQuery(document).ready(function ($) {
     }
 
     /**
+     * Call local WordPress REST API
+     * @param {any} service
+     * @param {any} data
+     * @param {any} callback
+     */
+    function apiECI(service, data, callback) {
+        var url = "https://engagements.missouri.edu/wp-json/wp/v2/";
+        api("get", url + service, data, callback);
+    }
+
+    /**
     * START
     */
     if ($('#' + ECI.map).length) {
@@ -98,7 +109,9 @@ jQuery(document).ready(function ($) {
                 position: 'topleft'
             },
             onAdd: function (map) {
-                var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                var aTag = L.DomUtil.create('a', 'leaflet-control-custom', container);
+                aTag.href = "#";
                 container.onclick = function (e) {
                     map.flyToBounds(ECI.bounds);
                     e.stopPropagation();
@@ -718,12 +731,11 @@ jQuery(document).ready(function ($) {
 		 */
 		function retrieveSummary(iPage, category, filter) {
 			// now get engagement entries from WP REST API with these GEOIDs
-			var url = "https://engagements.missouri.edu/wp-json/wp/v2/" + category;
             var perPage = 100;
             var param = { "parent": 0, "per_page": perPage, "page": iPage, "orderby": "id" };
             if (filter === ECI.filters[0]) param.exclude = 2;      // exclude 'Advancement'
 
-            api("get", url, param, function (response) {
+            apiECI(category, param, function (response) {
 				ECI.summary[filter] = ECI.summary[filter] || {};
 				$.each(response, function (i, v) {
 					if (v.count > 0) ECI.summary[filter][v.name] = v.count;
@@ -759,9 +771,8 @@ jQuery(document).ready(function ($) {
          */
         function retrievePosts(list, iPage) {
             // now get engagement entries from WP REST API with these GEOIDs
-            var url = "https://engagements.missouri.edu/wp-json/wp/v2/muext_engagement";
             var postsPerPage = 100;
-            api("get", url, { "filter[muext_geoid]": list.join(","), "filter[posts_per_page]": postsPerPage, "page": iPage }, function (response) {
+            apiECI("muext_engagement", { "filter[muext_geoid]": list.join(","), "filter[posts_per_page]": postsPerPage, "page": iPage }, function (response) {
                 console.log('muext_engagement', response);
 
                 // update ECI filters' post ID lists
@@ -1077,8 +1088,7 @@ jQuery(document).ready(function ($) {
             });
 
             if (gList.length > 0) {
-                var url = "https://engagements.missouri.edu/wp-json/wp/v2/muext_geoid";
-                api("get", url, { "slug": gList.join(","), "per_page": 100 }, function (response) {
+                apiECI("muext_geoid", { "slug": gList.join(","), "per_page": 100 }, function (response) {
                     if (response && response.length > 0) {
                         $.each(response, function (i, v) {
                             ECI.geoTID[v.id] = v.name;
