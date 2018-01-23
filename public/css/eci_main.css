@@ -139,7 +139,8 @@
   cursor: initial; }
 
 #filter-selections select {
-  margin-bottom: 1em; }
+  margin-bottom: 1em;
+  color: #333; }
 
 #filter-selections .display-style {
   color: #8F8884;
@@ -204,12 +205,7 @@
 #impact-list .engagement-item, #engage-list .engagement-item {
   border: 1px solid #ccc;
   background: #f9f9f9;
-  padding: 5px;
-}
-#engage-list .engagement-item {
-  height: 345px; }
-#impact-list .engagement-item {
-  height: 218px; }
+  padding: 5px; }
   #impact-list .engagement-item .img-container, #engage-list .engagement-item .img-container {
     background-size: 100%;
     background-position: center;
@@ -229,23 +225,29 @@
   #impact-list .list-group-item:after, #engage-list .list-group-item:after {
     clear: both; }
   #impact-list .list-group-item .engagement-item, #engage-list .list-group-item .engagement-item {
-    max-height: 232px;
+    max-height: 200px;
     height: auto; }
     #impact-list .list-group-item .engagement-item .img-container, #engage-list .list-group-item .engagement-item .img-container {
       margin: 0 auto;
       float: none;
       width: 300px;
-      max-height: 100px; 
-	  border: 1px solid #cccccc;
-	  border-radius: 4px;}
+      max-height: 100px;
+      border: 1px solid #cccccc;
+      border-radius: 4px; }
     #impact-list .list-group-item .engagement-item .text-below, #engage-list .list-group-item .engagement-item .text-below {
       text-align: center;
       width: auto; }
       #impact-list .list-group-item .engagement-item .text-below .desc, #engage-list .list-group-item .engagement-item .text-below .desc {
         display: block; }
 
+#impact-list .engagement-item {
+  height: 218px; }
+
 #engage-list {
   border-top: 1px solid #ccc; }
+
+#engage-list .engagement-item {
+  height: 345px; }
 
 #engage-subtitle {
   text-align: center; }
@@ -276,10 +278,10 @@
     font-size: 16px; }
   .single-engagement-card .inner-card {
     background-color: white; }
-  .single-engagement-card img{
-	border-radius:4px;
-	border:1px solid #cccccc;
-	padding:4px;}
+  .single-engagement-card img {
+    border-radius: 4px;
+    border: 1px solid #cccccc;
+    padding: 4px; }
 
 .modal-backdrop {
   opacity: 0.5 !important; }
