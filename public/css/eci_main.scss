@@ -132,10 +132,6 @@ $border: #8F8884;
 }
 
 #filter-selections {
-    #filter-help {
-        margin-bottom: 1em;
-    }
-
     fieldset {
         margin-bottom: 2em;
         border: 1px solid $border;
@@ -189,6 +185,7 @@ $border: #8F8884;
 
     select {
         margin-bottom: 1em;
+        color: $black;
     }
 
     .display-style {
@@ -218,6 +215,62 @@ $border: #8F8884;
         legend {
             cursor: pointer;
             padding-left: 10px;
+        }
+    }
+
+    .list-group {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        padding-left: 0;
+        margin-bottom: 1em;
+
+        .list-group-item {
+            position: relative;
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+            -webkit-flex-flow: row wrap;
+            -ms-flex-flow: row wrap;
+            flex-flow: row wrap;
+            -webkit-box-align: center;
+            -webkit-align-items: center;
+            -ms-flex-align: center;
+            align-items: center;
+            line-height: 2em;
+            font-size: 14px;
+            margin-bottom: -1px;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,.125);
+            cursor: pointer;
+
+            &:hover {
+                background: $border;
+                color: $gold;
+            }
+
+            &:first-child {
+                border-top-right-radius: .25rem;
+                border-top-left-radius: .25rem;
+            }
+
+            &:last-child {
+                margin-bottom: 0;
+                border-bottom-right-radius: .25rem;
+                border-bottom-left-radius: .25rem;
+            }
+        }
+
+        .active {
+            background: $black;
+            color: $gold;
         }
     }
 }
