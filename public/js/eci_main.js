@@ -133,8 +133,10 @@ jQuery(document).ready(function ($) {
         //********************* EVENT HANDLERS ******************//
 
         // select change of the dropdown list in 'My Community' filter
-        $("#" + ECI.selectcssGeogID).on('change', function (e) {
-            var i = parseInt($("#" + ECI.selectcssGeogID).val());
+        $("#" + ECI.selectcssGeogID).find("li").on('click', function (e) {
+            $("#" + ECI.selectcssGeogID).find("li").removeClass("active");
+            $(this).addClass("active");
+            var i = parseInt($(this).attr("data-id"));
             loadDataActiveGeog(ECI.geog[i].layer_name);
 
             // update button css class
@@ -152,6 +154,10 @@ jQuery(document).ready(function ($) {
             activeGeog = $.trim(activeGeog);
 
             loadDataActiveGeog(activeGeog);
+
+            // update 'My Community' geog list item selection
+            $("#" + ECI.selectcssGeogID).find("li").removeClass("active");
+            $("#" + ECI.selectcssGeogID).find("li[data-id='" + ECI.igeog + "']").addClass("active");
         });
 
         // attach map click event handler
@@ -240,8 +246,6 @@ jQuery(document).ready(function ($) {
                         // remove existing selection listing
                         populateGeographyList();
                         $(ECI.filterGeog).empty();
-
-                        $("#filter-help").show();
                     }
                     return false;
                 }
@@ -259,10 +263,12 @@ jQuery(document).ready(function ($) {
 
                 // populate geography pull-down list
                 $("#" + ECI.selectcssGeogID).append(
-                    $("<option />", { text: ECI.geog[i].layer_name, value: i})
+                    //$("<option />", { text: ECI.geog[i].layer_name, value: i})
+                    $("<li />", {"class": "list-group-item", "data-id": i}).append(ECI.geog[i].layer_name)
                 );
             });
-            $("#" + ECI.selectcssGeogID).val(ECI.igeog);
+            //$("#" + ECI.selectcssGeogID).val(ECI.igeog);
+            $("#" + ECI.selectcssGeogID).find("li[data-id='" + ECI.igeog + "']").addClass("active");
 
             // add ECI density map
             showDensityMap();
@@ -353,8 +359,6 @@ jQuery(document).ready(function ($) {
 
             // get selected GEOID
             if (featureCollection && featureCollection.features.length > 0) {
-                $("#filter-help").hide();
-
                 var inMissouri = false;
                 var style = $("#list-view").hasClass("active") ? " list-group-item" : "";
                 var stockImg = getPluginPath("images");
