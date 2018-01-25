@@ -1234,7 +1234,7 @@ jQuery(document).ready(function ($) {
                 var target = $("#" + getThemeId(id));
                 if (target.length) {
                     $('html,body').animate({
-                        scrollTop: target.offset().top - 135
+                        scrollTop: target.offset().top - 155
                     }, 1000);
                     return false;
                 }
