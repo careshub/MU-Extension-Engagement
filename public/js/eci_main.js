@@ -749,7 +749,7 @@ jQuery(document).ready(function ($) {
 					// get summary data for next filter
 					iPage = 1;
 				    if (ECI.summary.type) {
-					    if (ECI.summary.affiliation) {
+					    if (ECI.summary.affiliation || skipAffiliation()) {
 						    // got all summary counts. Now update the filters, unless the user has already selected a geography.
 						    if ( !ECI.geoid || ECI.geoid.length === 0 ) {
                                 showFilters(ECI.summary);
@@ -800,7 +800,10 @@ jQuery(document).ready(function ($) {
 
                     getFilterData(v.eng_theme, ECI.filters[0], v.id, isTop);
                     getFilterData(v.eng_type, ECI.filters[1], v.id);
-                    getFilterData(v.eng_affiliation, ECI.filters[2], v.id);
+
+                    if (!skipAffiliation()) {
+                        getFilterData(v.eng_affiliation, ECI.filters[2], v.id);
+                    }
                 });
 
                 if (response.length < postsPerPage) {
@@ -1115,6 +1118,10 @@ jQuery(document).ready(function ($) {
             var iconStyle = (hasPosts) ? "fa-square-o" : "fa-circle";
 
             $.each(ECI.filters, function (i, v) {
+                if (i === 2 && skipAffiliation()) {
+                    return false;
+                }
+
                 if (data[v]) {
                     filterCount[v] = {};
 
@@ -1180,6 +1187,10 @@ jQuery(document).ready(function ($) {
                             var filterList = {};
                             $.each(ECI.filters, function (i, v) {
                                 filterList[v] = [];
+
+                                if (i === 2 && skipAffiliation()) {
+                                    return false;
+                                }
 
                                 var $filter = $("#filter-" + v);
                                 $filter.find("li." + selectCss).each(function (el) {
@@ -1518,6 +1529,13 @@ jQuery(document).ready(function ($) {
             var hasChart = !hasGeog || hasPosts;
             $("#chart-container").toggle(hasChart);
             $("#engage-container").toggle(hasChart);
+        }
+
+        /**
+         * Check if we need to skip affiliation filters
+         */
+        function skipAffiliation() {
+            return ($("#filter-" + ECI.filters[2]).length === 0);
         }
 
         /**

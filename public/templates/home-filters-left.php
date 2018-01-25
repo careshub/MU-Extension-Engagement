@@ -32,7 +32,7 @@
 			</div>
 			</fieldset>
 
-			<fieldset class="collapsible collapsed">
+			<fieldset class="collapsible">
 			<legend><h6><i class="fa fa-chevron-down icon"></i> ENGAGEMENT TYPE</h6></legend>
 			<div>
 			<ul id="filter-type" data-type="type">
@@ -40,6 +40,7 @@
 			</div>
 			</fieldset>
 
+			<?php if( is_user_logged_in() ) { ?>
 			<fieldset class="collapsible collapsed">
 			<legend><h6><i class="fa fa-chevron-down icon"></i> AFFILIATION</h6></legend>
 			<div>
@@ -47,6 +48,7 @@
 			</ul>
 			</div>
 			</fieldset>
+			<?php } ?>
 
 			<fieldset class="collapsible" id="style-container">
 			<legend><h6><i class="fa fa-chevron-up icon"></i> DISPLAY STYLE</h6></legend>
