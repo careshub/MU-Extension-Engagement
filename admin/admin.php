@@ -1395,7 +1395,7 @@ function render_tools_page() {
 			<p>Download a <a href="<?php echo plugins_url( 'assets/sample-import-files/engagement-sample-taxonomy-import.csv', __FILE__ ); ?>">sample CSV</a> to get started.</p>
 
 			<h4>Importing Meta Information</h4>
-			<p><em>Limits</em> Keep your files to 1000 items or fewer for best performance.</p>
+			<p><em>Limits</em> Keep your files to 1000 items or fewer for best performance. If you're importing <code>location_text</code>, only submit about 175 records in a file.</p>
 			<p>Include the following columns in this order:</p>
 			<ul>
 				<li><code>myextension_id</code> or <code>local_id</code></li>	
@@ -1625,7 +1625,7 @@ function import_data( $attachment_id = null ) {
 					)
 					) ) );
 
-					if ( ! empty( $response->results[0] ) ) {
+					if ( ! empty( $response->status ) && 'OK' == $response->status && ! empty( $response->results[0] ) ) {
 						if ( ! empty( $response->results[0]->address_components ) ) {
 							foreach ( $response->results[0]->address_components as $comp ) {
 								$location_info[ '_muext_' . $comp->types[0] ] = $comp->long_name;
@@ -1636,7 +1636,7 @@ function import_data( $attachment_id = null ) {
 					}
 
 					$current_location[] = $location_info;
-					$success = update_post_meta( $post_id, '_muext_location_group',array_unique( $current_location, SORT_REGULAR ) );
+					$success = update_post_meta( $post_id, '_muext_location_group', array_unique( $current_location, SORT_REGULAR ) );
 				} else {
 					$success = update_post_meta( $post_id, $data[1], $data[2] );				
 				}
@@ -1644,8 +1644,14 @@ function import_data( $attachment_id = null ) {
 				if ( $success ) {
 					$retval[] = "Meta $data[2] was successfully applied to item $data[0].";
 				} else {
-					$retval[] = "Item $data[0] failed to gain the meta $data[2].";		
+					$retval[] = "Item $data[0] failed to gain the meta $data[2].";
 				}
+				// Keep an eye on the Geocoding API's response.
+				if ( empty( $response->status ) ) {
+					$retval[] = "Geocode API response was malformed.";				
+				} else if ( 'OK' != $response->status ) {
+					$retval[] = "Geocode API returned status: {$response->status}";				
+				}	
 			} else if ( 'contacts' === $import_file_info['import_type_slug'] ) {
 				$contacts = get_post_meta( $post_id, '_muext_contact_group', true );
 
@@ -1675,7 +1681,7 @@ function import_data( $attachment_id = null ) {
 					$new_user = wp_create_user( $email_parts[0] , $password, $data[2] );
 
 					if ( is_int( $new_user ) ) {
-						$retval[] = "Added new user (ID: {$newuser}) with the email $data[2].";
+						$retval[] = "Added new user (ID: {$new_user}) with the email $data[2].";
 					} else {
 						$retval[] = "Failed to add new user with the email $data[2].";		
 					}
