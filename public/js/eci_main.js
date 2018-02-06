@@ -722,7 +722,7 @@ jQuery(document).ready(function ($) {
                     // get the GEOIDs of all summary levels that overlap with the selected GEOIDs
                     api("get", "api-extension/v1/eci-geoid-list", { geoid: ECI.geoid.join(",") }, function (data) {
                         // now get engagement entries from WP REST API with these GEOIDs
-                        retrievePosts(list, 1);
+                        retrievePosts(data, 1);
                     });
                 }
             } else {
