@@ -41,7 +41,7 @@ jQuery(document).ready(function ($) {
 
     /**
     * Send a request to an API service to get data.
-    * @param {string} service - API endpoint and parameters.
+    * @param {string} service - API endpoint.
     * @param {object} data - The data posted to API.
     * @param {requestCallback} callback - The callback function to execute after the API request is succefully completed.
     * @param {requestCallback} [fallback] - The callback function to execute when the API request returns an error.
@@ -103,7 +103,7 @@ jQuery(document).ready(function ($) {
         ECI.bounds = map.getBounds();
         map.setMaxBounds(ECI.bounds);
 
-        // custom 'zoom to Missouri' button
+        // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
             options: {
                 position: 'topleft'
@@ -706,15 +706,25 @@ jQuery(document).ready(function ($) {
 
             // get all engagements based on current geography selection
             if (hasGeog) {
-                // get the GEOIDs of all summary levels that overlap with the selected GEOIDs
-                api("get", "api-extension/v1/eci-geoid-list", { geoid: ECI.geoid.join(",") }, function (data) {
-                    // always include Missouri and USA
-                    var list = ["04000US29", "01000US"];
-                    $.merge(list, data);
+                // get a total count of all GEOIDs for current geography type
+                if (!ECI.count.geoid_count) {
+                    var ids = [];
+                    for (var id in ECI.count) {
+                        ids.push(id);
+                    }
+                    ECI.count.geoid_count = ids.length;
+                }
 
-                    // now get engagement entries from WP REST API with these GEOIDs
-                    retrievePosts(list, 1);
-                });
+                // if we've selected the whole state, do not need to use geographic filter
+                if (ECI.geoid.length === ECI.count.geoid_count) {
+                    retrievePosts([], 1);
+                } else {
+                    // get the GEOIDs of all summary levels that overlap with the selected GEOIDs
+                    api("get", "api-extension/v1/eci-geoid-list", { geoid: ECI.geoid.join(",") }, function (data) {
+                        // now get engagement entries from WP REST API with these GEOIDs
+                        retrievePosts(list, 1);
+                    });
+                }
             } else {
                 if (!ECI.summary) {
                     // get summary info from WP REST API
@@ -776,7 +786,12 @@ jQuery(document).ready(function ($) {
         function retrievePosts(list, iPage) {
             // now get engagement entries from WP REST API with these GEOIDs
             var postsPerPage = 100;
-            apiECI("muext_engagement", { "filter[muext_geoid]": list.join(","), "filter[posts_per_page]": postsPerPage, "page": iPage }, function (response) {
+            var postFilter = {
+                "filter[muext_geoid]": list.join(","),
+                "filter[posts_per_page]": postsPerPage,
+                "page": iPage
+            };
+            apiECI("muext_engagement", postFilter, function (response) {
                 console.log('muext_engagement', response);
 
                 // update ECI filters' post ID lists
@@ -790,13 +805,15 @@ jQuery(document).ready(function ($) {
                     // if populating ID list for 'theme', we need to check  if this geoid is one of selected geographies. 
                     // If yes, place it on the top of list, otherwise, add to the end
                     var isTop = false;
-                    $.each(v.muext_geoid, function (j, w) {
-                        // check if the geoid is an item in the ECI.geoid array
-                        if (ECI.geoTID[w] && $.inArray(ECI.geoTID[w], ECI.geoid) !== -1) {
-                            isTop = true;
-                            return false;
-                        }
-                    });
+                    if (list.length > 0 && ECI.geoTID) {
+                        $.each(v.muext_geoid, function (j, w) {
+                            // check if the geoid is an item in the ECI.geoid array
+                            if (ECI.geoTID[w] && $.inArray(ECI.geoTID[w], ECI.geoid) !== -1) {
+                                isTop = true;
+                                return false;
+                            }
+                        });
+                    }
 
                     getFilterData(v.eng_theme, ECI.filters[0], v.id, isTop);
                     getFilterData(v.eng_type, ECI.filters[1], v.id);
@@ -807,10 +824,6 @@ jQuery(document).ready(function ($) {
                 });
 
                 if (response.length < postsPerPage) {
-                    console.log(ECI.posts);
-
-                    // move post IDs of the selected geographies to front in ECI.posts.theme 
-
                     showFilters(ECI.posts);
                 } else {
                    iPage++;
