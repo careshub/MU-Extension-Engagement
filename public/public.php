@@ -52,6 +52,9 @@ add_action( 'rest_api_init', 'MU_Ext_Engagement\CPT_Tax\\add_custom_rest_routes'
 add_action( 'wp_ajax_nopriv_ajax_single_card', __NAMESPACE__ . '\\ajax_single_card' );
 add_action( 'wp_ajax_ajax_single_card', __NAMESPACE__ . '\\ajax_single_card' );
 
+// Add custom pre-processing to REST API queries, like custom handling of geoid parameters
+add_action( 'rest_api_init', 'MU_Ext_Engagement\CPT_Tax\rest_api_filter_add_filters' );
+
 /**
  * Load the plugin text domain for translation.
  *
