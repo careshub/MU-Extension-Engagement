@@ -705,6 +705,53 @@ function disallow_advancement_themed_eng( $args, $request ) {
 	return $args;
 }
 
+ /**
+  * Add custom pre-processing to REST API queries, like custom handling of geoid parameters.
+  *
+  * @since 1.0.7 
+  *
+  **/
+function rest_api_filter_add_filters() {
+	// Add custom handling for geoID requests. We want this to run after the filter parameter is handled (at priority 10).
+	add_filter( 'rest_muext_engagement_query', __NAMESPACE__ . '\\filter_geoids', 30, 2 );
+}
+
+/**
+ * Filter the incoming 'muext_geoid' parameter.
+ * Essentially, if the user chooses "Columbia," we want to include all engagements
+ * that apply to Columbia, like ZIP 65201 and Boone County and the schools district.
+ * Individual engagements are tagged with their service area, not every possible geoid
+ * that could apply.
+ *
+ * @since 1.0.7 
+ *
+ * @param  array           $args    The query arguments.
+ * @param  WP_REST_Request $request Full details about the request.
+ * @return array $args.
+ **/
+function filter_geoids( $args, $request ) {
+	// Bail out if no geoid parameter is set.
+	if ( empty( $args['muext_geoid'] ) ) {
+		return $args;
+	}
+
+	if ( is_array( $args['muext_geoid'] ) ) {
+		$args['muext_geoid'] = implode( ',', $args['muext_geoid'] );
+	}
+
+	$api_url = add_query_arg( array(
+		'geoid' => trim( $args['muext_geoid'] ),
+	), 'https://services.engagementnetwork.org/api-extension/v1/eci-geoid-list' );
+
+	$response = wp_remote_get( $api_url );
+	// Only filter the args if we've received a successful response.
+	if ( 200 == wp_remote_retrieve_response_code( $response ) ) {
+		$args['muext_geoid'] = json_decode( wp_remote_retrieve_body( $response ) );
+	}
+
+	return $args;
+}
+
 // Helper functions
 /** 
  * Find the top-level parent of a term.

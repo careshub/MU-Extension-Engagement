@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
      * @param {any} callback
      */
     function apiECI(service, data, callback) {
-        var url = "https://engagements.missouri.edu/wp-json/wp/v2/";
+        var url = "https://" + document.location.hostname + "/wp-json/wp/v2/";
         api("get", url + service, data, callback);
     }
 
@@ -162,6 +162,7 @@ jQuery(document).ready(function ($) {
 
         // attach map click event handler
         map.on('click', function (e) {
+            if (ECI.popup) ECI.popup.remove();
             selectFeature(e.latlng);
         });
 
@@ -177,6 +178,8 @@ jQuery(document).ready(function ($) {
 
         // attach geography list selection event handler
         $("#list-geography").on("change", function (e) {
+            if (ECI.popup) ECI.popup.remove();
+
             var geoid = $(this).val();
             if (geoid !== "" && $.inArray(geoid, ECI.geoid) === -1) {
                 layerSelect.query()             // merge with queryFeature() function???
@@ -186,6 +189,9 @@ jQuery(document).ready(function ($) {
                     .run(function (error, featureCollection) {
                         setSelectionDef(featureCollection);
                     });
+
+                // scroll to impact container
+                scrollTo("content-container");
             }
         });
 
@@ -215,6 +221,8 @@ jQuery(document).ready(function ($) {
          * @param {string} activeGeog 
          */
         function loadDataActiveGeog(activeGeog) {
+            if (ECI.popup) ECI.popup.remove();
+
             // zoom out to state extent
             map.flyToBounds(ECI.bounds);
 
@@ -346,7 +354,7 @@ jQuery(document).ready(function ($) {
                 .on(map)
                 .layers("visible:" + ECI.geog[ECI.igeog].select_ids.join(","))
                 .run(function (error, featureCollection) {
-                    setSelectionDef(featureCollection);
+                    setSelectionDef(featureCollection, latLng);
                 });
         }
 
@@ -354,7 +362,7 @@ jQuery(document).ready(function ($) {
          * Set the geography selection definition
          * @param {any} [featureCollection] - The list of features found at mouse click on the map
          */
-        function setSelectionDef(featureCollection) {
+        function setSelectionDef(featureCollection, latlng) {
             var activeGeog = ECI.geog[ECI.igeog];
 
             // get selected GEOID
@@ -391,6 +399,20 @@ jQuery(document).ready(function ($) {
                             .append($("<span />").append(name));
                         $(ECI.filterGeog).append(liGeog);
 
+                        // show a popup
+                        if (latlng) {
+                            ECI.popup = L.popup({
+                                minWidth: 200,
+                                className: 'popup'
+                            })
+                                .setLatLng(latlng)
+                                .setContent('<h6>' + name + '</h6><div><i class="fa fa-spinner fa-spin fa-2x"></i> Loading...</div>' )
+                                .openOn(map);
+                        }
+
+                        // update msg
+                        changeListPrompt();
+
                         // filter icon 'delete' click - remove the geography
                         liGeog.find("i").on("click", function (e) {
                             var li = $(this).parent("li");
@@ -421,14 +443,14 @@ jQuery(document).ready(function ($) {
 
                                     // update the selection on the map
                                     setSelectionDef();
+
+                                    // update list prompt
+                                    changeListPrompt();
                                     break;
                                 }
                             }
 
-                            // if all selection are deleted, set pulldown to first option
-                            if (ECI.geoid.length === 0) {
-                                $("#list-geography").val('');
-                            }
+                            if (ECI.popup) ECI.popup.remove();
                         });
 
                         // found geography in Missouri
@@ -470,6 +492,24 @@ jQuery(document).ready(function ($) {
             getEngagements();
 
             return def;
+        }
+
+        /**
+         * Change geography list prompt text
+         */
+        function changeListPrompt() {
+            var $list = $("#list-geography")
+            var $option1 = $("#list-geography option:first");
+            $list.val($option1.val());
+            var msg = $option1.text();
+
+            var texts = ['Select', 'Add'];
+            if (ECI.geoid.length > 0) {
+                msg = msg.replace(texts[0], texts[1]);
+            } else {
+                msg = msg.replace(texts[1], texts[0]);
+            }
+            $option1.text(msg);
         }
 
         /**
@@ -719,11 +759,7 @@ jQuery(document).ready(function ($) {
                 if (ECI.geoid.length === ECI.count.geoid_count) {
                     retrievePosts([], 1);
                 } else {
-                    // get the GEOIDs of all summary levels that overlap with the selected GEOIDs
-                    api("get", "api-extension/v1/eci-geoid-list", { geoid: ECI.geoid.join(",") }, function (data) {
-                        // now get engagement entries from WP REST API with these GEOIDs
-                        retrievePosts(data, 1);
-                    });
+                    retrievePosts(ECI.geoid, 1);
                 }
             } else {
                 if (!ECI.summary) {
@@ -1244,13 +1280,7 @@ jQuery(document).ready(function ($) {
             // attach theme 'link' click
             $("#filter-theme").find("a").on("click", function (e) {
                 var id = $(this).parent().attr("data-id");
-                var target = $("#" + getThemeId(id));
-                if (target.length) {
-                    $('html,body').animate({
-                        scrollTop: target.offset().top - 160
-                    }, 1000);
-                    return false;
-                }
+                scrollTo(getThemeId(id));
             });
         }
 
@@ -1362,6 +1392,22 @@ jQuery(document).ready(function ($) {
                         // show the first group of engagements
                         showEngGroup(0, t);
                     }
+                }
+
+                // update popup content
+                if (ECI.popup && !$.isEmptyObject(data.engagements)) {
+                    var content = ECI.popup.getContent();
+                    var $el = $("<div />").append(content);
+                    $el.find("div")
+                        .empty()
+                        .append(
+                            $("<button />", { "class": "btn btn-primary" }).append("View Engagements")
+                        );
+                    ECI.popup.setContent($el.html());
+
+                    $(".popup").find("button").on("click", function () {
+                        scrollTo("content-container");
+                    });
                 }
             }
         }
@@ -1549,6 +1595,20 @@ jQuery(document).ready(function ($) {
          */
         function skipAffiliation() {
             return ($("#filter-" + ECI.filters[2]).length === 0);
+        }
+
+        /**
+         * Scroll page to an element 
+         * @param {any} id - The id of the element
+         */
+        function scrollTo(id) {
+            var target = $("#" + id);
+            if (target.length) {
+                $('html,body').animate({
+                    scrollTop: target.offset().top - 160
+                }, 1000);
+                return false;
+            }
         }
 
         /**

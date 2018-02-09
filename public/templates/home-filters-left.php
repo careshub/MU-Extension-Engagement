@@ -41,7 +41,7 @@
 			</fieldset>
 
 			<?php if( is_user_logged_in() ) { ?>
-			<fieldset class="collapsible collapsed">
+			<fieldset class="collapsible">
 			<legend><h6><i class="fa fa-chevron-down icon"></i> AFFILIATION</h6></legend>
 			<div>
 			<ul id="filter-affiliation" data-type="affiliation">

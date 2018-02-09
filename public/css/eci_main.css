@@ -26,6 +26,10 @@
     background: rgba(255, 255, 255, 0.8);
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
     border-radius: 5px; }
+  #impact-map-container .popup div {
+    color: #f1b82d; }
+  #impact-map-container .popup h6, #impact-map-container .popup div {
+    text-align: center; }
   #impact-map-container .legend {
     line-height: 18px;
     color: #555; }

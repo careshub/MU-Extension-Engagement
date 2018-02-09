@@ -37,6 +37,15 @@ $border: #8F8884;
         border-radius: 5px;
     }
 
+    .popup{
+        div {
+            color: $gold;
+        }
+        h6, div {
+            text-align: center;
+        }
+    }
+
     .legend {
         line-height: 18px;
         color: #555;
