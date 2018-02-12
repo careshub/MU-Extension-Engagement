@@ -502,22 +502,25 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 
 	$taxonomy_terms = get_the_terms( $object[ 'id' ], $tax_name );
 	$associated_term_ids = $raw = $rendered = array();
-	foreach ( $taxonomy_terms as $term ) {
-		// Skip terms that we're ignoring.
-		if ( in_array( $term->term_id, $ignore_terms, true ) ) {
-			continue;
+
+	if ( $taxonomy_terms ) {
+		foreach ( $taxonomy_terms as $term ) {
+			// Skip terms that we're ignoring.
+			if ( in_array( $term->term_id, $ignore_terms, true ) ) {
+				continue;
+			}
+			$raw[] = array(
+				'term_id'   => $term->term_id,
+				'name'      => $term->name,
+				'slug'      => $term->slug,
+				'taxonomy'  => $term->taxonomy,
+				'parent'    => $term->parent,
+				'count'     => $term->count,
+				'term_link' => get_term_link( $term, $tax_name )
+			);
+			$rendered[] = $term->name;
+			$associated_term_ids[] = $term->term_id;
 		}
-		$raw[] = array(
-			'term_id'   => $term->term_id,
-			'name'      => $term->name,
-			'slug'      => $term->slug,
-			'taxonomy'  => $term->taxonomy,
-			'parent'    => $term->parent,
-			'count'     => $term->count,
-			'term_link' => get_term_link( $term, $tax_name )
-		);
-		$rendered[] = $term->name;
-		$associated_term_ids[] = $term->term_id;
 	}
 
 	$associated = array(
