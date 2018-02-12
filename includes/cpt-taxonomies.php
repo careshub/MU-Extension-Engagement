@@ -92,6 +92,7 @@ function register_muext_engagement_cpt() {
 		'publicly_queryable'    => true,
 		// 'capabilities'          => $capabilities,
 		'show_in_rest'          => true,
+		'rest_controller_class' => 'WP_REST_Engagements_Controller',
 	);
 	register_post_type( 'muext_engagement', $args );
 }
@@ -713,7 +714,7 @@ function disallow_advancement_themed_eng( $args, $request ) {
   **/
 function rest_api_filter_add_filters() {
 	// Add custom handling for geoID requests. We want this to run after the filter parameter is handled (at priority 10).
-	add_filter( 'rest_muext_engagement_query', __NAMESPACE__ . '\\filter_geoids', 30, 2 );
+	// add_filter( 'rest_muext_engagement_query', __NAMESPACE__ . '\\filter_geoids', 30, 2 );
 }
 
 /**
