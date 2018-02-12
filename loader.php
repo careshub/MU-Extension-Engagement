@@ -45,6 +45,7 @@ require_once( $basepath . 'includes/eci-functions.php' );
 
 
 // The Custom Post Type and Taxonomy class
+require_once( $basepath . 'includes/class-rest-engagements-controller.php' );
 require_once( $basepath . 'includes/cpt-taxonomies.php' );
 
 // Admin and dashboard functionality
