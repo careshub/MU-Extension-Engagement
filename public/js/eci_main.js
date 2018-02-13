@@ -780,7 +780,7 @@ jQuery(document).ready(function ($) {
                 // if we've selected the whole state, do not need to use geographic filter
                 if (ECI.geoid.length === ECI.count.geoid_count) {
                     ECI.posts = $.extend(true, {}, ECI.summary);
-                    showPosts();
+					showPosts();
                 } else {
                     retrievePosts(ECI.geoid, 1);
                 }
