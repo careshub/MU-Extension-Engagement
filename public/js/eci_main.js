@@ -75,7 +75,7 @@ jQuery(document).ready(function ($) {
      * @param {any} callback
      */
     function apiECI(service, data, callback) {
-        var url = "https://" + document.location.hostname + "/wp-json/wp/v2/";
+        var url = "https://engagements.missouri.edu/wp-json/wp/v2/";
         api("get", url + service, data, callback);
     }
 
@@ -244,7 +244,7 @@ jQuery(document).ready(function ($) {
                         // change data layers to display
                         showDensityMap();
 
-                        // show overall in filters and charts
+                        // show summary data in filters and charts
                         getEngagements();
 
                         // remove all selections
@@ -368,9 +368,6 @@ jQuery(document).ready(function ($) {
             // get selected GEOID
             if (featureCollection && featureCollection.features.length > 0) {
                 var inMissouri = false;
-                var style = $("#list-view").hasClass("active") ? " list-group-item" : "";
-                var stockImg = getPluginPath("images");
-                var pdfPath = getPluginPath("pdf") + ECI.geog[ECI.igeog].layer_name.toLowerCase() + "/";
 
                 $.each(featureCollection.features, function (idx, feature) {
                     var dataId = feature.properties["GEOID"] || feature.properties["GeoID"];
@@ -383,12 +380,7 @@ jQuery(document).ready(function ($) {
                         var name = feature.properties["Name"] || feature.properties["NAMELSAD"];
 
                         // list UM impact card for the GEOID
-                        var $item = addItem({
-                            title: name,
-                            link: pdfPath + name + ".pdf",
-                            image: stockImg + "um_impact.png"
-                        }, dataId, style, true);
-                        $("#impact-list").append($item);
+                        showImpactCard(name, dataId);
 
                         // include the count value in the geography list
                         if (ECI.count && ECI.count[dataId]) {
@@ -427,6 +419,9 @@ jQuery(document).ready(function ($) {
                                     if (ECI.geoid.length === 0) {
                                         delete ECI.selectionBounds;
                                         map.flyToBounds(ECI.bounds);
+
+                                        // show summary again
+                                        getEngagements();
                                     } else {
                                         var layerId = ECI.geog[ECI.igeog].select_ids[1];
                                         queryFeatures(layerId, ECI.geoid, function (featureCollection) {
@@ -450,6 +445,7 @@ jQuery(document).ready(function ($) {
                                 }
                             }
 
+                            // remove popup
                             if (ECI.popup) ECI.popup.remove();
                         });
 
@@ -492,6 +488,32 @@ jQuery(document).ready(function ($) {
             getEngagements();
 
             return def;
+        }
+
+        /**
+         * list UM impact card for the GEOID
+         * @param {string} name - The name of geography selection
+         */
+        function showImpactCard(name, dataId) {
+            if (ECI.geoid.length === 1 || !dataId) {
+                $("#impact-list").empty();
+            }
+            dataId = dataId || "04000US29";
+
+            // list UM impact card for the GEOID
+            var stockImg = getPluginPath("images");
+            var pdfPath = getPluginPath("pdf");
+            if (ECI.geoid.length > 0) {
+                pdfPath += ECI.geog[ECI.igeog].layer_name.toLowerCase();
+            }
+            var style = $("#list-view").hasClass("active") ? " list-group-item" : "";
+
+            var $item = addItem({
+                title: name,
+                link: pdfPath + "/" + name + ".pdf",
+                image: stockImg + "um_impact.png"
+            }, dataId, style, true);
+            $("#impact-list").append($item);
         }
 
         /**
@@ -757,7 +779,8 @@ jQuery(document).ready(function ($) {
 
                 // if we've selected the whole state, do not need to use geographic filter
                 if (ECI.geoid.length === ECI.count.geoid_count) {
-                    retrievePosts([], 1);
+                    ECI.posts = $.extend(true, {}, ECI.summary);
+                    showPosts();
                 } else {
                     retrievePosts(ECI.geoid, 1);
                 }
@@ -768,6 +791,9 @@ jQuery(document).ready(function ($) {
                     retrieveSummary(1, "muext_program_category", ECI.filters[0]);
                 } else {
                     showFilters(ECI.summary);
+                    showImpactCard("State of Missouri");
+                    ECI.posts = $.extend(true, {}, ECI.summary);
+                    showPosts();
                 }
             }
 
@@ -799,6 +825,8 @@ jQuery(document).ready(function ($) {
 						    // got all summary counts. Now update the filters, unless the user has already selected a geography.
 						    if ( !ECI.geoid || ECI.geoid.length === 0 ) {
                                 showFilters(ECI.summary);
+                                retrievePosts([], 1);
+                                showImpactCard("State of Missouri");
 						    }
 					    } else {
 						    retrieveSummary(iPage, "muext_program_affiliation", ECI.filters[2]);
@@ -823,10 +851,15 @@ jQuery(document).ready(function ($) {
             // now get engagement entries from WP REST API with these GEOIDs
             var postsPerPage = 100;
             var postFilter = {
-                "filter[muext_geoid]": list.join(","),
-                "filter[posts_per_page]": postsPerPage,
                 "page": iPage
             };
+            if (list.length === 0) {
+                postFilter.per_page = postsPerPage;
+            } else {
+                postFilter["filter[muext_geoid]"] = list.join(",");
+                postFilter["filter[posts_per_page]"] = postsPerPage;
+            }
+
             apiECI("muext_engagement", postFilter, function (response) {
                 console.log('muext_engagement', response);
 
@@ -860,14 +893,33 @@ jQuery(document).ready(function ($) {
                 });
 
                 if (response.length < postsPerPage) {
-                    showFilters(ECI.posts);
+                    if (list.length === 0) {
+                        // got all posts for statewide, we'll store data in ECI.summary and show posts
+                        $.each(ECI.filters, function (i, v) {
+                            for (var x in ECI.summary[v]) {
+                                ECI.summary[v][x] = $.extend(true, [], ECI.posts[v][x]);
+                            }
+                        });
+                        ECI.summary.engagements = $.extend(true, {}, ECI.posts.engagements);
+
+                        console.log('summary posts', ECI.summary);
+
+                        // show the first group of posts for each theme, in case we didn't have enough for each group from the 1st page
+                        showPosts(ECI.summary.theme);
+                    } else {
+                        showFilters(ECI.posts);
+                    }
                 } else {
+                    // for statewide selection --- may not have 6 posts for each theme from the 1st page
+                    if (iPage === 1 && list.length === 0) {
+                        showPosts(ECI.summary.theme);
+                    }
+
                    iPage++;
                     retrievePosts(list, iPage);
                 }
             });
         }
-
 
         /**
          * Populate filter properties in ECI.posts - theme, type, affiliation 
@@ -899,27 +951,6 @@ jQuery(document).ready(function ($) {
                     }
                 }
             }
-        }
-
-        /**
-         * TODO: are we using this? 
-		 * Retrieve one post (post data and post meta data) from WP database
-         * @param {any} list - The list of GEOIDs
-         * @param {any} iPage - The index of pagination
-         */
-
-        function retrievePostContentMeta( post_id ) {
-            // now get engagement entries from WP REST API with these GEOIDs
-            var url = "https://engagements.missouri.edu/wp-json/wp/v2/engagement-contentmeta/" + post_id;
-            var postsPerPage = 1;
-            api(
-				"get", 
-				url,
-				function (response) {
-					console.log(response);
-
-                }
-            );
         }
 
         /**
@@ -1162,9 +1193,9 @@ jQuery(document).ready(function ($) {
         function showFilters(data, showLoading) {
             // update theme, type, affiliation filters
             var filterCount = {};           // store counts for chart
-            var hasPosts = (data.engagements);
+            var hasPosts = true; //(data.engagements);
 
-            var iconStyle = (hasPosts) ? "fa-square-o" : "fa-circle";
+            var iconStyle = "fa-square-o"; //(hasPosts) ? "fa-square-o" : "fa-circle";
 
             $.each(ECI.filters, function (i, v) {
                 if (i === 2 && skipAffiliation()) {
@@ -1376,23 +1407,7 @@ jQuery(document).ready(function ($) {
 
             // update engagement listing
             if (data.engagements) {
-                $("#engage-list").empty();
-
-                // loop through each theme
-                for (var t in data.theme) {
-                    if (data.theme[t].length > 0) {
-                        var tId = getThemeId(t);
-
-                        // add theme container, and container for the items
-                        $("#engage-list").append(
-                            $("<div />", { "id": tId + "_container", "class": "row" })
-                                .append($("<h4 />", { "id": tId, "class": "col-xs-12 modal-theme" }).append(t))
-                        );
-
-                        // show the first group of engagements
-                        showEngGroup(0, t);
-                    }
-                }
+                showPosts();
 
                 // update popup content
                 if (ECI.popup && !$.isEmptyObject(data.engagements)) {
@@ -1490,11 +1505,38 @@ jQuery(document).ready(function ($) {
         }
 
         /**
+         * Show engagement post groups for all themes (ie. impact areas)
+         */
+        function showPosts(themeList) {
+            if (ECI.posts.engagements) {
+                $("#engage-list").empty();
+
+                themeList = themeList || ECI.posts.theme;
+
+                // loop through each theme
+                for (var t in themeList) {
+                    if (ECI.posts.theme[t] && ECI.posts.theme[t].length > 0) {
+                        var tId = getThemeId(t);
+
+                        // add theme container, and container for the items
+                        $("#engage-list").append(
+                            $("<div />", { "id": tId + "_container", "class": "row" })
+                                .append($("<h4 />", { "id": tId, "class": "col-xs-12 modal-theme" }).append(t))
+                        );
+
+                        // show the first group of engagements
+                        showPostsByTheme(0, t);
+                    }
+                }
+            }
+        }
+
+        /**
          * Show a group of engagement posts
          * @param {any} startIndex - The starting index of engagement posts to show
          * @param {any} theme - The theme to show the posts
          */
-        function showEngGroup(startIndex, theme) {
+        function showPostsByTheme(startIndex, theme) {
             var stopIndex = startIndex + 6;
             var themeId = getThemeId(theme);
             var $container = $("#" + themeId  + "_container");
@@ -1518,7 +1560,6 @@ jQuery(document).ready(function ($) {
 
 					$item.on("click", function( e ){
 						var post_id = $(this).attr("data-id");
-						//retrievePostContentMeta( post_id );
 						loadSingleEngTemplate( post_id, true, theme );
 					});
 
@@ -1539,11 +1580,12 @@ jQuery(document).ready(function ($) {
                     var newIndex = parseInt($(this).attr("data-id"));
                     var theme = $(this).attr("data-theme");
                     $(this).remove();
-                    showEngGroup(newIndex, theme);
+                    showPostsByTheme(newIndex, theme);
                 });
                 $container.append($more);
             }
         }
+
         /**
          * Add an item (a post or datasheet) to output
          * @param {any} item - The item property: link, image, title
@@ -1571,6 +1613,10 @@ jQuery(document).ready(function ($) {
             return $item;
         }
 
+        /**
+         * Get the URL path of a directory in current plugin
+         * @param {any} dir - The name of the directory
+         */
         function getPluginPath(dir) {
             return $("#plugin-file-path").val() + dir + "/";
         }
@@ -1582,8 +1628,8 @@ jQuery(document).ready(function ($) {
             var hasGeog = (ECI.geoid.length > 0);
             var hasPosts = hasGeog && !$.isEmptyObject(ECI.posts.theme);
             $("#style-container").toggle(hasPosts);
-            $("#engage-list").toggle(hasPosts);
-            $("#impact-container").toggle(hasGeog && ECI.igeog !== 1);
+            //$("#engage-list").toggle(hasPosts);
+            $("#impact-container").toggle(!hasGeog || ECI.igeog !== 1);
 
             var hasChart = !hasGeog || hasPosts;
             $("#chart-container").toggle(hasChart);
