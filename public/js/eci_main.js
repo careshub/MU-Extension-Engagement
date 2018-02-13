@@ -779,10 +779,13 @@ jQuery(document).ready(function ($) {
 
                 // if we've selected the whole state, do not need to use geographic filter
                 if (ECI.geoid.length === ECI.count.geoid_count) {
-                    ECI.posts = $.extend(true, {}, ECI.summary);
-                    showPosts();
+                    retrievePosts([], 1);
                 } else {
-                    retrievePosts(ECI.geoid, 1);
+                    // get the GEOIDs of all summary levels that overlap with the selected GEOIDs
+                    api("get", "api-extension/v1/eci-geoid-list", { geoid: ECI.geoid.join(",") }, function (data) {
+                        // now get engagement entries from WP REST API with these GEOIDs
+                        retrievePosts(list, 1);
+                    });
                 }
             } else {
                 if (!ECI.summary) {
