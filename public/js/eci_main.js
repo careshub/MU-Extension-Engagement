@@ -852,13 +852,11 @@ jQuery(document).ready(function ($) {
             // now get engagement entries from WP REST API with these GEOIDs
             var postsPerPage = 100;
             var postFilter = {
-                "page": iPage
+                "page": iPage,
+                "per_page": postsPerPage
             };
-            if (list.length === 0) {
-                postFilter.per_page = postsPerPage;
-            } else {
+            if (list.length > 0) {
                 postFilter["filter[muext_geoid]"] = list.join(",");
-                postFilter["filter[posts_per_page]"] = postsPerPage;
             }
 
             apiECI("muext_engagement", postFilter, function (response) {
