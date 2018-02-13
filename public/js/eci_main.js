@@ -873,18 +873,18 @@ jQuery(document).ready(function ($) {
 
                     // if populating ID list for 'theme', we need to check  if this geoid is one of selected geographies. 
                     // If yes, place it on the top of list, otherwise, add to the end
-                    var isTop = false;
-                    if (list.length > 0 && ECI.geoTID) {
-                        $.each(v.muext_geoid, function (j, w) {
-                            // check if the geoid is an item in the ECI.geoid array
-                            if (ECI.geoTID[w] && $.inArray(ECI.geoTID[w], ECI.geoid) !== -1) {
-                                isTop = true;
-                                return false;
-                            }
-                        });
-                    }
+                    //var isTop = false;
+                    //if (list.length > 0 && ECI.geoTID) {
+                    //    $.each(v.muext_geoid, function (j, w) {
+                    //        // check if the geoid is an item in the ECI.geoid array
+                    //        if (ECI.geoTID[w] && $.inArray(ECI.geoTID[w], ECI.geoid) !== -1) {
+                    //            isTop = true;
+                    //            return false;
+                    //        }
+                    //    });
+                    //}
 
-                    getFilterData(v.eng_theme, ECI.filters[0], v.id, isTop);
+                    getFilterData(v.eng_theme, ECI.filters[0], v.id);
                     getFilterData(v.eng_type, ECI.filters[1], v.id);
 
                     if (!skipAffiliation()) {
@@ -944,11 +944,11 @@ jQuery(document).ready(function ($) {
                     ECI.posts[filterType][name] = ECI.posts[filterType][name] || [];
 
                     // if post's geoid is one of selected geographies, place them in the front, otherwise, add to the end
-                    if (isTop) {
-                        ECI.posts[filterType][name].splice(0, 0, id);
-                    } else {
+                    //if (isTop) {
+                    //    ECI.posts[filterType][name].splice(0, 0, id);
+                    //} else {
                         ECI.posts[filterType][name].push(id);
-                    }
+                    //}
                 }
             }
         }
