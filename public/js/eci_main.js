@@ -784,6 +784,7 @@ jQuery(document).ready(function ($) {
                 } else {
                     retrievePosts(ECI.geoid, 1);
                 }
+				
             } else {
                 if (!ECI.summary) {
                     // get summary info from WP REST API
