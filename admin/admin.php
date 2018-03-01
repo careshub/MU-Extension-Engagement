@@ -931,7 +931,10 @@ function muext_update_geoid_taxonomy( $post_id ){
 		foreach( $array as $key => $value){
 			if ( strpos( $key, 'geo_id' ) !== false ) {
 				// geoid string exists in field name
-				array_push( $geoid_terms, $value );
+				// But is not the whole US. Let's not be greedy.
+				if ( '01000US' != $value ) {
+					array_push( $geoid_terms, $value );
+				}
 				//error_log( $value );
 			}
 		}
