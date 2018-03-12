@@ -3,7 +3,7 @@
  * @package MUExt_Engagement
  * @wordpress-plugin
  * Plugin Name:       MU Extension Engagement
- * Version:           1.0.0
+ * Version:           1.0.8
  * Description:       Creates a new post type for recording engagement efforts.
  * Author:            dcavins
  * Text Domain:       muext-engagement
@@ -80,5 +80,5 @@ function get_plugin_slug() {
  * @return string Current version of plugin.
  */
 function get_plugin_version() {
-	return '1.0.7';
+	return '1.0.8';
 }
