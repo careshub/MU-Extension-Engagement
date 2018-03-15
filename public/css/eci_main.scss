@@ -140,7 +140,75 @@ $border: #8F8884;
     }
 }
 
+#filters-container-left, .filter-box {
+    padding: 0!important;
+}
+
 #filter-selections {
+    .collapsible-section {
+        padding-left: 0;
+        padding-right: 0;
+
+        .collapsible-section-title {
+            padding: 8px 16px;
+            border-bottom: 1px solid #D8D8D8;
+            font-size: 13px;
+            font-weight: 700;
+            margin: 0;
+            display: block;
+            font-family: 'Libre Franklin', sans-serif;
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
+            cursor: pointer;
+
+            & + div {
+                padding: 1em;
+            }
+        }
+
+        .expand-view {
+            border-bottom: 1px solid #D8D8D8;
+
+            input {
+                box-shadow: none;
+            }
+
+            input:-moz-placeholder {
+                box-shadow: none !important;
+            }
+
+            input:invalid {
+                box-shadow: none;
+            }
+        }
+
+        .expanded {
+        }
+
+        .collapsed {
+        }
+    }
+
+    .search-box, .close-icon, .search-wrapper {
+        position: relative;
+        padding: 10px;
+    }
+
+    .close-icon {
+        display: inline-block;
+        vertical-align: middle;
+        outline: 0;
+        cursor: pointer;
+        position: absolute;
+        right: 10px;
+        top: 8px;
+        color: $gold;
+    }
+
+    .search-box:not(:valid) ~ .close-icon {
+        display: none;
+    }
+
     fieldset {
         margin-bottom: 2em;
         border: 1px solid $border;
@@ -150,6 +218,11 @@ $border: #8F8884;
         select option {
             font-size: 14px;
         }
+    }
+
+    .side-menu {
+        margin: 1em;
+        text-align: center;
     }
 
     legend {
@@ -287,6 +360,9 @@ $border: #8F8884;
             background: $gold;
         }
     }
+    /*#eci-search {
+        margin-bottom: 2em;
+    }*/
 }
 
 #impact-list, #engage-list {
