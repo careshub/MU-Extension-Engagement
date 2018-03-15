@@ -995,30 +995,11 @@ jQuery(document).ready(function ($) {
 
         /**
          * Retrieve one post (post data and post meta data) from WP database, load into modal
-         * @param {any} list - The list of GEOIDs
-         * @param {any} iPage - The index of pagination
+         * @param {any} post_id - The ID of the post
+         * @param {any} this_theme - The theme of the post
          */
 
-        function loadSingleEngTemplate( post_id, firstView, this_theme) {
-
-            if ( firstView && firstView == true ){
-				// clear out eci.posts.viewed
-				ECI.posts.viewed = [];
-			}
-			// add post_id to eci.posts.viewed
-			ECI.posts.viewed.push( post_id );
-
-			// if theme, we're coming from modal already
-			if( this_theme ){
-				// what is the 
-
-			} else {
-				// get eng object with this post_id (for appending)
-				var eng_item = $(".single-engagement[data-id='" + post_id + "']");
-				var this_theme = eng_item.attr("data-theme");
-				console.log( eng_item );
-			}
-
+        function loadSingleEngTemplate( post_id, this_theme) {
 			var single_template_return = $.ajax({
 				url: eci_ajax.ajax_url, 
 				data: {
@@ -1026,15 +1007,8 @@ jQuery(document).ready(function ($) {
 					post_id : post_id
 				}, 
 				method: "POST",
-				dataType: "html",
-				beforeSend: function() {
-					// activate spinny
-					//$("#status-spinny").removeClass("hidden");
-				},
-				success: function( html ) {
-				}
+				dataType: "html"
 			}).done(function( data ) {
-				console.log( this_theme );
 				// loading template into modal window
 
 				// trim whitespace
@@ -1043,32 +1017,32 @@ jQuery(document).ready(function ($) {
 				// populate the modal
 				var title = $(data)[0];
 				var innards = $(data)[2];
-				$('#single-engagement-modal .modal-title').html( title );
-				$('#single-engagement-modal .modal-theme').html( "Impact Area: " + this_theme );
+                $('#single-engagement-modal .modal-title').html( title );
+				$('#single-engagement-modal .modal-theme').html( this_theme );
 				$('#single-engagement-modal .modal-main').html( innards );
 
 				// click dis- and re-enable the next/previous button
-				var next_id = nextModalPostID( post_id, this_theme );
+                var nextPost = getModalPost( post_id, this_theme, 1 );
 				var next_button = $("#single-engagement-modal .next-btn");
-				if( next_id == 0 ){
+                if (nextPost[0] == 0 ){
 					next_button.addClass("hidden");
 				} else {
 					next_button.removeClass("hidden");
 					next_button.off("click");
 					next_button.on("click", function( e ){
-						loadSingleEngTemplate( next_id, true, this_theme );
+                        loadSingleEngTemplate(nextPost[0], nextPost[1] );
 					});
 				}
 				
-				var prev_id = prevModalPostID( post_id, this_theme );
+                var prevPost = getModalPost( post_id, this_theme, -1 );
 				var prev_button = $("#single-engagement-modal .prev-btn");
-				if( prev_id == 0 ){
+                if (prevPost[0] == 0 ){
 					prev_button.addClass("hidden");
 				} else {
 					prev_button.removeClass("hidden");
 					prev_button.off("click");
 					prev_button.on("click", function( e ){
-						loadSingleEngTemplate( prev_id, true, this_theme );
+                        loadSingleEngTemplate(prevPost[0], prevPost[1] );
 					});
 				}
 
@@ -1076,134 +1050,57 @@ jQuery(document).ready(function ($) {
 				$('#single-engagement-modal').modal('show');
 
 			});
-
         }
 
-		/**
-		 * utility function to iterate to next post_id that hasn't been viewed in modal
-		 *
-		 * @param {int} currentPostID - current post being viewed
-		 * @param {str} currentPostTheme - current post's theme being viewed
-		 * @param {array} eciPostList - full list of eci posts
-		 * @param {array} eciViewedList - list of eci posts view in current modal session
-		 * @return {int} postID
-		 **/
-        function nextModalPostID(currentPostID, currentPostTheme) {
+        /**
+         * Get the ID and theme of previous or next post
+         * @param {any} postId - The ID of current post
+         * @param {any} postTheme - The theme of current post
+         * @param {any} increment - Increment: 1 for next, or -1 for previous
+         */
+        function getModalPost(postId, postTheme, increment) {
             // get the post object - ECI.summary or ECI.posts
             var postObj = getPostObject();
 
-			// get current index w/in this theme
-            var current_index = postObj.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
+            // get current index w/in this theme
+            var postIndex = $.inArray(parseInt(postId), postObj.theme[postTheme]);
+            var incPostId = 0;
+            var incTheme = postTheme;
 
-			// if we're not at the end of this theme, stay w/in theme
-            if ((current_index + 1) < postObj.theme[currentPostTheme].length ){
-                var next_id = postObj.theme[currentPostTheme][current_index + 1]; //index++
+            // check if we're w/in theme
+            var incPostIndex = postIndex + increment;
+            if (incPostIndex >= 0 && incPostIndex < postObj.theme[postTheme].length) {
+                incPostId = postObj.theme[postTheme][incPostIndex];
+            } else {
+                // get the prev or next theme with posts
 
-				// if we've already viewed this post_id, go to next post_id
-				if( ECI.posts.viewed.indexOf( next_id ) != -1 ){
-					next_id = nextModalPostID( next_id, currentPostTheme );
-				}
+                // first, we sort the themes
+                var themes = [];
+                for (var t in postObj.theme) {
+                    themes.push(t);
+                }
+                themes.sort();
+                var themeIndex = $.inArray(postTheme, themes);
 
-			} else { // we are at the end of this theme, go to next theme
-                nextPostTheme = getNextKey(postObj.theme, currentPostTheme);
+                if (increment > 0) {
+                    // get from next theme
+                    if (themes.length > themeIndex + 1) {
+                        incTheme = themes[themeIndex + 1];
+                        incPostId = postObj.theme[incTheme][0];
+                    }
+                } else {
+                    // get from previous theme
+                    if (themeIndex > 0) {
+                        incTheme = themes[themeIndex - 1];
+                        var lastIndex = postObj.theme[incTheme].length - 1;
+                        incPostId = postObj.theme[incTheme][lastIndex];
+                    }
+                }
+            }
 
-				if( nextPostTheme ){
-					//do we have any posts in this theme?
-                    if (postObj.theme[currentPostTheme].length == 0 ){
-                        nextPostTheme = getNextKey(postObj.theme, currentPostTheme);
-					} else {
-						//start from the beginning
-                        current_id = postObj.theme[nextPostTheme][0];
-
-						// if we've already viewed this post_id, go to next post_id
-						if( ECI.posts.viewed.indexOf( current_id ) != -1 ){
-							next_id = nextModalPostID( current_id, nextPostTheme );
-						} else {
-							return current_id;
-						}
-					}
-				} else {				
-					var next_id = 0; // we are out of themes
-				}
-			}
-			
-			return next_id;
-
-		}
-		/**
-		 * utility function to iterate to prev post_id 
-		 *
-		 * @param {int} currentPostID - current post being viewed
-		 * @param {str} currentPostTheme - current post's theme being viewed
-		 * @param {array} eciPostList - full list of eci posts
-		 * @param {array} eciViewedList - list of eci posts view in current modal session
-		 * @return {int} postID
-		 **/
-        function prevModalPostID(currentPostID, currentPostTheme) {
-            // get the post object - ECI.summary or ECI.posts
-            var postObj = getPostObject();
-
-			// get current index w/in this theme
-            var current_index = postObj.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
-
-			// if we're not at the beginning of this theme, stay w/in theme
-			if( !( ( current_index - 1 ) < 0 ) ){
-                var prev_id = postObj.theme[currentPostTheme][current_index - 1]; //index++
-
-
-			} else { // we are at the end of this theme, go to next theme
-                prevPostTheme = getPreviousKey(postObj.theme, currentPostTheme);
-
-				if( prevPostTheme ){
-					//do we have any posts in this theme?
-                    if (postObj.theme[currentPostTheme].length == 0 ){
-                        prevPostTheme = getPreviousKey(postObj.theme, currentPostTheme);
-					} else {
-						//start from the end
-                        current_id = postObj.theme[prevPostTheme].length;
-
-						// if we've already viewed this post_id, go to next post_id
-						//if( ECI.posts.viewed.indexOf( current_id ) != -1 ){
-							//prev_id = nextModalPostID( current_id, prevPostTheme );
-						//} else {
-							return current_id;
-						//}
-					}
-				} else {				
-					var prev_id = 0; // we are out of themes
-				}
-			}
-			
-			return prev_id;
-
-		}
-
-		//Utility: NEXT KEY
-		function getNextKey(o, id){
-			var keys = Object.keys( o ),
-				idIndex = keys.indexOf( id ),
-				nextIndex = idIndex += 1;
-			if(nextIndex >= keys.length){
-				//we're at the end, there is no next
-				return false;
-			}
-			var nextKey = keys[ nextIndex ]
-			return nextKey;
-		}
-	 
-		//Utility: PREVIOUS KEY
-		function getPreviousKey(o, id){
-			var keys = Object.keys( o ),
-				idIndex = keys.indexOf( id ),
-				nextIndex = idIndex -= 1;
-			if(idIndex === 0){
-			//we're at the beginning, there is no previous
-				return false;
-			}
-			var nextKey = keys[ nextIndex ]
-			return nextKey;
-		}
-
+            return [incPostId, incTheme];
+        }
+       
         /**
          * List all filters for theme, type, and affiliation
          * @param {any} posts - ECI.summary or ECI.posts
@@ -1557,7 +1454,7 @@ jQuery(document).ready(function ($) {
 
                     // add theme container, and container for the items
                     $("#engage-list").append(
-                        $("<div />", { "id": tId + "_container", "class": "row" })
+                        $("<div />", { "id": tId + "_container", "class": "row theme-container", "data-theme": t })
                             .append($("<h4 />", { "id": tId, "class": "col-xs-12 modal-theme" }).append(t))
                     );
 
@@ -1594,8 +1491,9 @@ jQuery(document).ready(function ($) {
 					var $item = addItem(item, pId, style, false);
 
 					$item.on("click", function( e ){
-						var post_id = $(this).attr("data-id");
-						loadSingleEngTemplate( post_id, true, theme );
+                        var post_id = $(this).attr("data-id");
+                        var post_theme = $(this).parent(".theme-container").attr("data-theme");
+                        loadSingleEngTemplate(post_id, post_theme );
 					});
 
                     $container.append($item);
@@ -1604,7 +1502,7 @@ jQuery(document).ready(function ($) {
 
             // if we have more posts, add a 'show more' icon
             if (postIDs.length > stopIndex) {
-                var $more = $("<h2 />", { "class": "text-center show-more", "data-id": stopIndex, "data-theme": theme})
+                var $more = $("<h2 />", { "class": "text-center show-more", "data-id": stopIndex})
                     .append(
                     $("<i />", { "class": "fa fa-chevron-circle-down icon fa-2x", "title": "Show more" })
                 );
@@ -1613,7 +1511,7 @@ jQuery(document).ready(function ($) {
                 $more.on("click", function (e) {
                     // get new index in integer to ensure load next 6 only, otherwise all remining posts are loaded.
                     var newIndex = parseInt($(this).attr("data-id"));
-                    var theme = $(this).attr("data-theme");
+                    var theme = $(this).parent(".theme-container").attr("data-theme");
                     $(this).remove();
                     showPostsByTheme(newIndex, theme, posts);
                 });
