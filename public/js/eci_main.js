@@ -415,11 +415,14 @@ jQuery(document).ready(function ($) {
 
                         // show a popup
                         if (latlng) {
+                            var center = L.geoJSON(featureCollection).getBounds().getCenter();
+
                             ECI.popup = L.popup({
                                 minWidth: 200,
+                                autoPan: false,
                                 className: 'popup'
                             })
-                                .setLatLng(latlng)
+                                .setLatLng(center)
                                 .setContent('<h6>' + name + '</h6><div><i class="fa fa-spinner fa-spin fa-2x"></i> Loading...</div>' )
                                 .openOn(map);
                         }
