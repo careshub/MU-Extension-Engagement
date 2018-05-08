@@ -101,7 +101,7 @@ jQuery(document).ready(function ($) {
 
         // get the statewide map extent
         ECI.bounds = map.getBounds();
-        map.setMaxBounds(ECI.bounds);
+        map.setMaxBounds(ECI.bounds.pad(0.02));       // add 2% padding for popup
 
         // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
