@@ -307,7 +307,7 @@ jQuery(document).ready(function ($) {
             getEngagements();
 
             // add the boundary's selection layer
-            var service = "https://gis3.cares.missouri.edu/arcgis/rest/services/Dynamic/Boundary2016_ECI/MapServer";
+            var service = "https://gis3.cares.missouri.edu/arcgis/rest/services/Boundary/Current_MO/MapServer";
             layerSelect = L.esri.dynamicMapLayer({
                 url: service,
                 layers: ECI.geog[ECI.igeog].select_ids,
