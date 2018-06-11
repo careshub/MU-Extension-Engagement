@@ -12,6 +12,7 @@ jQuery(document).ready(function ($) {
         map: 'impact-map',
         cssGeog: '.ecpp-geog',
         selectcssGeogID: 'filters-container-regions',
+        agsService: 'https://gis3.cares.missouri.edu/arcgis/rest/services/Boundary/Current_MO/MapServer',
         filterGeog: '#filter-geography',
         filters: ["theme", "type", "affiliation"],
         igeog: 0,
@@ -307,9 +308,8 @@ jQuery(document).ready(function ($) {
             getEngagements();
 
             // add the boundary's selection layer
-            var service = "https://gis3.cares.missouri.edu/arcgis/rest/services/Boundary/Current_MO/MapServer";
             layerSelect = L.esri.dynamicMapLayer({
-                url: service,
+                url: ECI.agsService,
                 layers: ECI.geog[ECI.igeog].select_ids,
                 layerDefs: resetSelection(),
                 format: "png32",
@@ -566,7 +566,7 @@ jQuery(document).ready(function ($) {
          */
         function queryFeatures(layerId, idList, callback) {
             var queryOption = {
-                url: "https://gis3.cares.missouri.edu/arcgis/rest/services/Dynamic/Boundary2016_ECI/MapServer",
+                url: ECI.agsService,
                 useCors: true
             };
 
