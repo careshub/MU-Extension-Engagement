@@ -36,6 +36,12 @@ add_action( 'cmb2_admin_init', __NAMESPACE__ . '\\muext_program_outcomes_meta_bo
 add_action( 'save_post_muext_engagement', __NAMESPACE__ . '\\muext_save_taxonomy_select2_boxes' );
 add_action( 'save_post_muext_engagement', __NAMESPACE__ . '\\muext_update_geoid_taxonomy' );
 
+// Add import tool for importing/syncing extension programs
+add_action( 'admin_menu', __NAMESPACE__ . '\\add_tools_page' );
+// AJAX to check type of uploaded import file.
+add_action( 'wp_ajax_engagement_importer_check_file', __NAMESPACE__ . '\\check_import_file' );
+// AJAX to run the importer. 
+add_action( 'wp_ajax_engagement_run_importer', __NAMESPACE__ . '\\import_data' );
 
 /**
 * Register and enqueue admin-specific style sheets and javascript files.
@@ -925,7 +931,10 @@ function muext_update_geoid_taxonomy( $post_id ){
 		foreach( $array as $key => $value){
 			if ( strpos( $key, 'geo_id' ) !== false ) {
 				// geoid string exists in field name
-				array_push( $geoid_terms, $value );
+				// But is not the whole US. Let's not be greedy.
+				if ( '01000US' != $value ) {
+					array_push( $geoid_terms, $value );
+				}
 				//error_log( $value );
 			}
 		}
@@ -1314,3 +1323,411 @@ function populate_post_content_input( $data, $object_id, $args, $field ) {
 	return $data;
 }
 add_filter( "cmb2_override_content_meta_value", __NAMESPACE__ . '\\populate_post_content_input', 10, 4  );
+
+/**
+ * Add an "import engagements" tool screen.
+ *
+ * @since 1.0.0
+ */
+function add_tools_page() {
+	add_management_page( "Import Extension Programs", 'Import Extension Programs', 'manage_options', 'import-extension-programs', __NAMESPACE__ . '\\render_tools_page' );
+}
+/**
+ * Render the "import engagements" tool screen.
+ *
+ * @since 1.0.0
+ *
+ * @return html 
+ */
+function render_tools_page() {
+	wp_enqueue_media();
+	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-plugin-script', plugins_url( 'assets/js/admin-tools.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), true );
+	?>
+	<div class="wrap">
+		<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
+		Hey there ho there!
+
+		<section id="choose-file">
+			<h3>Choose an Import File</h3>
+			<button id="ext-import-file-upload" >Upload or Choose a CSV</button><br>
+			<ul>
+				<li>Selected File: <span id="import_csv_filename">Not set</span></li>
+				<li>Program source: <span id="program_source_calc">Unknown</span></li>
+				<li>Import type: <span id="import_type_calc">Unknown</span></li>
+			</ul>
+
+			<input type="hidden" id="import_csv_attachment_id" value="0">
+
+			<button id="import-start" class="import-actions" disabled="disabled">Begin Import</button>
+
+			<ul id="import-results"></ul>
+		</section>
+
+		<section id="help">
+			<h3>Documentation</h3>
+			<p>The import process for engagements uses the form of the CSV to figure out what to do. Start by importing the new programs, then follow up with meta and terms. Read on for CSV formatting tips for each step.</p>
+
+			<h4>Importing Program Information</h4>
+			<p>Include the following columns in this order:</p>
+			<ul>
+				<li><code>myextension_id</code> or <code>local_id</code></li>	
+				<li><code>title</code></li>
+				<li><code>description</code></li>
+			</ul>
+			<p>Download a <a href="<?php echo plugins_url( 'assets/sample-import-files/engagement-sample-program-import.csv', __FILE__ ); ?>">sample CSV</a> to get started.</p>
+
+			<h4>Importing Taxonomy Terms</h4>
+			<p><em>Limits</em> Keep your files to 1000 terms or fewer for best performance.</p>
+			<p>Include the following columns in this order:</p>
+			<ul>
+				<li><code>myextension_id</code> or <code>local_id</code></li>	
+				<li><code>taxonomy</code></li>
+				<li><code>term</code></li>
+			</ul>
+			<p>These taxonomies are associated with engagements, and these names work well in the <code>taxonomy</code> column:</p>
+			<ul>
+				<?php 
+				$taxonomies = get_object_taxonomies( 'muext_engagement', 'objects' );
+				foreach ( $taxonomies as $tax ) {
+					?>
+					<li><code><?php echo $tax->name; ?></code> (&ldquo;<?php echo $tax->label; ?>&rdquo;)</li>
+					<?php
+				}
+				?>
+			</ul>
+			<p>Download a <a href="<?php echo plugins_url( 'assets/sample-import-files/engagement-sample-taxonomy-import.csv', __FILE__ ); ?>">sample CSV</a> to get started.</p>
+
+			<h4>Importing Meta Information</h4>
+			<p><em>Limits</em> Keep your files to 1000 items or fewer for best performance. If you're importing <code>location_text</code>, only submit about 175 records in a file.</p>
+			<p>Include the following columns in this order:</p>
+			<ul>
+				<li><code>myextension_id</code> or <code>local_id</code></li>	
+				<li><code>meta_key</code></li>
+				<li><code>value</code></li>
+			</ul>
+
+			<p>These meta keys are associated with engagements, and will work well in the <code>meta_key</code> column:</p>
+			<ul>
+				<li><code>_muext_start_date</code></li>
+				<li><code>_muext_frequency</code></li>
+				<li><code>location_text</code></li>
+			</ul>
+			<p>Download a <a href="<?php echo plugins_url( 'assets/sample-import-files/engagement-sample-meta-import.csv', __FILE__ ); ?>">sample CSV</a> to get started.</p>
+
+			<h4>Importing Contact Information</h4>
+			<p>Include the following columns in this order:</p>
+			<ul>
+				<li><code>myextension_id</code> or <code>local_id</code></li>	
+				<li><code>name</code></li>
+				<li><code>email</code></li>
+				<li><code>phone</code></li>
+			</ul>
+			<p>Download a <a href="<?php echo plugins_url( 'assets/sample-import-files/engagement-sample-contacts-import.csv', __FILE__ ); ?>">sample CSV</a> to get started.</p>
+
+		</section>	
+	</div>
+	<input type="hidden" id="engagement-ajax-nonce" value="<?php echo wp_create_nonce( 'engagement-ajax-nonce' ); ?>">
+	<?php
+}
+
+/**
+ * AJAX handler to check an import file's type.
+ *
+ * @since 1.0.0
+ *
+ * @return JSON response.
+ */
+function check_import_file() {
+	if ( ! wp_verify_nonce( $_REQUEST['_nonce'], 'engagement-ajax-nonce' ) ) {
+		wp_send_json_error( 'Nonce failed: ' . $_REQUEST['_nonce'] );
+	} else if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( 'User does not have permission to do this.' );
+	}
+
+	$retval = get_import_file_type( $_REQUEST['attachment_id'] );
+
+	wp_send_json_success( $retval );
+}
+
+/**
+ * Check an import file's type.
+ *
+ * @since 1.0.0
+ *
+ * @param string $attachment_id   The ID of the CSV to use.
+ * @return array An array of progress/status updates.
+ */
+function get_import_file_type( $attachment_id ) {
+	$retval = array();
+	if ( ( $handle = fopen( get_attached_file( $attachment_id ), "r" ) ) !== FALSE) {
+		while ( ( $data = fgetcsv( $handle, 0, "," ) ) !== FALSE ) {
+			// We'll use the header row to see what we've got.
+			switch ( $data[0] ) {
+				case 'myextension_id':
+					$retval['data_source']      = 'Import/Update MyExtension Programs';
+					$retval['data_source_slug'] = 'myextension_id';
+					break;
+				case 'local_id':
+					$retval['data_source']      = 'Update Engagement Programs';
+					$retval['data_source_slug'] = 'local_id';
+					break;
+				default:
+					$retval['data_source'] = false;
+					break;
+			}
+			switch ( $data[1] ) {
+				case 'title':
+					$retval['import_type']      = 'Import Programs';
+					$retval['import_type_slug'] = 'programs';
+					break;
+				case 'taxonomy':
+					$retval['import_type']      = 'Import Taxonomy Terms';
+					$retval['import_type_slug'] = 'terms';
+					break;
+				case 'meta_key':
+					$retval['import_type']      = 'Import Meta Data';
+					$retval['import_type_slug'] = 'meta';
+					break;
+				case 'name':
+					$retval['import_type']      = 'Import Contacts';
+					$retval['import_type_slug'] = 'contacts';
+					break;
+				default:
+					$retval['import_type'] = false;
+					break;
+			}
+
+			break;
+		}
+		fclose($handle);
+	}
+	return $retval;
+}
+
+/**
+ * Import engagement data from a carefully formatted CSV.
+ *
+ * @since 1.0.0
+ *
+ * @param string $attachment_id   The ID of the CSV to use.
+ * @return array An array of progress/status updates.
+ */
+function import_data( $attachment_id = null ) {
+
+	if ( ! wp_verify_nonce( $_REQUEST['_nonce'], 'engagement-ajax-nonce' ) ) {
+		wp_send_json_error( 'Nonce failed: ' . $_REQUEST['_nonce'] );
+	} else if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( 'User does not have permission to do this.' );
+	}
+
+	$retval = array();
+	$api_key = get_option( 'muext-google-location-apikey' );
+
+	$attachment_id = ( $attachment_id ) ? $attachment_id : $_REQUEST['attachment_id'];
+
+	$import_file_info = get_import_file_type( $attachment_id );
+
+	// Angela is the author of all of these things.
+	$author = get_user_by( 'login', 'johnsonange' );
+
+	$retval = array();
+	$row = 1;
+	$last_ref_id = 0;
+	if ( ( $handle = fopen( get_attached_file( $attachment_id ), "r" ) ) !== FALSE) {
+		while ( ( $data = fgetcsv( $handle, 0, "," ) ) !== FALSE ) {
+			// Skip the header row.
+			if ( 1 === $row ) {
+				$row++;
+				continue;
+			}
+
+			// Are we moving on to a new post?
+			if ( $data[0] != $last_ref_id ) {
+				// Are we working on an existing post?
+				$post_id = false;
+				if ( 'myextension_id' === $import_file_info['data_source_slug'] ) {
+					if ( $existing_id = check_for_existing_engagement( 'myextension_id', $data[0] ) ) {
+						$post_id = $existing_id;
+					}
+				} else if ( 'local_id' === $import_file_info['data_source_slug'] ) {
+					// We are updating local posts
+					$post_id = $data[0];
+				}
+			}
+
+			// The routine varies depending on the type of import.
+			if ( 'programs' === $import_file_info['import_type_slug'] ) {
+				$post_args = array(
+					'post_type'    => 'muext_engagement',
+					'post_title'   => $data[1],
+					'post_content' => $data[2],
+					'post_author'  => $author->ID,
+					'post_status'  => 'pending'
+				);
+
+				if ( $post_id ) {
+					$post_args['ID'] = $post_id;
+				}
+
+				// Importing new from external source--store remote ID as meta
+				if ( 'myextension_id' === $import_file_info['data_source_slug'] ) {
+					$post_args['meta_input'] = array( 'myextension_id' => $data[0] );
+				}
+
+				$success = wp_insert_post( $post_args );
+
+				if ( $success ) {
+					$retval[] = "Item $data[0] was successfully imported with the local ID of $success.";
+				} else {
+					$retval[] = "Item $data[0] failed to import.";		
+				}
+
+			} else if ( 'terms' === $import_file_info['import_type_slug'] ) {
+
+				$success = wp_set_object_terms( $post_id, $data[2], $data[1], 'true' );
+
+				// Taxonomies should be appended as keyed arrays for CMB use.
+				$term_ids = wp_get_object_terms( $post_id, $data[1], array( 'fields' => 'ids' ) );
+				$related_meta_keys = array(
+					'muext_program_category' => 'theme',
+					'muext_program_audience' => 'audience',
+					'muext_program_impact_area' => 'impact',
+					'muext_program_outreach_type' =>  'type',
+					'muext_program_affiliation' => 'affiliation',
+					'muext_program_funding' => 'funding'
+				);
+				if ( array_key_exists( $data[1], $related_meta_keys ) ) {
+					$meta = update_post_meta( $post_id, $related_meta_keys[ $data[1] ], $term_ids );	
+				}
+
+				if ( $success ) {
+					$retval[] = "Term $data[2] was successfully applied to item $data[0].";
+				} else {
+					$retval[] = "Item $data[0] failed to gain the term $data[2].";		
+				}
+
+			} else if ( 'meta' === $import_file_info['import_type_slug'] ) {
+
+				if ( 'location_text' == $data[1] ) {
+					// Location is a special case, and is stored as a serialized array of arrays.
+					$current_location = get_post_meta( $post_id, '_muext_location_group', true );
+					if ( ! is_array( $current_location ) ) {
+						$current_location = array();
+					}
+					$location_info = array( "_muext_location_text" => $data[2] );
+
+					$api_url = add_query_arg( array(
+						'key' => $api_key,
+						'address' => $data[2],
+					), 'https://maps.googleapis.com/maps/api/geocode/json' );
+
+					// Location
+					$response = json_decode( wp_remote_retrieve_body( wp_remote_get( $api_url,
+					array(
+					    'timeout'     => 120,
+					)
+					) ) );
+
+					if ( ! empty( $response->status ) && 'OK' == $response->status && ! empty( $response->results[0] ) ) {
+						if ( ! empty( $response->results[0]->address_components ) ) {
+							foreach ( $response->results[0]->address_components as $comp ) {
+								$location_info[ '_muext_' . $comp->types[0] ] = $comp->long_name;
+							}
+						}
+						$location_info['_muext_latitude'] = $response->results[0]->geometry->location->lat;
+						$location_info['_muext_longitude'] = $response->results[0]->geometry->location->lng;
+					}
+
+					$current_location[] = $location_info;
+					$success = update_post_meta( $post_id, '_muext_location_group', array_unique( $current_location, SORT_REGULAR ) );
+				} else {
+					$success = update_post_meta( $post_id, $data[1], $data[2] );				
+				}
+
+				if ( $success ) {
+					$retval[] = "Meta $data[2] was successfully applied to item $data[0].";
+				} else {
+					$retval[] = "Item $data[0] failed to gain the meta $data[2].";
+				}
+				// Keep an eye on the Geocoding API's response.
+				if ( empty( $response->status ) ) {
+					$retval[] = "Geocode API response was malformed.";				
+				} else if ( 'OK' != $response->status ) {
+					$retval[] = "Geocode API returned status: {$response->status}";				
+				}	
+			} else if ( 'contacts' === $import_file_info['import_type_slug'] ) {
+				$contacts = get_post_meta( $post_id, '_muext_contact_group', true );
+
+				if ( ! is_array( $contacts ) ) {
+					$contacts = array();
+				}
+				$contacts[] = array( 
+					"_muext_contact_name" => $data[1],
+					"_muext_contact_email" => $data[2],
+					"_muext_contact_phone" => $data[3]
+				);
+
+				$success = update_post_meta( $post_id, '_muext_contact_group', array_unique( $contacts, SORT_REGULAR ) );
+
+				if ( $success ) {
+					$retval[] = "Contact $data[1] was successfully applied to item $data[0].";
+				} else {
+					$retval[] = "Item $data[0] failed to gain the contact $data[1].";		
+				}
+
+				// Contacts must be added as users if they don't exist
+				if ( ! get_user_by( 'email', $data[2] ) ) {
+					// invent a username
+					$email_parts = explode( "@", $data[2] );
+					// Use a bonkers password--they'll never use it
+					$password = wp_generate_password( 20, true, true );
+					$new_user = wp_create_user( $email_parts[0] , $password, $data[2] );
+
+					if ( is_int( $new_user ) ) {
+						$retval[] = "Added new user (ID: {$new_user}) with the email $data[2].";
+					} else {
+						$retval[] = "Failed to add new user with the email $data[2].";		
+					}
+				} else {
+					$retval[] = "User already exists with the email $data[2].";
+				}
+
+				// First contact should be added as a coauthor
+				$coauthor = current( $contacts );
+				$coauthor_user_obj = get_user_by( 'email', $coauthor["_muext_contact_email"] );
+
+				if ( ! empty( $coauthor_user_obj->ID ) ) {
+					update_post_meta( $post_id, '_muext_coauthor', $coauthor_user_obj->ID );
+					$retval[] = "Added as a coauthor: {$coauthor_user_obj->user_email}.";
+				}
+			}
+			$row++;
+		}
+		fclose($handle);
+	}
+	wp_send_json_success( $retval );
+}
+
+/**
+ * Check to see if an engagement already exists, by meta key and value.
+ *
+ * @since 1.0.0
+ *
+ * @param string $meta_key   The meta key to check for.
+ * @param string $meta_value The meta value to check for.
+ * @return bool|int Return ID of existing post, false if none found.
+ */
+function check_for_existing_engagement( $meta_key = false, $meta_value = false ) {
+	$retval = false;
+	$exists = new \WP_Query( array( 
+		'post_status'  => 'any',
+		'post_type'    => 'muext_engagement',
+		'meta_key'     => $meta_key,
+		'meta_value'   => $meta_value,
+		'fields'       => 'ids'
+	) );
+	if ( ! empty( $exists->posts ) ) {
+		$retval = current( $exists->posts );
+	}
+	return $retval;
+}

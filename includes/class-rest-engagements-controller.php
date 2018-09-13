@@ -225,9 +225,16 @@ class WP_REST_Engagements_Controller extends WP_REST_Posts_Controller {
 		if ( ! empty( $paged_posts ) ) {
 			// We'll fetch them by the post ID.
 			$contents_query_args = array(
+<<<<<<< HEAD
 				'post__in'  => $paged_posts,
 				'orderby'   => 'post__in', // Keep them in the order set in the query
 				'post_type' => 'muext_engagement'
+=======
+				'post__in'       => $paged_posts,
+				'orderby'        => 'post__in', // Keep them in the order set in the query
+				'post_type'      => 'muext_engagement',
+				'posts_per_page' => -1
+>>>>>>> 7d661fe22ddb8b51cedf96b43c2189f02ecd356e
 			);
 
 			$contents_query   = new WP_Query();

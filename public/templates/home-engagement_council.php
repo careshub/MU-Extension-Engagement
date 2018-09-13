@@ -39,7 +39,7 @@
 						\MU_Ext_Engagement\Public_Facing\get_template_part( 'home', 'map-selector' );
 					?>
 					
-					<div class="row">
+					<div class="row" id="content-container">
 						<div id="impact-container" class="col-xs-12 clearfix engagements-box">
 							<div id="engage-title">
 								<h3>UM System Impact</h3>

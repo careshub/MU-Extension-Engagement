@@ -12,6 +12,7 @@ jQuery(document).ready(function ($) {
         map: 'impact-map',
         cssGeog: '.ecpp-geog',
         selectcssGeogID: 'filters-container-regions',
+        agsService: 'https://gis3.cares.missouri.edu/arcgis/rest/services/Boundary/Current_MO/MapServer',
         filterGeog: '#filter-geography',
         filters: ["theme", "type", "affiliation"],
         igeog: 0,
@@ -41,7 +42,7 @@ jQuery(document).ready(function ($) {
 
     /**
     * Send a request to an API service to get data.
-    * @param {string} service - API endpoint and parameters.
+    * @param {string} service - API endpoint.
     * @param {object} data - The data posted to API.
     * @param {requestCallback} callback - The callback function to execute after the API request is succefully completed.
     * @param {requestCallback} [fallback] - The callback function to execute when the API request returns an error.
@@ -101,9 +102,9 @@ jQuery(document).ready(function ($) {
 
         // get the statewide map extent
         ECI.bounds = map.getBounds();
-        map.setMaxBounds(ECI.bounds);
+        map.setMaxBounds(ECI.bounds.pad(0.02));       // add 2% padding for popup
 
-        // custom 'zoom to Missouri' button
+        // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
             options: {
                 position: 'topleft'
@@ -162,6 +163,7 @@ jQuery(document).ready(function ($) {
 
         // attach map click event handler
         map.on('click', function (e) {
+            if (ECI.popup) ECI.popup.remove();
             selectFeature(e.latlng);
         });
 
@@ -177,6 +179,8 @@ jQuery(document).ready(function ($) {
 
         // attach geography list selection event handler
         $("#list-geography").on("change", function (e) {
+            if (ECI.popup) ECI.popup.remove();
+
             var geoid = $(this).val();
             if (geoid !== "" && $.inArray(geoid, ECI.geoid) === -1) {
                 layerSelect.query()             // merge with queryFeature() function???
@@ -186,6 +190,9 @@ jQuery(document).ready(function ($) {
                     .run(function (error, featureCollection) {
                         setSelectionDef(featureCollection);
                     });
+
+                // scroll to impact container
+                scrollTo("content-container");
             }
         });
 
@@ -208,6 +215,28 @@ jQuery(document).ready(function ($) {
                 .addClass("grid-group-item");
         });
 
+        // search keywords
+        $("#eci-search").keypress(function (e) {
+            if (e.keyCode === 13) {
+                getEngagements();
+                scrollTo("content-container");
+            }
+        });
+
+        // clear keyword search
+        $("#eci-search-clear").on("click", function () {
+            $("#eci-search").val('');
+            getEngagements();
+        });
+
+        // clear all filters
+        $("#clear-filters").on("click", function () {
+            $("#eci-search").val('');
+            ECI.geoid = [];
+            $(ECI.filterGeog).empty();
+            getEngagements();
+        });
+
         //****************** LOCAL FUNCTIONS *******************//
 
         /**
@@ -215,6 +244,8 @@ jQuery(document).ready(function ($) {
          * @param {string} activeGeog 
          */
         function loadDataActiveGeog(activeGeog) {
+            if (ECI.popup) ECI.popup.remove();
+
             // zoom out to state extent
             map.flyToBounds(ECI.bounds);
 
@@ -236,7 +267,7 @@ jQuery(document).ready(function ($) {
                         // change data layers to display
                         showDensityMap();
 
-                        // show overall in filters and charts
+                        // show summary data in filters and charts
                         getEngagements();
 
                         // remove all selections
@@ -277,9 +308,8 @@ jQuery(document).ready(function ($) {
             getEngagements();
 
             // add the boundary's selection layer
-            var service = "https://gis3.cares.missouri.edu/arcgis/rest/services/Dynamic/Boundary2016_ECI/MapServer";
             layerSelect = L.esri.dynamicMapLayer({
-                url: service,
+                url: ECI.agsService,
                 layers: ECI.geog[ECI.igeog].select_ids,
                 layerDefs: resetSelection(),
                 format: "png32",
@@ -346,7 +376,7 @@ jQuery(document).ready(function ($) {
                 .on(map)
                 .layers("visible:" + ECI.geog[ECI.igeog].select_ids.join(","))
                 .run(function (error, featureCollection) {
-                    setSelectionDef(featureCollection);
+                    setSelectionDef(featureCollection, latLng);
                 });
         }
 
@@ -354,15 +384,12 @@ jQuery(document).ready(function ($) {
          * Set the geography selection definition
          * @param {any} [featureCollection] - The list of features found at mouse click on the map
          */
-        function setSelectionDef(featureCollection) {
+        function setSelectionDef(featureCollection, latlng) {
             var activeGeog = ECI.geog[ECI.igeog];
 
             // get selected GEOID
             if (featureCollection && featureCollection.features.length > 0) {
                 var inMissouri = false;
-                var style = $("#list-view").hasClass("active") ? " list-group-item" : "";
-                var stockImg = getPluginPath("images");
-                var pdfPath = getPluginPath("pdf") + ECI.geog[ECI.igeog].layer_name.toLowerCase() + "/";
 
                 $.each(featureCollection.features, function (idx, feature) {
                     var dataId = feature.properties["GEOID"] || feature.properties["GeoID"];
@@ -375,12 +402,7 @@ jQuery(document).ready(function ($) {
                         var name = feature.properties["Name"] || feature.properties["NAMELSAD"];
 
                         // list UM impact card for the GEOID
-                        var $item = addItem({
-                            title: name,
-                            link: pdfPath + name + ".pdf",
-                            image: stockImg + "um_impact.png"
-                        }, dataId, style, true);
-                        $("#impact-list").append($item);
+                        showImpactCard(name, dataId);
 
                         // include the count value in the geography list
                         if (ECI.count && ECI.count[dataId]) {
@@ -390,6 +412,23 @@ jQuery(document).ready(function ($) {
                             .append($("<i />", { "class": "fa fa-times-circle fa-2x" }))
                             .append($("<span />").append(name));
                         $(ECI.filterGeog).append(liGeog);
+
+                        // show a popup
+                        if (latlng) {
+                            var center = L.geoJSON(featureCollection).getBounds().getCenter();
+
+                            ECI.popup = L.popup({
+                                minWidth: 200,
+                                autoPan: false,
+                                className: 'popup'
+                            })
+                                .setLatLng(center)
+                                .setContent('<h6>' + name + '</h6><div><i class="fa fa-spinner fa-spin fa-2x"></i> Loading...</div>' )
+                                .openOn(map);
+                        }
+
+                        // update msg
+                        changeListPrompt();
 
                         // filter icon 'delete' click - remove the geography
                         liGeog.find("i").on("click", function (e) {
@@ -405,6 +444,9 @@ jQuery(document).ready(function ($) {
                                     if (ECI.geoid.length === 0) {
                                         delete ECI.selectionBounds;
                                         map.flyToBounds(ECI.bounds);
+
+                                        // show summary again
+                                        getEngagements();
                                     } else {
                                         var layerId = ECI.geog[ECI.igeog].select_ids[1];
                                         queryFeatures(layerId, ECI.geoid, function (featureCollection) {
@@ -421,14 +463,15 @@ jQuery(document).ready(function ($) {
 
                                     // update the selection on the map
                                     setSelectionDef();
+
+                                    // update list prompt
+                                    changeListPrompt();
                                     break;
                                 }
                             }
 
-                            // if all selection are deleted, set pulldown to first option
-                            if (ECI.geoid.length === 0) {
-                                $("#list-geography").val('');
-                            }
+                            // remove popup
+                            if (ECI.popup) ECI.popup.remove();
                         });
 
                         // found geography in Missouri
@@ -438,7 +481,7 @@ jQuery(document).ready(function ($) {
 
                 if (!inMissouri) return;
 
-                getGeoidTaxonomyKey();
+                //getGeoidTaxonomyKey();
             }
 
             // set layer definition
@@ -473,13 +516,57 @@ jQuery(document).ready(function ($) {
         }
 
         /**
+         * list UM impact card for the GEOID
+         * @param {string} name - The name of geography selection
+         */
+        function showImpactCard(name, dataId) {
+            if (ECI.geoid.length === 1 || !dataId) {
+                $("#impact-list").empty();
+            }
+            dataId = dataId || "04000US29";
+
+            // list UM impact card for the GEOID
+            var stockImg = getPluginPath("images");
+            var pdfPath = getPluginPath("pdf");
+            if (ECI.geoid.length > 0) {
+                pdfPath += ECI.geog[ECI.igeog].layer_name.toLowerCase();
+            }
+            var style = $("#list-view").hasClass("active") ? " list-group-item" : "";
+
+            var $item = addItem({
+                title: name,
+                link: pdfPath + "/" + name + ".pdf",
+                image: stockImg + "um_impact.png"
+            }, dataId, style, true);
+            $("#impact-list").append($item);
+        }
+
+        /**
+         * Change geography list prompt text
+         */
+        function changeListPrompt() {
+            var $list = $("#list-geography")
+            var $option1 = $("#list-geography option:first");
+            $list.val($option1.val());
+            var msg = $option1.text();
+
+            var texts = ['Select', 'Add'];
+            if (ECI.geoid.length > 0) {
+                msg = msg.replace(texts[0], texts[1]);
+            } else {
+                msg = msg.replace(texts[1], texts[0]);
+            }
+            $option1.text(msg);
+        }
+
+        /**
          * Query the boundary layer of selected GEOID to get a collection of features.
         * @param {string} layerId - The ID of the layer to query
         * @param {callbackRequest} callback - The function to execute after query has returned fetureCollection
          */
         function queryFeatures(layerId, idList, callback) {
             var queryOption = {
-                url: "https://gis3.cares.missouri.edu/arcgis/rest/services/Dynamic/Boundary2016_ECI/MapServer",
+                url: ECI.agsService,
                 useCors: true
             };
 
@@ -688,12 +775,34 @@ jQuery(document).ready(function ($) {
         }
 
         /**
+         * Get the filter object
+         * @param {any} geoids - array of geoids
+         * @param {any} ipage -  page number
+         */
+        function getPostFilter(geoids, ipage) {
+            var filter = {
+                page: ipage
+            };
+
+            if (geoids.length > 0) {
+                filter["filter[muext_geoid]"] = geoids.join(",");
+            }
+
+            var term = searchTerm();
+            if (term !== "") {
+                filter.search = term;
+            }
+
+            return filter;
+        }
+
+        /**
          * Get engagement data from server based on current geography selection
          */
         function getEngagements() {
             var hasGeog = (ECI.geoid.length > 0);
 
-            // reset engagement posts selection
+            // reset engagement posts selection (ECI.posts)
             ECI.posts = {
                 "engagements": {},
 				"viewed": [] //has been viewed in current modal context 
@@ -706,22 +815,49 @@ jQuery(document).ready(function ($) {
 
             // get all engagements based on current geography selection
             if (hasGeog) {
-                // get the GEOIDs of all summary levels that overlap with the selected GEOIDs
-                api("get", "api-extension/v1/eci-geoid-list", { geoid: ECI.geoid.join(",") }, function (data) {
-                    // always include Missouri and USA
-                    var list = ["04000US29", "01000US"];
-                    $.merge(list, data);
+                // get a total count of all GEOIDs for current geography type
+                if (!ECI.count.geoid_count) {
+                    var ids = [];
+                    for (var id in ECI.count) {
+                        ids.push(id);
+                    }
+                    ECI.count.geoid_count = ids.length;
+                }
 
-                    // now get engagement entries from WP REST API with these GEOIDs
-                    retrievePosts(list, 1);
-                });
-            } else {
+                // if we've selected the whole state, do not need to use geographic filter
+                if (ECI.geoid.length === ECI.count.geoid_count && searchTerm() === "") {
+                    showPosts(ECI.summary);
+                } else {
+                    retrievePosts(getPostFilter(ECI.geoid, 1), ECI.posts);
+                }
+				
+            } else if (searchTerm() !== "") {
+                showFilters(ECI.posts, true);
+                retrievePosts(getPostFilter([], 1), ECI.posts);
+            }else{
                 if (!ECI.summary) {
                     // get summary info from WP REST API
-                    ECI.summary = {};
-                    retrieveSummary(1, "muext_program_category", ECI.filters[0]);
+                    ECI.summary = {
+                        "engagements": {}
+                    };
+
+                    // get pre-processed data for faster loading
+                    api("get", "api-extension/v1/get-post-list", null, function (data) {
+                        //if (data && data !== "") {
+                            ECI.summary = JSON.parse(data);
+
+                            showFilters(ECI.summary);
+                            showImpactCard("State of Missouri");
+                            showPosts(ECI.summary);
+                        //} else {
+                            // need to retrieve all posts
+                            //retrieveSummary(1, "muext_program_category", ECI.filters[0]);
+                        //}
+                    });
                 } else {
                     showFilters(ECI.summary);
+                    showImpactCard("State of Missouri");
+                    showPosts(ECI.summary);
                 }
             }
 
@@ -740,9 +876,13 @@ jQuery(document).ready(function ($) {
             if (filter === ECI.filters[0]) param.exclude = 2;      // exclude 'Advancement'
 
             apiECI(category, param, function (response) {
-				ECI.summary[filter] = ECI.summary[filter] || {};
+                ECI.summary[filter] = ECI.summary[filter] || {};
+
 				$.each(response, function (i, v) {
-					if (v.count > 0) ECI.summary[filter][v.name] = v.count;
+                    if (v.count > 0) {
+                        ECI.summary[filter][v.name] = ECI.summary[filter][v.name] || 0;
+                        ECI.summary[filter][v.name] = v.count;
+                    }
 				});
 
 				if (response.length < perPage) {
@@ -753,6 +893,9 @@ jQuery(document).ready(function ($) {
 						    // got all summary counts. Now update the filters, unless the user has already selected a geography.
 						    if ( !ECI.geoid || ECI.geoid.length === 0 ) {
                                 showFilters(ECI.summary);
+
+                                retrievePosts(getPostFilter([], 1), ECI.summary);
+                                showImpactCard("State of Missouri");
 						    }
 					    } else {
 						    retrieveSummary(iPage, "muext_program_affiliation", ECI.filters[2]);
@@ -770,135 +913,96 @@ jQuery(document).ready(function ($) {
 
         /**
          * Retrieve posts from WP database
-         * @param {any} list - The list of GEOIDs
-         * @param {any} iPage - The index of pagination
+         * @param {any} postFilter - The list of GEOIDs, search term and page #
          */
-        function retrievePosts(list, iPage) {
+        function retrievePosts(postFilter, posts) {
             // now get engagement entries from WP REST API with these GEOIDs
             var postsPerPage = 100;
-            apiECI("muext_engagement", { "filter[muext_geoid]": list.join(","), "filter[posts_per_page]": postsPerPage, "page": iPage }, function (response) {
-                console.log('muext_engagement', response);
+            postFilter.per_page = 100;
+
+            apiECI("muext_engagement", postFilter, function (response) {
+                console.log(postFilter, response);
 
                 // update ECI filters' post ID lists
                 $.each(response, function (i, v) {
-                    ECI.posts.engagements[v.id] = {
+                    posts.engagements[v.id] = {
                         "title": v.title.rendered,
                         "link": v.link,
                         "image": v.eng_featured_image
                     };
 
-                    // if populating ID list for 'theme', we need to check  if this geoid is one of selected geographies. 
-                    // If yes, place it on the top of list, otherwise, add to the end
-                    var isTop = false;
-                    $.each(v.muext_geoid, function (j, w) {
-                        // check if the geoid is an item in the ECI.geoid array
-                        if (ECI.geoTID[w] && $.inArray(ECI.geoTID[w], ECI.geoid) !== -1) {
-                            isTop = true;
-                            return false;
-                        }
-                    });
-
-                    getFilterData(v.eng_theme, ECI.filters[0], v.id, isTop);
-                    getFilterData(v.eng_type, ECI.filters[1], v.id);
+                    getFilterData(v.eng_theme, ECI.filters[0], v.id, posts);
+                    getFilterData(v.eng_type, ECI.filters[1], v.id, posts);
 
                     if (!skipAffiliation()) {
-                        getFilterData(v.eng_affiliation, ECI.filters[2], v.id);
+                        getFilterData(v.eng_affiliation, ECI.filters[2], v.id, posts);
                     }
                 });
 
                 if (response.length < postsPerPage) {
-                    console.log(ECI.posts);
+                    // got all posts
+                    //if (!postFilter["filter[muext_geoid]"]  && !postFilter.search && !ECI.loadComplete) {
+                    //    ECI.loadComplete = true;
 
-                    // move post IDs of the selected geographies to front in ECI.posts.theme 
+                    //    // show the first group of posts for each theme again, in case we didn't have enough for each group from the 1st page
+                    //    if (searchTerm() === "") {
+                    //        showPosts(posts);
+                    //    }
+                    //} else {
+                    //    // for selected geographies or term search
+                    //    showFilters(posts);
+                    //}
 
-                    showFilters(ECI.posts);
+                    showFilters(posts);
                 } else {
-                   iPage++;
-                    retrievePosts(list, iPage);
+                    // for statewide selection --- may not have 6 posts for each theme from the 1st page
+                    //if (postFilter.page === 1 && !postFilter["filter[muext_geoid]"] && !ECI.loadComplete) {
+                    //    showPosts(posts);
+                    //}
+
+                    postFilter.page++;
+                    retrievePosts(postFilter, posts);
                 }
             });
         }
-
 
         /**
          * Populate filter properties in ECI.posts - theme, type, affiliation 
          * @param {any} postProperty - The property of the engagement post 
          * @param {any} filterType - filter type: theme, type, affiliation
          * @param {any} id - The ID of the engagement post
+         * @param {any} posts - ECI.summary or ECI.posts
          */
-        function getFilterData(postProperty, filterType, id, isTop) {
+        function getFilterData(postProperty, filterType, id, posts) {
             var topLevel = postProperty["top-level"];
 
             if (topLevel && topLevel.raw) {
-                ECI.posts.engagements[id][filterType] = [];
+                posts.engagements[id][filterType] = [];
 
                 // loop through each filter name
                 for (var t = 0; t < topLevel.raw.length; t++) {
                     var name = topLevel.raw[t].name;
 
                     // add filter name to appropriate array
-                    ECI.posts.engagements[id][filterType].push(name);
+                    posts.engagements[id][filterType].push(name);
 
-                    // store post ID in ECI.posts
-                    ECI.posts[filterType][name] = ECI.posts[filterType][name] || [];
-
-                    // if post's geoid is one of selected geographies, place them in the front, otherwise, add to the end
-                    if (isTop) {
-                        ECI.posts[filterType][name].splice(0, 0, id);
-                    } else {
-                        ECI.posts[filterType][name].push(id);
+                    // store post ID in ECI.summary or ECI.posts
+                    if (!posts[filterType][name] || typeof posts[filterType][name] === "number") {
+                        posts[filterType][name] = [];
                     }
+                    posts[filterType][name] = posts[filterType][name] || [];
+                    posts[filterType][name].push(id);
                 }
             }
         }
 
         /**
-         * TODO: are we using this? 
-		 * Retrieve one post (post data and post meta data) from WP database
-         * @param {any} list - The list of GEOIDs
-         * @param {any} iPage - The index of pagination
-         */
-
-        function retrievePostContentMeta( post_id ) {
-            // now get engagement entries from WP REST API with these GEOIDs
-            var url = "https://engagements.missouri.edu/wp-json/wp/v2/engagement-contentmeta/" + post_id;
-            var postsPerPage = 1;
-            api(
-				"get", 
-				url,
-				function (response) {
-					console.log(response);
-
-                }
-            );
-        }
-
-        /**
          * Retrieve one post (post data and post meta data) from WP database, load into modal
-         * @param {any} list - The list of GEOIDs
-         * @param {any} iPage - The index of pagination
+         * @param {any} post_id - The ID of the post
+         * @param {any} this_theme - The theme of the post
          */
 
-        function loadSingleEngTemplate( post_id, firstView, this_theme) {
-
-            if ( firstView && firstView == true ){
-				// clear out eci.posts.viewed
-				ECI.posts.viewed = [];
-			}
-			// add post_id to eci.posts.viewed
-			ECI.posts.viewed.push( post_id );
-
-			// if theme, we're coming from modal already
-			if( this_theme ){
-				// what is the 
-
-			} else {
-				// get eng object with this post_id (for appending)
-				var eng_item = $(".single-engagement[data-id='" + post_id + "']");
-				var this_theme = eng_item.attr("data-theme");
-				console.log( eng_item );
-			}
-
+        function loadSingleEngTemplate( post_id, this_theme) {
 			var single_template_return = $.ajax({
 				url: eci_ajax.ajax_url, 
 				data: {
@@ -906,15 +1010,8 @@ jQuery(document).ready(function ($) {
 					post_id : post_id
 				}, 
 				method: "POST",
-				dataType: "html",
-				beforeSend: function() {
-					// activate spinny
-					//$("#status-spinny").removeClass("hidden");
-				},
-				success: function( html ) {
-				}
+				dataType: "html"
 			}).done(function( data ) {
-				console.log( this_theme );
 				// loading template into modal window
 
 				// trim whitespace
@@ -923,32 +1020,32 @@ jQuery(document).ready(function ($) {
 				// populate the modal
 				var title = $(data)[0];
 				var innards = $(data)[2];
-				$('#single-engagement-modal .modal-title').html( title );
-				$('#single-engagement-modal .modal-theme').html( "Impact Area: " + this_theme );
+                $('#single-engagement-modal .modal-title').html( title );
+				$('#single-engagement-modal .modal-theme').html( this_theme );
 				$('#single-engagement-modal .modal-main').html( innards );
 
 				// click dis- and re-enable the next/previous button
-				var next_id = nextModalPostID( post_id, this_theme );
+                var nextPost = getModalPost( post_id, this_theme, 1 );
 				var next_button = $("#single-engagement-modal .next-btn");
-				if( next_id == 0 ){
+                if (nextPost[0] == 0 ){
 					next_button.addClass("hidden");
 				} else {
 					next_button.removeClass("hidden");
 					next_button.off("click");
 					next_button.on("click", function( e ){
-						loadSingleEngTemplate( next_id, true, this_theme );
+                        loadSingleEngTemplate(nextPost[0], nextPost[1] );
 					});
 				}
 				
-				var prev_id = prevModalPostID( post_id, this_theme );
+                var prevPost = getModalPost( post_id, this_theme, -1 );
 				var prev_button = $("#single-engagement-modal .prev-btn");
-				if( prev_id == 0 ){
+                if (prevPost[0] == 0 ){
 					prev_button.addClass("hidden");
 				} else {
 					prev_button.removeClass("hidden");
 					prev_button.off("click");
 					prev_button.on("click", function( e ){
-						loadSingleEngTemplate( prev_id, true, this_theme );
+                        loadSingleEngTemplate(prevPost[0], prevPost[1] );
 					});
 				}
 
@@ -956,173 +1053,77 @@ jQuery(document).ready(function ($) {
 				$('#single-engagement-modal').modal('show');
 
 			});
-
         }
-
-		/**
-		 * utility function to iterate to next post_id that hasn't been viewed in modal
-		 *
-		 * @param {int} currentPostID - current post being viewed
-		 * @param {str} currentPostTheme - current post's theme being viewed
-		 * @param {array} eciPostList - full list of eci posts
-		 * @param {array} eciViewedList - list of eci posts view in current modal session
-		 * @return {int} postID
-		 **/
-        function nextModalPostID(currentPostID, currentPostTheme) {
-			// get current index w/in this ECI.posts.theme
-            var current_index = ECI.posts.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
-
-			// if we're not at the end of this theme in ECI.posts, stay w/in theme
-            if ((current_index + 1) < ECI.posts.theme[currentPostTheme].length ){
-                var next_id = ECI.posts.theme[currentPostTheme][current_index + 1]; //index++
-
-				// if we've already viewed this post_id, go to next post_id
-				if( ECI.posts.viewed.indexOf( next_id ) != -1 ){
-					next_id = nextModalPostID( next_id, currentPostTheme );
-				}
-
-			} else { // we are at the end of this theme, go to next theme
-                nextPostTheme = getNextKey(ECI.posts.theme, currentPostTheme);
-
-				if( nextPostTheme ){
-					//do we have any posts in this theme?
-                    if (ECI.posts.theme[currentPostTheme].length == 0 ){
-                        nextPostTheme = getNextKey(ECI.posts.theme, currentPostTheme);
-					} else {
-						//start from the beginning
-                        current_id = ECI.posts.theme[nextPostTheme][0];
-
-						// if we've already viewed this post_id, go to next post_id
-						if( ECI.posts.viewed.indexOf( current_id ) != -1 ){
-							next_id = nextModalPostID( current_id, nextPostTheme );
-						} else {
-							return current_id;
-						}
-					}
-				} else {				
-					var next_id = 0; // we are out of themes
-				}
-			}
-			
-			return next_id;
-
-		}
-		/**
-		 * utility function to iterate to prev post_id 
-		 *
-		 * @param {int} currentPostID - current post being viewed
-		 * @param {str} currentPostTheme - current post's theme being viewed
-		 * @param {array} eciPostList - full list of eci posts
-		 * @param {array} eciViewedList - list of eci posts view in current modal session
-		 * @return {int} postID
-		 **/
-        function prevModalPostID(currentPostID, currentPostTheme) {
-			// get current index w/in this ECI.posts.theme
-            var current_index = ECI.posts.theme[currentPostTheme].indexOf( parseInt( currentPostID ) );
-
-			// if we're not at the beginning of this theme in ECI.posts, stay w/in theme
-			if( !( ( current_index - 1 ) < 0 ) ){
-                var prev_id = ECI.posts.theme[currentPostTheme][current_index - 1]; //index++
-
-
-			} else { // we are at the end of this theme, go to next theme
-                prevPostTheme = getPreviousKey(ECI.posts.theme, currentPostTheme);
-
-				if( prevPostTheme ){
-					//do we have any posts in this theme?
-                    if (ECI.posts.theme[currentPostTheme].length == 0 ){
-                        prevPostTheme = getPreviousKey(ECI.posts.theme, currentPostTheme);
-					} else {
-						//start from the end
-                        current_id = ECI.posts.theme[prevPostTheme].length;
-
-						// if we've already viewed this post_id, go to next post_id
-						//if( ECI.posts.viewed.indexOf( current_id ) != -1 ){
-							//prev_id = nextModalPostID( current_id, prevPostTheme );
-						//} else {
-							return current_id;
-						//}
-					}
-				} else {				
-					var prev_id = 0; // we are out of themes
-				}
-			}
-			
-			return prev_id;
-
-		}
-
-		//Utility: NEXT KEY
-		function getNextKey(o, id){
-			var keys = Object.keys( o ),
-				idIndex = keys.indexOf( id ),
-				nextIndex = idIndex += 1;
-			if(nextIndex >= keys.length){
-				//we're at the end, there is no next
-				return false;
-			}
-			var nextKey = keys[ nextIndex ]
-			return nextKey;
-		}
-	 
-		//Utility: PREVIOUS KEY
-		function getPreviousKey(o, id){
-			var keys = Object.keys( o ),
-				idIndex = keys.indexOf( id ),
-				nextIndex = idIndex -= 1;
-			if(idIndex === 0){
-			//we're at the beginning, there is no previous
-				return false;
-			}
-			var nextKey = keys[ nextIndex ]
-			return nextKey;
-		}
 
         /**
-         * Get GEOID taxonomy ID so we can give order priority to posts of currently selected GEOIDs
+         * Get the ID and theme of previous or next post
+         * @param {any} postId - The ID of current post
+         * @param {any} postTheme - The theme of current post
+         * @param {any} increment - Increment: 1 for next, or -1 for previous
          */
-        function getGeoidTaxonomyKey() {
-            ECI.geoTID = ECI.geoTID || {};
-            ECI.geoTID.viewed = ECI.geoTID.viewed || [];
+        function getModalPost(postId, postTheme, increment) {
+            // get the post object - ECI.summary or ECI.posts
+            var postObj = getPostObject();
 
-            // only get the geoids that we don't have taxonomy keys yet
-            var gList = [];
-            $.each(ECI.geoid, function (i, v) {
-                if ($.inArray(v, ECI.geoTID.viewed) === -1) {
-                    gList.push(v);
-                    ECI.geoTID.viewed.push(v);
+            // get current index w/in this theme
+            var postIndex = $.inArray(parseInt(postId), postObj.theme[postTheme]);
+            var incPostId = 0;
+            var incTheme = postTheme;
+
+            // check if we're w/in theme
+            var incPostIndex = postIndex + increment;
+            if (incPostIndex >= 0 && incPostIndex < postObj.theme[postTheme].length) {
+                incPostId = postObj.theme[postTheme][incPostIndex];
+            } else {
+                // get the prev or next theme with posts
+
+                // first, we sort the themes
+                var themes = [];
+                for (var t in postObj.theme) {
+                    themes.push(t);
                 }
-            });
+                themes.sort();
+                var themeIndex = $.inArray(postTheme, themes);
 
-            if (gList.length > 0) {
-                apiECI("muext_geoid", { "slug": gList.join(","), "per_page": 100 }, function (response) {
-                    if (response && response.length > 0) {
-                        $.each(response, function (i, v) {
-                            ECI.geoTID[v.id] = v.name;
-                        });
+                if (increment > 0) {
+                    // get from next theme
+                    if (themes.length > themeIndex + 1) {
+                        incTheme = themes[themeIndex + 1];
+                        incPostId = postObj.theme[incTheme][0];
                     }
-                });
+                } else {
+                    // get from previous theme
+                    if (themeIndex > 0) {
+                        incTheme = themes[themeIndex - 1];
+                        var lastIndex = postObj.theme[incTheme].length - 1;
+                        incPostId = postObj.theme[incTheme][lastIndex];
+                    }
+                }
             }
-        }
 
+            return [incPostId, incTheme];
+        }
+       
         /**
          * List all filters for theme, type, and affiliation
-         * @param {any} data
-         * @param {any} showLoading
+         * @param {any} posts - ECI.summary or ECI.posts
+         * @param {any} showLoading - flag to show loading animation
          */
-        function showFilters(data, showLoading) {
+        function showFilters(posts, showLoading) {
             // update theme, type, affiliation filters
-            var filterCount = {};           // store counts for chart
-            var hasPosts = (data.engagements);
+            var filterCount = {};      // store counts for chart
+            var hasPosts = true;    //(posts.engagements);
 
-            var iconStyle = (hasPosts) ? "fa-square-o" : "fa-circle";
+            var iconStyle = "fa-square-o"; //(hasPosts) ? "fa-square-o" : "fa-circle";
 
+            // loop through each group of filters
             $.each(ECI.filters, function (i, v) {
                 if (i === 2 && skipAffiliation()) {
                     return false;
                 }
 
-                if (data[v]) {
+                // 
+                if (posts[v]) {
                     filterCount[v] = {};
 
                     var $filter = $("#filter-" + v);
@@ -1130,7 +1131,7 @@ jQuery(document).ready(function ($) {
 
                     // sort the filters by name
                     var keys = [];
-                    for (var t in data[v]) {
+                    for (var t in posts[v]) {
                         keys.push(t);
                     }
                     if (hasPosts) keys.sort();
@@ -1141,8 +1142,8 @@ jQuery(document).ready(function ($) {
 
                     for (var k = 0; k < keys.length; k++) {
                         var key = keys[k];
-                        if (data[v].hasOwnProperty(key)) {
-                            var count = $.isArray(data[v][key]) ? data[v][key].length : data[v][key];
+                        if (posts[v].hasOwnProperty(key)) {
+                            var count = $.isArray(posts[v][key]) ? posts[v][key].length : posts[v][key];
                             filterCount[v][key] = count;
 
                             var $filterText = (isFilterLinked) ? $("<a />", { "href": "javascript:void(0)" }) : $("<span />");
@@ -1155,12 +1156,12 @@ jQuery(document).ready(function ($) {
                                     )
                             );
                             hasProp = true;
-                            sorted[key] = data[v][key];
+                            sorted[key] = posts[v][key];
                         }
                     }
 
                     // keep filters sorted by name
-                    data[v] = sorted;
+                    posts[v] = sorted;
 
                     // show a loading icon
                     if (showLoading && !hasProp) {
@@ -1201,10 +1202,10 @@ jQuery(document).ready(function ($) {
                             updateFilter(filterList);
 
                             var themeCount = {};
-                            for (var f in ECI.posts.theme) {
-                                themeCount[f] = ECI.posts.theme[f].length;
+                            for (var f in posts.theme) {
+                                themeCount[f] = posts.theme[f].length;
                             }
-                            updateContent(ECI.posts, themeCount);
+                            updateContent(posts, themeCount);
 
                             // update filter counts
                             $.each(ECI.filters, function (iType, fType) {
@@ -1215,7 +1216,7 @@ jQuery(document).ready(function ($) {
                                 $filter.find("li").each(function (el) {
                                     var $text = $(this).find(tag);
                                     var fValue = $(this).attr("data-id");
-                                    var num = ECI.posts[fType][fValue] ? ECI.posts[fType][fValue].length : 0;
+                                    var num = posts[fType][fValue] ? posts[fType][fValue].length : 0;
                                     if (countAll || $(this).hasClass(selectCss)) fValue += " (" + num + ")";
                                     $text.html(fValue);
                                 });
@@ -1226,27 +1227,21 @@ jQuery(document).ready(function ($) {
             });
 
             // now update chart and contents
-            updateContent(data, filterCount.theme);
+            updateContent(posts, filterCount.theme);
 
             // attach theme 'link' click
             $("#filter-theme").find("a").on("click", function (e) {
                 var id = $(this).parent().attr("data-id");
-                var target = $("#" + getThemeId(id));
-                if (target.length) {
-                    $('html,body').animate({
-                        scrollTop: target.offset().top - 135
-                    }, 1000);
-                    return false;
-                }
+                scrollTo(getThemeId(id));
             });
         }
 
 
         /**
          * Update theme/type/affiliation filters, chart and engagement listing content
-         * @param {any} data - The engagement data
+         * @param {any} posts - The engagement data, i.e. ECI.summary or ECI.posts
          */
-        function updateContent(data, themeCount) {
+        function updateContent(posts, themeCount) {
             setContainerState();
 
             $("#engage-loading").hide();
@@ -1332,40 +1327,50 @@ jQuery(document).ready(function ($) {
             });
 
             // update engagement listing
-            if (data.engagements) {
-                $("#engage-list").empty();
+            if (posts.engagements) {
+                showPosts(posts);
 
-                // loop through each theme
-                for (var t in data.theme) {
-                    if (data.theme[t].length > 0) {
-                        var tId = getThemeId(t);
-
-                        // add theme container, and container for the items
-                        $("#engage-list").append(
-                            $("<div />", { "id": tId + "_container", "class": "row" })
-                                .append($("<h4 />", { "id": tId, "class": "col-xs-12 modal-theme" }).append(t))
+                // update popup content
+                if (ECI.popup && !$.isEmptyObject(posts.engagements)) {
+                    var content = ECI.popup.getContent();
+                    var $el = $("<div />").append(content);
+                    $el.find("div")
+                        .empty()
+                        .append(
+                            $("<button />", { "class": "btn btn-primary" }).append("View Engagements")
                         );
+                    ECI.popup.setContent($el.html());
 
-                        // show the first group of engagements
-                        showEngGroup(0, t);
-                    }
+                    $(".popup").find("button").on("click", function () {
+                        scrollTo("content-container");
+                    });
                 }
             }
         }
 
         /**
-         * 
-         * @param {any} arrTheme
-         * @param {any} arrType
-         * @param {any} arrAffiliation
+         * Get the object containing the appropriate posts data:
+         * - use ECI.summary when no geography or search term is defined. Otherwise get ECI.posts.
+         */
+        function getPostObject() {
+            return (ECI.geoid.length === 0 && searchTerm() === "") ? ECI.summary : ECI.posts;
+        }
+
+        /**
+         * When a filter is checked/unchecked, update all filter counts
+         * @param {any} filterList - {"theme": string[], "type": [], "affiliation": []}
          */
         function updateFilter(filterList) {
-            // convert ECI.posts.engagements to an array
+            console.log('filters', filterList);
+
+            // convert post engagements to an array
             var temp = [];
-            for (var id in ECI.posts.engagements) {
+            var postObject = getPostObject();
+
+            for (var id in postObject.engagements) {
                 var obj = { "id": id };
                 $.each(ECI.filters, function (i, v) {
-                    obj[v] = ECI.posts.engagements[id][v];
+                    obj[v] = postObject.engagements[id][v];
                 });
                 temp.push(obj);
             }
@@ -1384,7 +1389,7 @@ jQuery(document).ready(function ($) {
 
             // assemble ID lists again
             $.each(ECI.filters, function (i, v) {
-                ECI.posts[v] = {};
+                postObject[v] = {};
 
                 // loop through each post item
                 $.each(temp, function (j, item) {
@@ -1394,9 +1399,9 @@ jQuery(document).ready(function ($) {
                     $.each(item[v], function (k, z) {
 
                         // z - a theme/type/affiliation name
-                        ECI.posts[v][z] = ECI.posts[v][z] || [];
-                        if ($.inArray(item.id, ECI.posts[v][z]) === -1) {
-                            ECI.posts[v][z].push(postId);
+                        postObject[v][z] = postObject[v][z] || [];
+                        if ($.inArray(item.id, postObject[v][z]) === -1) {
+                            postObject[v][z].push(postId);
                         }
                     });
                 });
@@ -1405,12 +1410,14 @@ jQuery(document).ready(function ($) {
             // if we have theme filters, need to remove IDs from not-selected themes
             var t = ECI.filters[0];
             if (filterList[t].length > 0) {
-                for (var f in ECI.posts[t]) {
+                for (var f in postObject[t]) {
                     if ($.inArray(f, filterList[t]) === -1) {
-                        ECI.posts[t][f] = [];
+                        postObject[t][f] = [];
                     }
                 }
             }
+
+            console.log('filtered', postObject);
         }
 
 
@@ -1431,25 +1438,54 @@ jQuery(document).ready(function ($) {
         }
 
         /**
+         * Show engagement post groups for all themes (ie. impact areas)
+         */
+        function showPosts(posts) {
+            if (posts.engagements) {
+                $("#engage-list").empty();
+
+                // sort themes
+                var keys = [];
+                for (var t in posts.theme) {
+                    if (posts.theme[t].length > 0) keys.push(t);
+                }
+                keys.sort();
+
+                // loop through each theme
+                $.each(keys, function (i, t) {
+                    var tId = getThemeId(t);
+
+                    // add theme container, and container for the items
+                    $("#engage-list").append(
+                        $("<div />", { "id": tId + "_container", "class": "row theme-container", "data-theme": t })
+                            .append($("<h4 />", { "id": tId, "class": "col-xs-12 modal-theme" }).append(t))
+                    );
+
+                    // show the first group of engagements
+                    showPostsByTheme(0, t, posts);
+                });
+            }
+        }
+
+        /**
          * Show a group of engagement posts
          * @param {any} startIndex - The starting index of engagement posts to show
          * @param {any} theme - The theme to show the posts
          */
-        function showEngGroup(startIndex, theme) {
+        function showPostsByTheme(startIndex, theme, posts) {
             var stopIndex = startIndex + 6;
             var themeId = getThemeId(theme);
             var $container = $("#" + themeId  + "_container");
             var style = $("#list-view").hasClass("active") ? " list-group-item" : "";
 
             // show up to 6 posts
-            var postIDs = ECI.posts.theme[theme];
-            var posts = ECI.posts.engagements;
+            var postIDs = posts.theme[theme];
             var stockImg = getPluginPath("images");
             for (var p = startIndex; p < Math.min(postIDs.length, stopIndex); p++) {
                 var pId = postIDs[p];
 
-                if (ECI.posts.engagements.hasOwnProperty(pId)) {
-					var item = ECI.posts.engagements[pId];
+                if (posts.engagements.hasOwnProperty(pId)) {
+					var item = posts.engagements[pId];
 					item = {
 						title: item.title,
 						link: item.link,
@@ -1458,9 +1494,9 @@ jQuery(document).ready(function ($) {
 					var $item = addItem(item, pId, style, false);
 
 					$item.on("click", function( e ){
-						var post_id = $(this).attr("data-id");
-						//retrievePostContentMeta( post_id );
-						loadSingleEngTemplate( post_id, true, theme );
+                        var post_id = $(this).attr("data-id");
+                        var post_theme = $(this).parent(".theme-container").attr("data-theme");
+                        loadSingleEngTemplate(post_id, post_theme );
 					});
 
                     $container.append($item);
@@ -1469,7 +1505,7 @@ jQuery(document).ready(function ($) {
 
             // if we have more posts, add a 'show more' icon
             if (postIDs.length > stopIndex) {
-                var $more = $("<h2 />", { "class": "text-center show-more", "data-id": stopIndex, "data-theme": theme})
+                var $more = $("<h2 />", { "class": "text-center show-more", "data-id": stopIndex})
                     .append(
                     $("<i />", { "class": "fa fa-chevron-circle-down icon fa-2x", "title": "Show more" })
                 );
@@ -1478,13 +1514,14 @@ jQuery(document).ready(function ($) {
                 $more.on("click", function (e) {
                     // get new index in integer to ensure load next 6 only, otherwise all remining posts are loaded.
                     var newIndex = parseInt($(this).attr("data-id"));
-                    var theme = $(this).attr("data-theme");
+                    var theme = $(this).parent(".theme-container").attr("data-theme");
                     $(this).remove();
-                    showEngGroup(newIndex, theme);
+                    showPostsByTheme(newIndex, theme, posts);
                 });
                 $container.append($more);
             }
         }
+
         /**
          * Add an item (a post or datasheet) to output
          * @param {any} item - The item property: link, image, title
@@ -1512,6 +1549,14 @@ jQuery(document).ready(function ($) {
             return $item;
         }
 
+        function searchTerm() {
+            return $("#eci-search").val().trim();
+        }
+
+        /**
+         * Get the URL path of a directory in current plugin
+         * @param {any} dir - The name of the directory
+         */
         function getPluginPath(dir) {
             return $("#plugin-file-path").val() + dir + "/";
         }
@@ -1520,11 +1565,12 @@ jQuery(document).ready(function ($) {
          * Set display state of filter, engagement, chart containers.
          */
         function setContainerState() {
+            var postObj = getPostObject();
             var hasGeog = (ECI.geoid.length > 0);
-            var hasPosts = hasGeog && !$.isEmptyObject(ECI.posts.theme);
+            var hasPosts = hasGeog && !$.isEmptyObject(postObj.theme) || !hasGeog;
             $("#style-container").toggle(hasPosts);
-            $("#engage-list").toggle(hasPosts);
-            $("#impact-container").toggle(hasGeog && ECI.igeog !== 1);
+            //$("#engage-list").toggle(hasPosts);
+            $("#impact-container").toggle(!hasGeog || ECI.igeog !== 1);
 
             var hasChart = !hasGeog || hasPosts;
             $("#chart-container").toggle(hasChart);
@@ -1539,9 +1585,55 @@ jQuery(document).ready(function ($) {
         }
 
         /**
+         * Scroll page to an element 
+         * @param {any} id - The id of the element
+         */
+        function scrollTo(id) {
+            var target = $("#" + id);
+            if (target.length) {
+                $('html,body').animate({
+                    scrollTop: target.offset().top - 160
+                }, 1000);
+                return false;
+            }
+        }
+
+        /**
          * Initialize all collapsible fieldsets.
          */
+
         function collapsible() {
+            var settings = {
+                collapsed: false,
+                animation: true,
+                speed: "medium"
+            };
+
+            $("div.collapsible-section").each(function () {
+                var $section = $(this);
+                var $title = $section.find(".collapsible-section-title");
+                var isCollapsed = $section.hasClass("collapsed");
+
+                $title.click(function () {
+                    collapse($section, settings, !isCollapsed);
+                    isCollapsed = !isCollapsed;
+
+                    // update icon in legend
+                    $(this).find("i")
+                        .toggleClass("fa-chevron-down", isCollapsed)
+                        .toggleClass("fa-chevron-up", !isCollapsed);
+                });
+
+                // Perform initial collapse. Don't use animation to close for initial collapse.
+                if (isCollapsed) {
+                    collapse($section, { animation: false }, isCollapsed);
+                } else {
+                    collapse($section, settings, isCollapsed);
+                }
+            });
+        };
+
+        function collapsible_bak() {
             var settings = {
                 collapsed: false,
                 animation: true,
@@ -1574,29 +1666,28 @@ jQuery(document).ready(function ($) {
         };
 
         /**
-         * Collapse/uncollapse the specified fieldset.
-         * @param {object} $fieldset
+         * Collapse/uncollapse the specified section.
+         * @param {object} $section
          * @param {object} options
          * @param {boolean} collapse
          */
-        function collapse($fieldset, options, doCollapse) {
-            $container = $fieldset.find("div");
+        function collapse($section, options, doCollapse) {
+            $container = $section.find("div.expand-view");
             if (doCollapse) {
                 if (options.animation) {
                     $container.slideUp(options.speed);
                 } else {
                     $container.hide();
                 }
-                $fieldset.removeClass("expanded").addClass("collapsed");
+                $section.removeClass("expanded").addClass("collapsed");
             } else {
                 if (options.animation) {
                     $container.slideDown(options.speed);
                 } else {
                     $container.show();
                 }
-                $fieldset.removeClass("collapsed").addClass("expanded");
+                $section.removeClass("collapsed").addClass("expanded");
             }
-
         };
 
         /**

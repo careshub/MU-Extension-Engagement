@@ -19,8 +19,6 @@
 			otherRegionListener( this );
 		});
 	});
-		
-		
 	
 	// Set toggle indicators and add ARIA attributes on page load.
 	$( "#page .toggle-container" ).each( function( i, item ){
