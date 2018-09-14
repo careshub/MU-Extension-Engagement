@@ -12,7 +12,7 @@ jQuery(document).ready(function ($) {
         map: 'impact-map',
         cssGeog: '.ecpp-geog',
         selectcssGeogID: 'filters-container-regions',
-        agsService: 'https://gis3.cares.missouri.edu/arcgis/rest/services/Boundary/Current_MO/MapServer',
+        agsService: 'https://gis3.cares.missouri.edu/arcgis/rest/services/Boundary/Current_MO2/MapServer',
         filterGeog: '#filter-geography',
         filters: ["theme", "type", "affiliation"],
         igeog: 0,
@@ -37,7 +37,8 @@ jQuery(document).ready(function ($) {
             geo_key: "500",
             layer_ids: [40, 41],
             select_ids: [42, 43]
-        }]
+            }],
+        layers: {}
     };
 
     /**
@@ -84,8 +85,6 @@ jQuery(document).ready(function ($) {
     * START
     */
     if ($('#' + ECI.map).length) {
-        var layerSelect, layerECI, legendECI;
-
         // initialize the map
         map = L.map(ECI.map, {
             attributionControl: false,
@@ -124,6 +123,9 @@ jQuery(document).ready(function ($) {
 
         // add ECI density, boundary and reference map layers
         addMapLayers();
+
+        // iniatialize the left filter panel
+        initFilterPanel();
 
         // geocode service
         var geocoder = L.esri.Geocoding.geocodeService();
@@ -183,7 +185,7 @@ jQuery(document).ready(function ($) {
 
             var geoid = $(this).val();
             if (geoid !== "" && $.inArray(geoid, ECI.geoid) === -1) {
-                layerSelect.query()             // merge with queryFeature() function???
+                ECI.layers["select"].query()             // merge with queryFeature() function???
                     .layer(ECI.geog[ECI.igeog].select_ids[0])
                     .within(ECI.bounds)
                     .where("GEOID = '" + geoid + "'")
@@ -265,14 +267,15 @@ jQuery(document).ready(function ($) {
                         ECI.geoid = [];
 
                         // change data layers to display
-                        showDensityMap();
+                        addBoundaryLayer();
 
                         // show summary data in filters and charts
                         getEngagements();
+                        getECICount();
 
                         // remove all selections
-                        layerSelect.setLayerDefs(resetSelection());
-                        layerSelect.setLayers(v.select_ids);
+                        ECI.layers["select"].setLayerDefs(resetSelection());
+                        ECI.layers["select"].setLayers(v.select_ids);
 
                         // remove existing selection listing
                         populateGeographyList();
@@ -283,49 +286,199 @@ jQuery(document).ready(function ($) {
             });
         }
 
+
+        /**
+         * Adds or updates the layer used to show the boundaries for the currently selected geography.
+         */
+        function addBoundaryLayer() {
+            var layerIds = ECI.geog[ECI.igeog].layer_ids;
+
+            if (ECI.layers["boundary"]) {
+                ECI.layers["boundary"].setLayers(layerIds);
+            } else {
+                // add the boundary's selection layer
+                ECI.layers["boundary"] = L.esri.dynamicMapLayer({
+                    url: ECI.agsService,
+                    layers: layerIds,
+                    format: "png32",
+                    opacity: 1,
+                    position: 'back'
+                }).addTo(map);
+            }
+        }
+
+        /**
+         * Adds or updates the layer used to show the outline of the currently selected geography.
+         */
+        function addSelectLayer() {
+            var selectIds = ECI.geog[ECI.igeog].select_ids;
+            var def = resetSelection();
+
+            if (ECI.layers["select"]) {
+                ECI.layers["select"].setLayerDefs(def);
+                ECI.layers["select"].setLayers(selectIds);
+            } else {
+                // add the boundary's selection layer
+                ECI.layers["select"] = L.esri.dynamicMapLayer({
+                    url: ECI.agsService,
+                    layers: selectIds,
+                    layerDefs: def,
+                    format: "png32",
+                    opacity: 1,
+                    position: 'front'
+                }).addTo(map);
+            }
+        }
+
+        /**
+         * Add an asset map layer
+         * @param {any} param
+         */
+        function addAssetLayer(param) {
+            var layerId = param.id;
+
+            api("get", "api-data/v1/mom/ECI/" + layerId, null, function (data) {
+                if ($.isArray(data)) {
+                    ECI.assets[layerId] = {
+                        features: data,
+                        icon: param.icon
+                    };
+                    return;
+                } else {
+                    ECI.layers[layerId] = L.esri.dynamicMapLayer({
+                        url: data.service,
+                        opacity: 0,                 // not displayed
+                        format: data.format,
+                        layers: data.layer_ids,
+                        token: data.token,
+                        useCors: true
+                    }).addTo(map);
+
+                    if (param.legend) {
+                        var url = data.service + '/legend?token=' + data.token + '&f=json&callback=?';
+                        $.getJSON(url, function (legendJson) {
+                            console.log('legend', legendJson);
+                            var imgUrl = data.service + '/' + data.layer_ids[0] + '/images/';
+                            var $legend = $(".mom-data[data-id='" + layerId + "']");
+
+                            $.each(legendJson.layers, function (i, v) {
+                                if (v.layerId === data.layer_ids[0]) {
+                                    // found the layer
+                                    if (v.legend.length === 1) {
+                                        // single symbol - insert between checkbox and name
+                                        $legend.find("label").find("input").after(
+                                            $("<img />", { "src": imgUrl + v.legend[0].url + '?token=' + data.token })
+                                        );
+                                    } else {
+                                        // multiple symbols - add below name
+                                        $.each(v.legend, function (j, w) {
+                                            $legend.append(
+                                                $("<div />")
+                                                    .append($("<img />", { "src": imgUrl + w.url + '?token=' + data.token, "class": "mr-1" }))
+                                                    .append(w.label)
+                                            );
+                                        });
+                                    }
+                                    return false;
+                                }
+                            });
+                        });
+                    }
+                }
+            });
+        }
+
+        /**
+         * Add a GeoJSON layer
+         * @param {any} id
+         */
+        function addGeoJsonLayer(id) {
+            var features = ECI.assets[id].features;
+
+            if (features && features.length > 0) {
+                // add a new GeoJSON map layer
+                var clickHandler = $.noop;
+
+                switch (features[0].geometry.type) {
+                    case "Point":
+                        if (!ECI.clusterGroup) {
+                            ECI.clusterGroup = L.markerClusterGroup({
+                                showCoverageOnHover: false,
+                                maxClusterRadius: 30
+                            });
+                            map.addLayer(ECI.clusterGroup);
+                        }
+
+                        // points are handled differently than polylines and polygones - drawn as simple markers by default.
+                        var markerIcon = L.icon(ECI.assets[id].icon);
+                        var markerLayer = L.geoJSON(features, {
+                            pointToLayer: function (feature, latlng) {
+                                return L.marker(latlng, { icon: markerIcon });
+                            },
+                            onEachFeature: clickHandler
+                        });
+
+                        ECI.clusterGroup.addLayer(markerLayer);
+                        ECI.layers[id] = markerLayer;
+                        break;
+                    default:
+                        // polyline or polygon features, and store handle in MOM object
+                        ECI.layers[id] = L.geoJSON(features, {
+                            style: function (feature) {
+                                return {
+                                    "color": feature.properties._color,
+                                    "opacity": 0.65,
+                                    "weight": 1.5
+                                };
+                            },
+                            onEachFeature: clickHandler
+                        }).addTo(map);
+                        break;
+                }
+            }
+        }
+
         /**
          * Add map layers as a base layer and selection layer to the map
          */
         function addMapLayers() {
-
-            // get all geography button texts
-            $(ECI.cssGeog).each(function (i, v) {
-                ECI.geog[i].layer_name = $.trim($(v).html());
-
-                // populate geography pull-down list
-                $("#" + ECI.selectcssGeogID).append(
-                    //$("<option />", { text: ECI.geog[i].layer_name, value: i})
-                    $("<li />", {"class": "list-group-item", "data-id": i}).append(ECI.geog[i].layer_name)
-                );
-            });
-            //$("#" + ECI.selectcssGeogID).val(ECI.igeog);
-            $("#" + ECI.selectcssGeogID).find("li[data-id='" + ECI.igeog + "']").addClass("active");
-
-            // add ECI density map
-            showDensityMap();
-
-            // show statewide summary
-            getEngagements();
-
-            // add the boundary's selection layer
-            layerSelect = L.esri.dynamicMapLayer({
-                url: ECI.agsService,
-                layers: ECI.geog[ECI.igeog].select_ids,
-                layerDefs: resetSelection(),
-                format: "png32",
-                opacity: 1,
-                position: 'front'
-            }).addTo(map);
+            // add boundary layers
+            addBoundaryLayer();
 
             // add a reference layer, only available 0-13 zoom levels. Move to shadowPane so it's on the top
-            var refLayer = L.esri.tiledMapLayer({
-                url: 'https://server.arcgisonline.com/arcgis/rest/services/Reference/World_Reference_Overlay/MapServer',
-                maxZoom: 13
-            }).addTo(map);
-            map.getPanes().shadowPane.appendChild(refLayer.getContainer());
+            //var refLayer = L.esri.tiledMapLayer({
+            //    url: 'https://server.arcgisonline.com/arcgis/rest/services/Reference/World_Reference_Overlay/MapServer',
+            //    maxZoom: 13
+            //}).addTo(map);
+            //map.getPanes().shadowPane.appendChild(refLayer.getContainer());
 
-            // populate geography list
-            populateGeographyList();
+            // add reference layers
+            api("get", "api-map/v1/layers/ECI", null, function (response) {
+                console.log('ref', response);
+
+                $.each(response.map_layers, function (i, v) {
+                    L.esri.dynamicMapLayer({
+                        url: v.service,
+                        layers: v.layer_ids,
+                        format: v.format,
+                        opacity: v.opacity,
+                        token: response.tokens[2].token
+                    }).addTo(map);
+                });
+
+                addSelectLayer();
+            });
+
+            // add asset map layers
+            api("get", "api-data/v1/mom/ECI", null, function (response) {
+                console.log('assets', response);
+
+                addLegend(response.data);
+                ECI.assets = {};
+                $.each(response.data, function (i, v) {
+                    addAssetLayer(v, false);
+                });
+            });
         }
 
         /**
@@ -341,6 +494,116 @@ jQuery(document).ready(function ($) {
                 }
             });
             return def;
+        }
+
+        /**
+         * 
+         * @param {any} assets
+         */
+        function addLegend(assets) {
+            // check if we have any layers to be displayed on legend
+            var legAssets = $.grep(assets, function (v) { return v.legend; });
+
+            if (legAssets.length == 0) return;
+
+            // start build legend
+            var legend = L.control({ position: 'bottomright' });
+            legend.onAdd = function (map) {
+                var content = "";
+
+                // add all data layers to the legend control
+                content += "<nav id='mom-legend-content' class='mt-4'>";
+                var id;
+                for (var i = 0; i < legAssets.length; i++) {
+                    // add legend
+                    var layerLegend = legAssets[i].name;
+                    if (legAssets[i].icon) {
+                        layerLegend = "<img src='" + legAssets[i].icon.iconUrl + "' /> " + layerLegend;
+                    }
+
+                    layerLegend = "<div class='mom-data' data-id='" + legAssets[i].id + "'>" +
+                        "<label><input type='checkbox' value=" + legAssets[i].id + " /> " +
+                        layerLegend + "</label></div>";
+
+                    content += layerLegend;
+                }
+
+                // display the legend
+                content += "</nav>";
+
+                var div = L.DomUtil.create('div', 'info legend');
+                div.innerHTML = "<div id='mom-legend'>" + content + "</div>";
+
+                return div;
+            };
+            legend.addTo(map);
+
+            // Disable map navigation when user's cursor enters the legend
+            legend.getContainer().addEventListener('mouseover', function () {
+                map.dragging.disable();
+                map.touchZoom.disable();
+                map.doubleClickZoom.disable();
+                map.boxZoom.disable();
+            });
+
+            // Re-enable map navigation when user's cursor leaves the legend
+            legend.getContainer().addEventListener('mouseout', function () {
+                map.dragging.enable();
+                map.touchZoom.enable();
+                map.doubleClickZoom.enable();
+                map.boxZoom.enable();
+            });
+
+            $("#mom-legend nav").css({ "maxHeight": ($("#" + ECI.map).height() - 75) + "px" });
+
+            // add filter event handler when a checkbox is clicked
+            $("#mom-legend").find("input").each(function () {
+                $(this).on("click", function () {
+                    var layerId = $(this).val();
+
+                    if (ECI.assets[layerId]) {          // GeoJSON layer
+                        if (ECI.clusterGroup) ECI.clusterGroup.clearLayers();
+
+                        // all all checked assert layers
+                        $(".mom-data input:checked").each(function () {
+                            console.log('asset', this.value);
+                            addGeoJsonLayer(this.value);
+                        });
+                    } else {
+                        var op = this.checked ? 1 : 0;
+                        ECI.layers[layerId].setOpacity(op);
+                    }
+                });
+            });
+
+            $("#mom-legend").parent().on("click", function (e) {
+                e.stopPropagation();
+            });
+        }
+
+        /**
+         * Show filter options on the left filter panel
+         */
+        function initFilterPanel() {
+            // get all geography button texts and list them on the filter panel
+            $(ECI.cssGeog).each(function (i, v) {
+                ECI.geog[i].layer_name = $.trim($(v).html());
+
+                // show geography types on the filter panel as list
+                $("#" + ECI.selectcssGeogID).append(
+                    $("<li />", { "class": "list-group-item", "data-id": i }).append(ECI.geog[i].layer_name)
+                );
+            });
+            $("#" + ECI.selectcssGeogID).find("li[data-id='" + ECI.igeog + "']").addClass("active");
+
+            // show statewide summary
+            getEngagements();
+
+            // get counts of engagements for each geographic unit
+            getECICount();
+
+            // populate geography list of current geography type
+            populateGeographyList();
         }
 
         /**
@@ -371,7 +634,7 @@ jQuery(document).ready(function ($) {
          */
         function selectFeature(latLng) {
             // get census tract number
-            layerSelect.identify()
+            ECI.layers["select"].identify()
                 .at(latLng)
                 .on(map)
                 .layers("visible:" + ECI.geog[ECI.igeog].select_ids.join(","))
@@ -492,8 +755,8 @@ jQuery(document).ready(function ($) {
             });
 
             // if selection layer has been added to map, show selection
-            if (layerSelect) {
-                layerSelect.setLayerDefs(def);
+            if (ECI.layers["select"]) {
+                ECI.layers["select"].setLayerDefs(def);
 
                 // expand bounds to include the selection, and zoom to new bounds
                 if (featureCollection) {
@@ -582,188 +845,13 @@ jQuery(document).ready(function ($) {
         }
 
         /**
-         * Show statewide density map
+         *  Get total count of engagements for each geographic unit of current geography type
          */
-        function showDensityMap() {
-            // get the selected geography type
-            //var geoKey = $('input[name="map-geog"]:checked').val();
-
-            if (layerECI) {
-                layerECI.remove();
-                legendECI.remove();
-            }
-
-            // get GeoJSON for the geography
-            queryFeatures(ECI.geog[ECI.igeog].layer_ids[1], null, function (featureCollection) {
-                if (featureCollection && featureCollection.features.length) {
-                    // get ECI item counts for the features
-                    api("get", "api-extension/v1/eci-counts/" + ECI.geog[ECI.igeog].geo_key, null, function (response) {
-                        ECI.count = response;
-
-                        // set up colors for map
-                        if (!ECI.colors) {
-                            // set color ramp ends
-                            ECI.colors = {
-                                "ramp": [[98, 8, 82], [209, 186, 208]], //[[107, 0, 0], [255,239,204]], //[[128, 0, 38], [255, 237, 160]],
-                                "grades": []
-                            };
-                            getClassification();
-
-                            // interpolate color ramp so we'll have a color for each grade
-                            var numColors = ECI.colors.grades.length - 1;
-                            var colorStart = ECI.colors.ramp[0];
-                            var colorEnd = ECI.colors.ramp[1];
-
-                            for (var i = 1; i < numColors; i++) {
-                                var rgb = [];
-
-                                // loop through RGB
-                                for (var j = 0; j < colorStart.length; j++) {
-                                    var c = colorStart[j] + i / numColors * (colorEnd[j] - colorStart[j]);
-                                    rgb.push(Math.round(c));
-                                }
-
-                                ECI.colors.ramp.splice(i, 0, rgb);
-                            }
-
-                            // convert corlor from [r, g, b] to RGB(r, g, b)
-                            ECI.colors.ramp = $.map(ECI.colors.ramp, function (v) {
-                                return "RGB(" + v.join(",") + ")"
-                            });
-                        } else {
-                            // update classification breaks
-                            getClassification();
-                        }
-
-                        // add 'count' property to each feature in featureCollection
-                        $.each(featureCollection.features, function (idx, feature) {
-                            var geoId = feature.properties["GEOID"] || feature.properties["GeoID"];
-                            feature.properties.count = response[geoId];
-                        });
-
-                        // sort featrues by counts so those with higher counts are added to map later and boundaries shaded darker
-                        featureCollection.features.sort(function (a, b) {
-                            if (a.properties.count < b.properties.count) return -1;
-                            if (a.properties.count > b.properties.count) return 1;
-                            return 0;
-                        });
-
-                        var shadeStyle = function (feature) {
-                            var color = getColor(feature.properties.count);
-                            return {
-                                fillColor: color,
-                                fillOpacity: 0.7,
-                                weight: 1,
-                                color: color,
-                                opacity: 1
-                            };
-                        };
-
-                        layerECI = L.geoJSON(featureCollection, {
-                            style: shadeStyle
-                        }).addTo(map);
-
-                        // add a custom legend control
-                        legendECI = L.control({ position: 'bottomleft' });
-                        legendECI.onAdd = function (map) {
-                            var div = L.DomUtil.create('div', 'info legend');
-
-                            // loop through our density intervals and generate a label with a colored square for each interval
-                            var grades = ECI.colors.grades;
-                            for (var i = 0; i < grades.length; i++) {
-                                // get color for this grade
-                                div.innerHTML += '<i style="background:' + getColor(grades[i] + 1) + '"></i>';
-
-                                var label = (grades[i] == grades[i + 1] - 1) ? grades[i + 1] + '</span><br>' :
-                                    (grades[i] + 1) + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '</span><br>' : '+</span>');
-
-                                div.innerHTML += '<span>' + label;
-                            }
-
-                            return div;
-                        };
-
-                        legendECI.addTo(map);
-                    });
-                }
+        function getECICount() {
+            api("get", "api-extension/v1/eci-counts/" + ECI.geog[ECI.igeog].geo_key, null, function (response) {
+                console.log(response);
+                ECI.count = response;
             });
-        }
-
-        /**
-         * Classify the counts using 'Jenks' natural breaks
-         */
-        function getClassification() {
-            var series = [];
-            for (var g in ECI.count) {
-                series.push(ECI.count[g]);
-            }
-            var brew = new classyBrew();
-            brew.setSeries(series);
-            brew.setNumClasses(4);
-            var breaks = brew.classify();
-
-            ECI.colors.grades = [0];
-            for (var i = 0; i < breaks.length - 1; i++) {
-                ECI.colors.grades.push(breaks[i]);
-            }
-
-            //ECI.colors.grades = brew.classify();
-            //ECI.colors.grades.splice(0, 0, 0);      // add 0 as the first element
-            //ECI.colors.grades.splice(ECI.colors.grades.length - 1, 1);  // remove the last one
-        }
-
-        /**
-         * Get the color to shade a GeoJSON feature
-         * @param {any} d - The value of property 'count'
-         */
-        function getColor(d) {
-            var upper = ECI.colors.ramp.length - 1;
-            for (var i = upper; i >= 0; i--) {
-                if (d > ECI.colors.grades[i]) {
-                    return ECI.colors.ramp[upper - i];
-                }
-            }
-
-            return ECI.colors.ramp[upper];
-        }
-
-        /**
-         * Highlight a selected geographic feature on map
-         * @param {any} e - Map click event
-         */
-        function highlightFeature(e) {
-            var layer = e.target;
-
-            layer.setStyle({
-                weight: 2,
-                color: '#ff0000',
-            });
-
-            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                layer.bringToFront();
-            }
-        }
-
-        /**
-         * Zoom map to the extent of a clicked geographic feature
-         * @param {any} e - Map click event
-         */
-        function zoomToFeature(e) {
-            map.fitBounds(e.target.getBounds());
-        }
-
-        /**
-         * Event handler for map click on a GeoJSON feature --- delete???
-         * @param {any} feature
-         * @param {any} layer
-         */
-        function onEachFeature(feature, layer) {
-            if (feature.properties) {
-                var content = feature.properties["NAMELSAD"] || feature.properties["Name"];
-                var count = feature.properties["count"];
-                content = "<b>" + content + "</b>: " + count;
-                layer.bindPopup(content);
-            }
         }
 
         /**
@@ -816,7 +904,7 @@ jQuery(document).ready(function ($) {
             // get all engagements based on current geography selection
             if (hasGeog) {
                 // get a total count of all GEOIDs for current geography type
-                if (!ECI.count.geoid_count) {
+                if (ECI.count && !ECI.count.geoid_count) {
                     var ids = [];
                     for (var id in ECI.count) {
                         ids.push(id);
@@ -920,14 +1008,21 @@ jQuery(document).ready(function ($) {
             var postsPerPage = 100;
             postFilter.per_page = 100;
 
-            apiECI("muext_engagement", postFilter, function (response) {
+            apiECI("muext_engagement", postFilter, function (response, status, jqxhr) {
                 console.log(postFilter, response);
 
                 // update ECI filters' post ID lists
                 $.each(response, function (i, v) {
+                    // get post geography - local, regional, statewide
+                    var geog = "regional";
+                    if (v.muext_geoid.length == 1) {
+                        geog = (v.muext_geoid[0] === 445) ? "statewide" : "local";
+                    }
+
                     posts.engagements[v.id] = {
                         "title": v.title.rendered,
                         "link": v.link,
+                        "geog": geog,
                         "image": v.eng_featured_image
                     };
 
@@ -939,7 +1034,7 @@ jQuery(document).ready(function ($) {
                     }
                 });
 
-                if (response.length < postsPerPage) {
+                if (response.length < postsPerPage || jqxhr.getResponseHeader("X-WP-Total") == postFilter.page * postsPerPage) {
                     // got all posts
                     //if (!postFilter["filter[muext_geoid]"]  && !postFilter.search && !ECI.loadComplete) {
                     //    ECI.loadComplete = true;
@@ -1485,11 +1580,13 @@ jQuery(document).ready(function ($) {
                 var pId = postIDs[p];
 
                 if (posts.engagements.hasOwnProperty(pId)) {
-					var item = posts.engagements[pId];
+                    var item = posts.engagements[pId];
+
 					item = {
 						title: item.title,
 						link: item.link,
-						image: item.image || stockImg + themeId + ".jpg"
+                        image: item.image || stockImg + themeId + (Math.floor(Math.random() * 6) + 1) + ".jpg",
+                        geog: item.geog
 					};
 					var $item = addItem(item, pId, style, false);
 
@@ -1528,6 +1625,12 @@ jQuery(document).ready(function ($) {
          * @param {any} style - The display style
          */
         function addItem(item, dataId, style, linked) {
+            var geogIcon = {
+                "local": "fa-map-marker",
+                "regional": "fa-map-o",
+                "statewide": "fa-globe"
+            }
+
             var $item = $("<div />", {
                 "class": "single-engagement col-xs-12 col-lg-4 col-md-6 col-sm-6" + style,
                 "data-id": dataId
@@ -1538,13 +1641,24 @@ jQuery(document).ready(function ($) {
                     $("<div />", { "style": "background-image: url(" + item.image + ")", "class": "img-container" })
                     )
                     .append(
-                    $("<div />", { "class": "row" }).append($("<div />", { "class": "text-below col-xs-12" }).append(
-                        $("<h3 />").append(item.title)
-                    ))
+                    $("<div />", { "class": "row" })
+                        .append(
+                        $("<div />", { "class": "text-below col-xs-12" })
+                            .append($("<h3 />").append(item.title))
+                        )
                     )
                 );
 
-            if (linked) $item = $("<a />", { "href": item.link, "target": "_blank" }).append($item);
+            if (linked) {
+                // impact card
+                $item = $("<a />", { "href": item.link, "target": "_blank" }).append($item);
+            } else {
+                // engage card
+                $item.find(".row").append($("<div />", { "class": "geog" })
+                    .append($("<i />", { "class": "fa fa-map-marker" }))
+                    .append(item.geog)
+                );
+            }
 
             return $item;
         }
@@ -1710,171 +1824,3 @@ jQuery(document).ready(function ($) {
         }
     }
 });
-
-/**
-* Generate Jenks Natural Breaks, modified from 'classybrew' github repository
-* https://github.com/tannerjt/classybrew
-*/
-(function () {
-
-    var classyBrew = (function () {
-
-        return function () {
-            this.series = undefined;
-            this.numClasses = null;
-            this.breaks = undefined;
-            this.range = undefined;
-            this.statMethod = undefined;
-           
-            // define array of values
-            this.setSeries = function (seriesArr) {
-                this.series = Array();
-                this.series = seriesArr;
-                this.series = this.series.sort(function (a, b) { return a - b });
-            };
-
-            // set number of classes
-            this.setNumClasses = function (n) {
-                this.numClasses = n;
-            };
-
-            /**** Classification Methods ****/
-            this._classifyJenks = function () {
-                var mat1 = [];
-                for (var x = 0, xl = this.series.length + 1; x < xl; x++) {
-                    var temp = []
-                    for (var j = 0, jl = this.numClasses + 1; j < jl; j++) {
-                        temp.push(0)
-                    }
-                    mat1.push(temp)
-                }
-
-                var mat2 = []
-                for (var i = 0, il = this.series.length + 1; i < il; i++) {
-                    var temp2 = []
-                    for (var c = 0, cl = this.numClasses + 1; c < cl; c++) {
-                        temp2.push(0)
-                    }
-                    mat2.push(temp2)
-                }
-
-                for (var y = 1, yl = this.numClasses + 1; y < yl; y++) {
-                    mat1[0][y] = 1
-                    mat2[0][y] = 0
-                    for (var t = 1, tl = this.series.length + 1; t < tl; t++) {
-                        mat2[t][y] = Infinity
-                    }
-                    var v = 0.0
-                }
-
-                for (var l = 2, ll = this.series.length + 1; l < ll; l++) {
-                    var s1 = 0.0
-                    var s2 = 0.0
-                    var w = 0.0
-                    for (var m = 1, ml = l + 1; m < ml; m++) {
-                        var i3 = l - m + 1
-                        var val = parseFloat(this.series[i3 - 1])
-                        s2 += val * val
-                        s1 += val
-                        w += 1
-                        v = s2 - (s1 * s1) / w
-                        var i4 = i3 - 1
-                        if (i4 != 0) {
-                            for (var p = 2, pl = this.numClasses + 1; p < pl; p++) {
-                                if (mat2[l][p] >= (v + mat2[i4][p - 1])) {
-                                    mat1[l][p] = i3
-                                    mat2[l][p] = v + mat2[i4][p - 1]
-                                }
-                            }
-                        }
-                    }
-                    mat1[l][1] = 1
-                    mat2[l][1] = v
-                }
-
-                var k = this.series.length
-                var kclass = []
-
-                for (i = 0, il = this.numClasses + 1; i < il; i++) {
-                    kclass.push(0)
-                }
-
-                kclass[this.numClasses] = parseFloat(this.series[this.series.length - 1])
-
-                kclass[0] = parseFloat(this.series[0])
-                var countNum = this.numClasses
-                while (countNum >= 2) {
-                    var id = parseInt((mat1[k][countNum]) - 2)
-                    kclass[countNum - 1] = this.series[id]
-                    k = parseInt((mat1[k][countNum] - 1))
-
-                    countNum -= 1
-                }
-
-                if (kclass[0] == kclass[1]) {
-                    kclass[0] = 0
-                }
-
-                this.range = kclass;
-                this.range.sort(function (a, b) { return a - b })
-
-                return this.range; //array of breaks
-            };
-
-            /**** End classification methods ****/
-
-            // return array of natural breaks
-            this.classify = function (method, classes) {
-                this.statMethod = (method !== undefined) ? method : this.statMethod;
-                this.numClasses = (classes !== undefined) ? classes : this.numClasses;
-                var breaks = this._classifyJenks();
-                this.breaks = breaks;
-                return breaks;
-            };
-
-            this.getBreaks = function () {
-                // always re-classify to account for new data
-                return this.breaks ? this.breaks : this.classify();
-            };
-
-            /*** Simple Math Functions ***/
-            this._mean = function (arr) {
-                return parseFloat(this._sum(arr) / arr.length);
-            };
-
-            this._sum = function (arr) {
-                var sum = 0;
-                var i;
-                for (i = 0; i < arr.length; i++) {
-                    sum += arr[i];
-                }
-                return sum;
-            };
-
-            this._variance = function (arr) {
-                var tmp = 0;
-                for (var i = 0; i < arr.length; i++) {
-                    tmp += Math.pow((arr[i] - this._mean(arr)), 2);
-                }
-
-                return (tmp / arr.length);
-            };
-
-            this._stdDev = function (arr) {
-                return Math.sqrt(this._variance(arr));
-            };
-
-            /*** END Simple math Functions ***/
-        }
-
-
-    })();
-
-    // support node module and browser
-    if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-        module.exports = classyBrew;
-    } else {
-        window.classyBrew = classyBrew;
-    }
-
-})();

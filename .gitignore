@@ -6,3 +6,5 @@ working/Ext_Data_For_Import.csv
 **/.DS_Store
 *.pubxml
 *.publishproj
+public/js/eci_main - Copy.js
+public/js/eci_main - Copy.min.js

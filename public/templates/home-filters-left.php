@@ -62,7 +62,6 @@
 			</div>
 			</div>
 
-			<?php if( is_user_logged_in() ) { ?>
 			<div class="collapsible-section">
 			<div class="collapsible-section-title">
 			<i class="fa pull-right fa-chevron-up"></i>
@@ -73,7 +72,6 @@
 			</ul>
 			</div>
 			</div>
-			<?php } ?>
 
 			<div class="collapsible-section">
 			<div class="collapsible-section-title">
