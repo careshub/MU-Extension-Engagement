@@ -65,7 +65,7 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 		<div class="row">
 			<?php if( get_the_post_thumbnail() != "" ){ ?>
 				<div class="thumbnail col-xs-3">
-					<?php the_post_thumbnail(); ?>
+					<?php the_post_thumbnail('medium'); ?>
 				</div>
 				<?php 
 				$inner_class = 'col-xs-9'; 

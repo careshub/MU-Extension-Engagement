@@ -17,27 +17,28 @@
 <link rel="profile" href="http://gmpg.org/xfn/11">
 
 <?php wp_head(); ?>
+
 </head>
 
 <body <?php body_class(); ?>>
 <div id="page" class="site">
 	<a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'twentyseventeen' ); ?></a>
 
-	
+
 
 <header id="engagement-council-header" class="banner headerclass eci-header" itemscope itemtype="http://schema.org/WPHeader">
 
-	
+
 	<div id="topbar" class="topclass">
 
 		<?php if( current_user_can('edit_posts' ) && has_nav_menu( 'top-logged-in' ) ) { ?>
-		
+
 			<div class="navigation-top">
 				<div class="">
 					<?php get_template_part( 'template-parts/navigation/navigation', 'top-logged-in' ); ?>
 				</div><!-- .wrap -->
 			</div><!-- .navigation-top -->
-			
+
 		<?php
 		} else if ( has_nav_menu( 'top' ) ) { ?>
 			<div class="navigation-top">
@@ -51,10 +52,10 @@
 
 
 	<link href="https://fonts.googleapis.com/css?family=Lato|Libre+Franklin|Merriweather+Sans|Merriweather" rel="stylesheet">
-	
-	<?php 
+
+	<?php
 		$logocclass = 'col-xs-12';
-		$menulclass = 'hidden'; 
+		$menulclass = 'hidden';
 		?>
 	<div class="fullpage-container engagement-header hidden-xs">
 		<div class="row">
@@ -64,8 +65,8 @@
 						<div class="hamburger float-left">
 							<i class="fa fa-bars fa-3x"></i>
 						</div>
-						<a class="brand logofont " href="<?php echo home_url(); ?>/">				  
-						<?php 
+						<a class="brand logofont " href="<?php echo home_url(); ?>/">
+						<?php
 							echo "<img class='' src=" . ECPP_MU_LOGO_HEADER . " title='mu stacked logo' >";
 						?>
 						</a>
@@ -78,7 +79,7 @@
 		   </div><!-- close logo span -->
 		</div> <!-- Close Row -->
 	</div> <!-- Close Container -->
-	
+
 	<!-- small device header view -->
 	<div class="fullpage-container engagement-header-xs hidden-md hidden-lg hidden-sm">
 		<div class="row">
@@ -88,8 +89,8 @@
 						<div class="hamburger float-left">
 							<i class="fa fa-bars fa-3x"></i>
 						</div>
-						<a class="brand logofont " href="<?php echo home_url(); ?>/">				  
-						<?php 
+						<a class="brand logofont " href="<?php echo home_url(); ?>/">
+						<?php
 							echo "<img class='' src=" . ECPP_MU_LOGO_HEADER . " title='mu stacked logo' >";
 						?>
 						</a>
@@ -102,5 +103,5 @@
 		   </div><!-- close logo span -->
 		</div> <!-- Close Row -->
 	</div> <!-- Close Container -->
-	
+
 </header>

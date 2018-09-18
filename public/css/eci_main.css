@@ -311,13 +311,13 @@
 
 .single-engagement-card {
   width: 100%;
-  padding: 3em; }
+  padding: 1em 3em; }
   .single-engagement-card .entry-content {
-    margin-top: 2em; }
+    margin-top: 1em; display:flex; flex-wrap:wrap; }
   .single-engagement-card .engagement-meta {
     border: 1px solid #d6d6d6;
-    border-radius: 4px; }
-  .single-engagement-card a {
+    border-radius: 4px; flex-grow: 1; width:48%; margin: 0 1% 2%;}
+ .single-engagement-card .engagement-meta:last-child {  } .single-engagement-card .engagement-meta .inset-contents { height:auto; }  .single-engagement-card a {
     text-decoration: none; }
   .single-engagement-card span.external-link {
     -webkit-box-shadow: none;
@@ -326,16 +326,16 @@
     font-size: 16px; }
   .single-engagement-card .inner-card {
     background-color: white; }
-  .single-engagement-card img {
+  .single-engagement-card .thumbnail { text-align: center; }	.single-engagement-card img {
     border-radius: 4px;
     border: 1px solid #cccccc;
-    padding: 4px; }
+    padding: 4px; max-height: 180px; width:auto;}
 
 .modal-backdrop {
   opacity: 0.5 !important; }
 
 #single-engagement-modal .modal-dialog {
-  margin: 10% auto 0em; }
+  margin: 6% auto 0em; }
 
 #single-engagement-modal button {
   box-shadow: none; }
