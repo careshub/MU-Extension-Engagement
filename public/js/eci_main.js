@@ -9,12 +9,11 @@ jQuery(document).ready(function ($) {
     // see complete object definition:
     // https://docs.google.com/document/d/1RJRDP-tZLFzAeMUvd72Eig9QyoI7pM1XLYB7WHQa5X0/edit?usp=sharing
     var ECI = {
-        map: 'impact-map',
         cssGeog: '.ecpp-geog',
         selectcssGeogID: 'filters-container-regions',
         agsService: 'https://gis3.cares.missouri.edu/arcgis/rest/services/Boundary/Current_MO2/MapServer',
         filterGeog: '#filter-geography',
-        filters: ["theme", "type", "affiliation"],
+        filters: ["theme", "type", "affiliation", "location"],
         igeog: 0,
         geoid: [],
         geog: [{
@@ -84,24 +83,17 @@ jQuery(document).ready(function ($) {
     /**
     * START
     */
-    if ($('#' + ECI.map).length) {
-        // initialize the map
-        map = L.map(ECI.map, {
-            attributionControl: false,
-            minZoom: 7,
-            maxZoom: 13,
-            loadingControl: true,
-            scrollWheelZoom: false
-        }).setView([38.333, -92.34], 7);
-
-        // add ESRI's World Terrace Base basemap
-        L.esri.tiledMapLayer({
-            url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer"
-        }).addTo(map);
-
+    if (momAPI.LM && $('#' + momAPI.LM.mapId).length) {
+     
         // get the statewide map extent
-        ECI.bounds = map.getBounds();
-        map.setMaxBounds(ECI.bounds.pad(0.02));       // add 2% padding for popup
+        var map = momAPI.LM.map;
+        map.setView([38.333, -92.34], 7);
+        map.setMinZoom(7);
+        map.setMaxZoom(13);
+        setTimeout(function () {
+            ECI.bounds = map.getBounds();
+            map.setMaxBounds(ECI.bounds.pad(0.02));       // add 2% padding for popup
+        }, 2000);
 
         // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
@@ -121,8 +113,8 @@ jQuery(document).ready(function ($) {
         });
         map.addControl(new moZoomControl());
 
-        // add ECI density, boundary and reference map layers
-        addMapLayers();
+        addBoundaryLayer();
+        addSelectLayer();
 
         // iniatialize the left filter panel
         initFilterPanel();
@@ -164,6 +156,7 @@ jQuery(document).ready(function ($) {
         });
 
         // attach map click event handler
+        map.off("click");
         map.on('click', function (e) {
             if (ECI.popup) ECI.popup.remove();
             selectFeature(e.latlng);
@@ -185,7 +178,7 @@ jQuery(document).ready(function ($) {
 
             var geoid = $(this).val();
             if (geoid !== "" && $.inArray(geoid, ECI.geoid) === -1) {
-                ECI.layers["select"].query()             // merge with queryFeature() function???
+                ECI.layers.select.query()             // merge with queryFeature() function???
                     .layer(ECI.geog[ECI.igeog].select_ids[0])
                     .within(ECI.bounds)
                     .where("GEOID = '" + geoid + "'")
@@ -274,8 +267,8 @@ jQuery(document).ready(function ($) {
                         getECICount();
 
                         // remove all selections
-                        ECI.layers["select"].setLayerDefs(resetSelection());
-                        ECI.layers["select"].setLayers(v.select_ids);
+                        ECI.layers.select.setLayerDefs(resetSelection());
+                        ECI.layers.select.setLayers(v.select_ids);
 
                         // remove existing selection listing
                         populateGeographyList();
@@ -293,11 +286,11 @@ jQuery(document).ready(function ($) {
         function addBoundaryLayer() {
             var layerIds = ECI.geog[ECI.igeog].layer_ids;
 
-            if (ECI.layers["boundary"]) {
-                ECI.layers["boundary"].setLayers(layerIds);
+            if (ECI.layers.boundary) {
+                ECI.layers.boundary.setLayers(layerIds);
             } else {
                 // add the boundary's selection layer
-                ECI.layers["boundary"] = L.esri.dynamicMapLayer({
+                ECI.layers.boundary = L.esri.dynamicMapLayer({
                     url: ECI.agsService,
                     layers: layerIds,
                     format: "png32",
@@ -314,12 +307,12 @@ jQuery(document).ready(function ($) {
             var selectIds = ECI.geog[ECI.igeog].select_ids;
             var def = resetSelection();
 
-            if (ECI.layers["select"]) {
-                ECI.layers["select"].setLayerDefs(def);
-                ECI.layers["select"].setLayers(selectIds);
+            if (ECI.layers.select) {
+                ECI.layers.select.setLayerDefs(def);
+                ECI.layers.select.setLayers(selectIds);
             } else {
                 // add the boundary's selection layer
-                ECI.layers["select"] = L.esri.dynamicMapLayer({
+                ECI.layers.select = L.esri.dynamicMapLayer({
                     url: ECI.agsService,
                     layers: selectIds,
                     layerDefs: def,
@@ -328,157 +321,6 @@ jQuery(document).ready(function ($) {
                     position: 'front'
                 }).addTo(map);
             }
-        }
-
-        /**
-         * Add an asset map layer
-         * @param {any} param
-         */
-        function addAssetLayer(param) {
-            var layerId = param.id;
-
-            api("get", "api-data/v1/mom/ECI/" + layerId, null, function (data) {
-                if ($.isArray(data)) {
-                    ECI.assets[layerId] = {
-                        features: data,
-                        icon: param.icon
-                    };
-                    return;
-                } else {
-                    ECI.layers[layerId] = L.esri.dynamicMapLayer({
-                        url: data.service,
-                        opacity: 0,                 // not displayed
-                        format: data.format,
-                        layers: data.layer_ids,
-                        token: data.token,
-                        useCors: true
-                    }).addTo(map);
-
-                    if (param.legend) {
-                        var url = data.service + '/legend?token=' + data.token + '&f=json&callback=?';
-                        $.getJSON(url, function (legendJson) {
-                            console.log('legend', legendJson);
-                            var imgUrl = data.service + '/' + data.layer_ids[0] + '/images/';
-                            var $legend = $(".mom-data[data-id='" + layerId + "']");
-
-                            $.each(legendJson.layers, function (i, v) {
-                                if (v.layerId === data.layer_ids[0]) {
-                                    // found the layer
-                                    if (v.legend.length === 1) {
-                                        // single symbol - insert between checkbox and name
-                                        $legend.find("label").find("input").after(
-                                            $("<img />", { "src": imgUrl + v.legend[0].url + '?token=' + data.token })
-                                        );
-                                    } else {
-                                        // multiple symbols - add below name
-                                        $.each(v.legend, function (j, w) {
-                                            $legend.append(
-                                                $("<div />")
-                                                    .append($("<img />", { "src": imgUrl + w.url + '?token=' + data.token, "class": "mr-1" }))
-                                                    .append(w.label)
-                                            );
-                                        });
-                                    }
-                                    return false;
-                                }
-                            });
-                        });
-                    }
-                }
-            });
-        }
-
-        /**
-         * Add a GeoJSON layer
-         * @param {any} id
-         */
-        function addGeoJsonLayer(id) {
-            var features = ECI.assets[id].features;
-
-            if (features && features.length > 0) {
-                // add a new GeoJSON map layer
-                var clickHandler = $.noop;
-
-                switch (features[0].geometry.type) {
-                    case "Point":
-                        if (!ECI.clusterGroup) {
-                            ECI.clusterGroup = L.markerClusterGroup({
-                                showCoverageOnHover: false,
-                                maxClusterRadius: 30
-                            });
-                            map.addLayer(ECI.clusterGroup);
-                        }
-
-                        // points are handled differently than polylines and polygones - drawn as simple markers by default.
-                        var markerIcon = L.icon(ECI.assets[id].icon);
-                        var markerLayer = L.geoJSON(features, {
-                            pointToLayer: function (feature, latlng) {
-                                return L.marker(latlng, { icon: markerIcon });
-                            },
-                            onEachFeature: clickHandler
-                        });
-
-                        ECI.clusterGroup.addLayer(markerLayer);
-                        ECI.layers[id] = markerLayer;
-                        break;
-                    default:
-                        // polyline or polygon features, and store handle in MOM object
-                        ECI.layers[id] = L.geoJSON(features, {
-                            style: function (feature) {
-                                return {
-                                    "color": feature.properties._color,
-                                    "opacity": 0.65,
-                                    "weight": 1.5
-                                };
-                            },
-                            onEachFeature: clickHandler
-                        }).addTo(map);
-                        break;
-                }
-            }
-        }
-
-        /**
-         * Add map layers as a base layer and selection layer to the map
-         */
-        function addMapLayers() {
-            // add boundary layers
-            addBoundaryLayer();
-
-            // add a reference layer, only available 0-13 zoom levels. Move to shadowPane so it's on the top
-            //var refLayer = L.esri.tiledMapLayer({
-            //    url: 'https://server.arcgisonline.com/arcgis/rest/services/Reference/World_Reference_Overlay/MapServer',
-            //    maxZoom: 13
-            //}).addTo(map);
-            //map.getPanes().shadowPane.appendChild(refLayer.getContainer());
-
-            // add reference layers
-            api("get", "api-map/v1/layers/ECI", null, function (response) {
-                console.log('ref', response);
-
-                $.each(response.map_layers, function (i, v) {
-                    L.esri.dynamicMapLayer({
-                        url: v.service,
-                        layers: v.layer_ids,
-                        format: v.format,
-                        opacity: v.opacity,
-                        token: response.tokens[2].token
-                    }).addTo(map);
-                });
-
-                addSelectLayer();
-            });
-
-            // add asset map layers
-            api("get", "api-data/v1/mom/ECI", null, function (response) {
-                console.log('assets', response);
-
-                addLegend(response.data);
-                ECI.assets = {};
-                $.each(response.data, function (i, v) {
-                    addAssetLayer(v, false);
-                });
-            });
         }
 
         /**
@@ -494,91 +336,6 @@ jQuery(document).ready(function ($) {
                 }
             });
             return def;
-        }
-
-        /**
-         * 
-         * @param {any} assets
-         */
-        function addLegend(assets) {
-            // check if we have any layers to be displayed on legend
-            var legAssets = $.grep(assets, function (v) { return v.legend; });
-
-            if (legAssets.length == 0) return;
-
-            // start build legend
-            var legend = L.control({ position: 'bottomright' });
-            legend.onAdd = function (map) {
-                var content = "";
-
-                // add all data layers to the legend control
-                content += "<nav id='mom-legend-content' class='mt-4'>";
-                var id;
-                for (var i = 0; i < legAssets.length; i++) {
-                    // add legend
-                    var layerLegend = legAssets[i].name;
-                    if (legAssets[i].icon) {
-                        layerLegend = "<img src='" + legAssets[i].icon.iconUrl + "' /> " + layerLegend;
-                    }
-
-                    layerLegend = "<div class='mom-data' data-id='" + legAssets[i].id + "'>" +
-                        "<label><input type='checkbox' value=" + legAssets[i].id + " /> " +
-                        layerLegend + "</label></div>";
-
-                    content += layerLegend;
-                }
-
-                // display the legend
-                content += "</nav>";
-
-                var div = L.DomUtil.create('div', 'info legend');
-                div.innerHTML = "<div id='mom-legend'>" + content + "</div>";
-
-                return div;
-            };
-            legend.addTo(map);
-
-            // Disable map navigation when user's cursor enters the legend
-            legend.getContainer().addEventListener('mouseover', function () {
-                map.dragging.disable();
-                map.touchZoom.disable();
-                map.doubleClickZoom.disable();
-                map.boxZoom.disable();
-            });
-
-            // Re-enable map navigation when user's cursor leaves the legend
-            legend.getContainer().addEventListener('mouseout', function () {
-                map.dragging.enable();
-                map.touchZoom.enable();
-                map.doubleClickZoom.enable();
-                map.boxZoom.enable();
-            });
-
-            $("#mom-legend nav").css({ "maxHeight": ($("#" + ECI.map).height() - 75) + "px" });
-
-            // add filter event handler when a checkbox is clicked
-            $("#mom-legend").find("input").each(function () {
-                $(this).on("click", function () {
-                    var layerId = $(this).val();
-
-                    if (ECI.assets[layerId]) {          // GeoJSON layer
-                        if (ECI.clusterGroup) ECI.clusterGroup.clearLayers();
-
-                        // all all checked assert layers
-                        $(".mom-data input:checked").each(function () {
-                            console.log('asset', this.value);
-                            addGeoJsonLayer(this.value);
-                        });
-                    } else {
-                        var op = this.checked ? 1 : 0;
-                        ECI.layers[layerId].setOpacity(op);
-                    }
-                });
-            });
-
-            $("#mom-legend").parent().on("click", function (e) {
-                e.stopPropagation();
-            });
         }
 
         /**
@@ -634,7 +391,7 @@ jQuery(document).ready(function ($) {
          */
         function selectFeature(latLng) {
             // get census tract number
-            ECI.layers["select"].identify()
+            ECI.layers.select.identify()
                 .at(latLng)
                 .on(map)
                 .layers("visible:" + ECI.geog[ECI.igeog].select_ids.join(","))
@@ -755,8 +512,8 @@ jQuery(document).ready(function ($) {
             });
 
             // if selection layer has been added to map, show selection
-            if (ECI.layers["select"]) {
-                ECI.layers["select"].setLayerDefs(def);
+            if (ECI.layers.select) {
+                ECI.layers.select.setLayerDefs(def);
 
                 // expand bounds to include the selection, and zoom to new bounds
                 if (featureCollection) {
@@ -1014,24 +771,27 @@ jQuery(document).ready(function ($) {
                 // update ECI filters' post ID lists
                 $.each(response, function (i, v) {
                     // get post geography - local, regional, statewide
-                    var geog = "regional";
+                    var loc = "Regional";
                     if (v.muext_geoid.length == 1) {
-                        geog = (v.muext_geoid[0] === 445) ? "statewide" : "local";
+                        loc = (v.muext_geoid[0] === 445) ? "Statewide" : "Local";
                     }
 
                     posts.engagements[v.id] = {
                         "title": v.title.rendered,
                         "link": v.link,
-                        "geog": geog,
+                        "location": [loc],
                         "image": v.eng_featured_image
                     };
 
                     getFilterData(v.eng_theme, ECI.filters[0], v.id, posts);
                     getFilterData(v.eng_type, ECI.filters[1], v.id, posts);
 
-                    if (!skipAffiliation()) {
+                    //if (!skipAffiliation()) {
                         getFilterData(v.eng_affiliation, ECI.filters[2], v.id, posts);
-                    }
+                    //}
+
+                    // location filter
+                    getFilterData(loc, ECI.filters[3], v.id, posts);
                 });
 
                 if (response.length < postsPerPage || jqxhr.getResponseHeader("X-WP-Total") == postFilter.page * postsPerPage) {
@@ -1088,6 +848,13 @@ jQuery(document).ready(function ($) {
                     posts[filterType][name] = posts[filterType][name] || [];
                     posts[filterType][name].push(id);
                 }
+            } else {
+                 //store post ID in ECI.summary or ECI.posts
+                if (!posts[filterType][postProperty] || typeof posts[filterType][postProperty] === "number") {
+                    posts[filterType][postProperty] = [];
+                }
+                posts[filterType][postProperty] = posts[filterType][postProperty] || [];
+                posts[filterType][postProperty].push(id);
             }
         }
 
@@ -1205,7 +972,7 @@ jQuery(document).ready(function ($) {
          * @param {any} showLoading - flag to show loading animation
          */
         function showFilters(posts, showLoading) {
-            // update theme, type, affiliation filters
+            // update theme, type, affiliation, location filters
             var filterCount = {};      // store counts for chart
             var hasPosts = true;    //(posts.engagements);
 
@@ -1213,9 +980,9 @@ jQuery(document).ready(function ($) {
 
             // loop through each group of filters
             $.each(ECI.filters, function (i, v) {
-                if (i === 2 && skipAffiliation()) {
-                    return false;
-                }
+                //if (i === 2 && skipAffiliation()) {
+                //    return false;
+                //}
 
                 // 
                 if (posts[v]) {
@@ -1284,9 +1051,9 @@ jQuery(document).ready(function ($) {
                             $.each(ECI.filters, function (i, v) {
                                 filterList[v] = [];
 
-                                if (i === 2 && skipAffiliation()) {
-                                    return false;
-                                }
+                                //if (i === 2 && skipAffiliation()) {
+                                //    return false;
+                                //}
 
                                 var $filter = $("#filter-" + v);
                                 $filter.find("li." + selectCss).each(function (el) {
@@ -1316,6 +1083,9 @@ jQuery(document).ready(function ($) {
                                     $text.html(fValue);
                                 });
                             });
+
+                            // scroll to 'MU Engagement' section
+                            scrollTo("engagement-container");
                         });
                     }
                 }
@@ -1469,6 +1239,7 @@ jQuery(document).ready(function ($) {
                 });
                 temp.push(obj);
             }
+            console.log('temp', temp);
 
             // apply filters
             temp = temp.filter(function (obj) {
@@ -1582,12 +1353,13 @@ jQuery(document).ready(function ($) {
                 if (posts.engagements.hasOwnProperty(pId)) {
                     var item = posts.engagements[pId];
 
-					item = {
-						title: item.title,
-						link: item.link,
-                        image: item.image || stockImg + themeId + (Math.floor(Math.random() * 6) + 1) + ".jpg",
-                        geog: item.geog
-					};
+					//item = {
+					//	title: item.title,
+					//	link: item.link,
+     //                   image: item.image || stockImg + themeId + (Math.floor(Math.random() * 6) + 1) + ".jpg",
+     //                   location: item.location[0]
+					//};
+                    item.image = item.image || stockImg + themeId + (Math.floor(Math.random() * 6) + 1) + ".jpg";
 					var $item = addItem(item, pId, style, false);
 
 					$item.on("click", function( e ){
@@ -1656,7 +1428,7 @@ jQuery(document).ready(function ($) {
                 // engage card
                 $item.find(".row").append($("<div />", { "class": "geog" })
                     .append($("<i />", { "class": "fa fa-map-marker" }))
-                    .append(item.geog)
+                    .append(item.location[0])
                 );
             }
 
@@ -1692,10 +1464,12 @@ jQuery(document).ready(function ($) {
         }
 
         /**
-         * Check if we need to skip affiliation filters
+         * Check if we need to skip affiliation filters - changed to always visible on 9/17/19
+         * -- keep the codes for now, in case we need to revert back.
          */
         function skipAffiliation() {
-            return ($("#filter-" + ECI.filters[2]).length === 0);
+            return false;
+            //return ($("#filter-" + ECI.filters[2]).length === 0);
         }
 
         /**

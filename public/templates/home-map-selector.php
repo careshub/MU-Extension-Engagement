@@ -5,9 +5,10 @@
 	 **/
 
 ?>
-	<div class="row">
+	<div class="row" id="cdt">
+		<input type="hidden" data-id="cdt-mom-style" value="ECI" />
 		<div id="impact-map-container" class="col-sm-8 col-xs-12">
-			<div id="impact-map"></div>
+			<div id="cdt-mom"></div>
 			<div id="address">
 				  <div class="input-group">
 					<input id="address-input" type="text" value="" class="form-control" placeholder="Find a location..." />
