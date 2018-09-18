@@ -114,6 +114,9 @@ function enqueue_ecistyles_scripts() {
 	wp_enqueue_script('leaflet-script', 'https://unpkg.com/leaflet@1.2.0/dist/leaflet.js', array( 'jquery' ), '1.2.0');
 	wp_enqueue_script( 'esri-leaflet-script', 'https://unpkg.com/esri-leaflet@2.1.0/dist/esri-leaflet.js', array( 'jquery' ), '2.1.0');
 	wp_enqueue_script( 'esri-leaflet-geocoder-script', 'https://unpkg.com/esri-leaflet-geocoder@2.2.8/dist/esri-leaflet-geocoder-debug.js', array(), '2.2.8');
+	wp_enqueue_script( 'leaflet-markercluster-script', 'https://services.engagementnetwork.org/assets/js/Leaflet.markercluster-1.3.0/dist/leaflet.markercluster.js', array('leaflet-script'), '1.3.0');
+	wp_enqueue_script( 'cdt-mom-script', 'https://services.engagementnetwork.org/assets/cdt/public/js/mom.min.js', array('leaflet-script'), '1.3.0');
+
 	wp_enqueue_script( 'highchart-script', 'https://code.highcharts.com/5.0.7/highcharts.js', array(), '5.0.7');
 	wp_enqueue_script( \MU_Ext_Engagement\get_plugin_slug() . '-ecimodal-script', plugins_url( 'js/modalonlybootstrap/bootstrap.min.js', __FILE__ ), array( 'jquery' ), \MU_Ext_Engagement\get_plugin_version(), 'all' );
 

@@ -6,20 +6,31 @@
  License URI:  http://www.gnu.org/licenses/gpl-2.0.html
  Text Domain:  engagement-council
 */
+@import url("https://engagementnetwork.org/wp-content/plugins/cares-data-tools/public/css/mom.css");
 #impact-map-container {
   position: relative;
   width: 100%;
   display: block; }
-  #impact-map-container #impact-map {
+  #impact-map-container #cdt-mom {
     width: 100%;
     height: 550px;
     border: 1px solid #8F8884; }
+    #impact-map-container #cdt-mom .leaflet-control-attribution {
+      display: none; }
+    #impact-map-container #cdt-mom h4 {
+      font-size: 1.125em;
+      font-weight: 600; }
+    #impact-map-container #cdt-mom table td, #impact-map-container #cdt-mom table th {
+      padding: 5px;
+      border: 1px solid #dedede; }
   #impact-map-container #address {
     position: absolute;
     top: 10px;
     right: 25px;
     z-index: 500;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25); }
+  #impact-map-container button {
+    box-shadow: none; }
   #impact-map-container .info {
     padding: 6px 8px;
     background: white;
@@ -32,7 +43,8 @@
     text-align: center; }
   #impact-map-container .legend {
     line-height: 18px;
-    color: #555; }
+    color: #555;
+    background: #fff; }
     #impact-map-container .legend i {
       width: 18px;
       height: 18px;
@@ -40,9 +52,14 @@
       opacity: 0.7; }
     #impact-map-container .legend span {
       margin-left: 8px; }
+  #impact-map-container #mom-legend {
+    min-width: 200px; }
+    #impact-map-container #mom-legend img {
+      width: auto;
+      margin: 0; }
   #impact-map-container .leaflet-control-custom {
     background-image: url(../images/mo.png);
-    background-color: #f1b82d;
+    /*background-color: $gold;*/
     background-position: center;
     background-repeat: no-repeat; }
   #impact-map-container .leaflet-map-pane svg {
@@ -101,7 +118,7 @@
       justify-content: center; }
       #impact-map-container .input-group .input-group-btn .btn {
         border: 1px solid #ccc;
-        background: #f1b82d;
+        /*background: $gold;*/
         box-shadow: 2px 2px 2px #bbb; }
 
 #filters-container-left, .filter-box {
@@ -253,7 +270,8 @@
 #impact-list .engagement-item, #engage-list .engagement-item {
   border: 1px solid #ccc;
   background: #f9f9f9;
-  padding: 5px; }
+  padding: 5px;
+  position: relative; }
   #impact-list .engagement-item .img-container, #engage-list .engagement-item .img-container {
     background-size: 100%;
     background-position: center;
@@ -264,6 +282,15 @@
     overflow: hidden; }
   #impact-list .engagement-item .text-below .desc, #engage-list .engagement-item .text-below .desc {
     display: none; }
+  #impact-list .engagement-item .geog, #engage-list .engagement-item .geog {
+    position: absolute;
+    text-align: center;
+    bottom: 2px;
+    width: 100%;
+    color: #999;
+    font-weight: 100; }
+    #impact-list .engagement-item .geog i, #engage-list .engagement-item .geog i {
+      margin-right: 5px; }
 
 #impact-list .list-group-item, #engage-list .list-group-item {
   float: none;
@@ -311,13 +338,13 @@
 
 .single-engagement-card {
   width: 100%;
-  padding: 1em 3em; }
+  padding: 3em; }
   .single-engagement-card .entry-content {
-    margin-top: 1em; display:flex; flex-wrap:wrap; }
+    margin-top: 2em; }
   .single-engagement-card .engagement-meta {
     border: 1px solid #d6d6d6;
-    border-radius: 4px; flex-grow: 1; width:48%; margin: 0 1% 2%;}
- .single-engagement-card .engagement-meta:last-child {  } .single-engagement-card .engagement-meta .inset-contents { height:auto; }  .single-engagement-card a {
+    border-radius: 4px; }
+  .single-engagement-card a {
     text-decoration: none; }
   .single-engagement-card span.external-link {
     -webkit-box-shadow: none;
@@ -326,16 +353,16 @@
     font-size: 16px; }
   .single-engagement-card .inner-card {
     background-color: white; }
-  .single-engagement-card .thumbnail { text-align: center; }	.single-engagement-card img {
+  .single-engagement-card img {
     border-radius: 4px;
     border: 1px solid #cccccc;
-    padding: 4px; max-height: 180px; width:auto;}
+    padding: 4px; }
 
 .modal-backdrop {
   opacity: 0.5 !important; }
 
 #single-engagement-modal .modal-dialog {
-  margin: 6% auto 0em; }
+  margin: 10% auto 0em; }
 
 #single-engagement-modal button {
   box-shadow: none; }

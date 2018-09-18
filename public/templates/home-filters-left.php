@@ -39,9 +39,9 @@
 			</div>
 			</div>
 
-			<div class="collapsible-section">
+			<div class="collapsible-section collapsed">
 			<div class="collapsible-section-title" >
-			<i class="fa pull-right fa-chevron-up"></i>
+			<i class="fa pull-right fa-chevron-down"></i>
 			ENGAGEMENT IMPACT AREA
 			</div>
 			<div class="expand-view">
@@ -50,10 +50,21 @@
 			</div>
 			</div>
 
-
-			<div class="collapsible-section">
+			<div class="collapsible-section collapsed">
 			<div class="collapsible-section-title" >
-			<i class="fa pull-right fa-chevron-up"></i>
+			<i class="fa pull-right fa-chevron-down"></i>
+			ENGAGEMENT COVERAGE
+			</div>
+			<div class="expand-view">
+			<ul id="filter-location" data-type="location">
+			</ul>
+			</div>
+			</div>
+
+
+			<div class="collapsible-section collapsed">
+			<div class="collapsible-section-title" >
+			<i class="fa pull-right fa-chevron-down"></i>
 			ENGAGEMENT TYPE
 			</div>
 			<div class="expand-view">
@@ -62,25 +73,14 @@
 			</div>
 			</div>
 
-			<div class="collapsible-section">
+			<div class="collapsible-section collapsed">
 			<div class="collapsible-section-title">
-			<i class="fa pull-right fa-chevron-up"></i>
+			<i class="fa pull-right fa-chevron-down"></i>
 			AFFILIATION
 			</div>
 			<div class="expand-view">
 			<ul id="filter-affiliation" data-type="affiliation">
 			</ul>
-			</div>
-			</div>
-
-			<div class="collapsible-section">
-			<div class="collapsible-section-title">
-			<i class="fa pull-right fa-chevron-up"></i>
-			DISPLAY STYLE
-			</div>
-			<div class="expand-view display-style">
-			<i class="fa fa-th fa-3x active" title="Grid View" id="grid-view"></i>
-			<i class="fa fa-list fa-3x" title="List View" id="list-view"></i>
 			</div>
 			</div>
 			
