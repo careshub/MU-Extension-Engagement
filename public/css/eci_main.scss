@@ -80,7 +80,7 @@ $border: #8F8884;
     }
 
     #mom-legend {
-        min-width: 200px;
+        width: 220px;
         img {
             width: auto;
             margin: 0;
@@ -89,13 +89,16 @@ $border: #8F8884;
 
     .leaflet-control-custom {
         background-image: url(../images/mo.png);
-        /*background-color: $gold;*/
         background-position: center;
         background-repeat: no-repeat;
     }
 
     .leaflet-map-pane svg {
         z-index: 1;
+    }
+
+    .legend {
+        margin-top: 50px;
     }
 
     iframe {

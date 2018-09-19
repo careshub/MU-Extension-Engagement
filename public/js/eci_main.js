@@ -293,7 +293,7 @@ jQuery(document).ready(function ($) {
                     layers: layerIds,
                     format: "png32",
                     opacity: 1,
-                    position: 'back'
+                    position: "back"
                 }).addTo(map);
             }
         }
@@ -309,6 +309,11 @@ jQuery(document).ready(function ($) {
                 ECI.layers.select.setLayerDefs(def);
                 ECI.layers.select.setLayers(selectIds);
             } else {
+                // add a new map pane so this layer will always on top of other overlay layers and shadowPane
+                map.createPane('highlight');
+                map.getPane('highlight').style.zIndex = 550;
+                map.getPane('highlight').style.pointerEvents = 'none';
+
                 // add the boundary's selection layer
                 ECI.layers.select = L.esri.dynamicMapLayer({
                     url: ECI.agsService,
@@ -316,7 +321,7 @@ jQuery(document).ready(function ($) {
                     layerDefs: def,
                     format: "png32",
                     opacity: 1,
-                    position: 'front'
+                    pane: 'highlight'
                 }).addTo(map);
             }
         }
@@ -433,14 +438,17 @@ jQuery(document).ready(function ($) {
 
                         // show a popup
                         if (latlng) {
-                            var center = L.geoJSON(featureCollection).getBounds().getCenter();
+                            // place the popup on the center of upper half of the bounds
+                            var bounds = L.geoJSON(featureCollection).getBounds();
+                            var pos = bounds.getCenter();
+                            pos.lat = bounds.getSouthWest().lat + (bounds.getNorthWest().lat - bounds.getSouthWest().lat) * 0.75;
 
                             ECI.popup = L.popup({
                                 minWidth: 200,
                                 autoPan: false,
                                 className: 'popup'
                             })
-                                .setLatLng(center)
+                                .setLatLng(pos)
                                 .setContent('<h6>' + name + '</h6><div><i class="fa fa-spinner fa-spin fa-2x"></i> Loading...</div>' )
                                 .openOn(map);
                         }
