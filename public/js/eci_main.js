@@ -86,12 +86,25 @@ jQuery(document).ready(function ($) {
         // get the statewide map extent
         var map = momAPI.LM.map;
         map.setView([38.333, -92.34], 7);
-        map.setMinZoom(7);
         map.setMaxZoom(13);
-        setTimeout(function () {
-            ECI.bounds = map.getBounds();
-            map.setMaxBounds(ECI.bounds.pad(0.02));       // add 2% padding for popup
-        }, 2000);
+
+        // after map is loaded, set state bounds
+        var mapLoaded = function () {
+            if (momAPI.LM.loaded) {
+                if ( $("#" + momAPI.LM.mapId).width() < 800 ) {
+                    ECI.bounds = L.latLngBounds(L.latLng(35.88, -95.8), L.latLng(40.73, -89));
+                    map.fitBounds(ECI.bounds);                    
+                } else {
+                    map.setMinZoom(7);
+                    ECI.bounds = map.getBounds();
+                    map.setMaxBounds(ECI.bounds.pad(0.05));       // add 5% padding for popup
+                }
+            } else {
+                setTimeout(mapLoaded, 500);
+            }
+        }
+
+        mapLoaded();
 
         // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
@@ -228,6 +241,11 @@ jQuery(document).ready(function ($) {
             ECI.geoid = [];
             $(ECI.filterGeog).empty();
             getEngagements();
+        });
+
+        $("#map-hamburger").on("click", function () {
+            $("#address").toggle();
+            $(".leaflet-right").toggle();
         });
 
         //****************** LOCAL FUNCTIONS *******************//
@@ -444,7 +462,7 @@ jQuery(document).ready(function ($) {
                             pos.lat = bounds.getSouthWest().lat + (bounds.getNorthWest().lat - bounds.getSouthWest().lat) * 0.75;
 
                             ECI.popup = L.popup({
-                                minWidth: 200,
+                                //minWidth: 200,
                                 autoPan: false,
                                 className: 'popup'
                             })

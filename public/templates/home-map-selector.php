@@ -18,5 +18,8 @@
 					</div>
 				  </div>
 			</div>
+			<div id="map-hamburger" class="leaflet-bar leaflet-control">
+			<i class="fa fa-bars"></i>
+			</div>
 		</div>
 	</div>
