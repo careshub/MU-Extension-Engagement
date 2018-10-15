@@ -105,6 +105,15 @@ jQuery(document).ready(function ($) {
 
         mapLoaded();
 
+        // add street map for when zoomed in beyond level 13
+        L.tileLayer('https://{s}.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
+            id: "mapbox.streets",
+            subdomains: ['a', 'b', 'c', 'd'],
+            attribution: '',
+            token: 'pk.eyJ1IjoiYmFybmV0dHkiLCJhIjoiY2pkeXM5cGlvNGY5cTMzcXB4enltMDhvaSJ9.sWdz4snAjiUU0Aw3Pikmjw',
+            minZoom: 14
+        }).addTo(LM.map);
+
         // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
             options: {
@@ -310,6 +319,7 @@ jQuery(document).ready(function ($) {
                     layers: layerIds,
                     format: "png32",
                     opacity: 1,
+                    maxZoom: 13,
                     position: "back"
                 }).addTo(map);
             }
@@ -338,6 +348,7 @@ jQuery(document).ready(function ($) {
                     layerDefs: def,
                     format: "png32",
                     opacity: 1,
+                    maxZoom: 13,
                     pane: 'highlight'
                 }).addTo(map);
             }
