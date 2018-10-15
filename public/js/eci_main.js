@@ -112,7 +112,7 @@ jQuery(document).ready(function ($) {
             attribution: '',
             token: 'pk.eyJ1IjoiYmFybmV0dHkiLCJhIjoiY2pkeXM5cGlvNGY5cTMzcXB4enltMDhvaSJ9.sWdz4snAjiUU0Aw3Pikmjw',
             minZoom: 14
-        }).addTo(LM.map);
+        }).addTo(momAPI.LM.map);
 
         // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
