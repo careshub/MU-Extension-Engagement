@@ -86,7 +86,6 @@ jQuery(document).ready(function ($) {
         // get the statewide map extent
         var map = momAPI.LM.map;
         map.setView([38.333, -92.34], 7);
-        map.setMaxZoom(13);
 
         // after map is loaded, set state bounds
         var mapLoaded = function () {
