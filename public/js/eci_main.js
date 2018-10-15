@@ -98,21 +98,21 @@ jQuery(document).ready(function ($) {
                     ECI.bounds = map.getBounds();
                     map.setMaxBounds(ECI.bounds.pad(0.05));       // add 5% padding for popup
                 }
+
+                // add street map for when zoomed in beyond level 13
+                L.tileLayer('https://{s}.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
+                    id: "mapbox.streets",
+                    subdomains: ['a', 'b', 'c', 'd'],
+                    attribution: '',
+                    token: 'pk.eyJ1IjoiYmFybmV0dHkiLCJhIjoiY2pkeXM5cGlvNGY5cTMzcXB4enltMDhvaSJ9.sWdz4snAjiUU0Aw3Pikmjw',
+                    minZoom: 13
+                }).addTo(momAPI.LM.map);
             } else {
                 setTimeout(mapLoaded, 500);
             }
         }
 
         mapLoaded();
-
-        // add street map for when zoomed in beyond level 13
-        L.tileLayer('https://{s}.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
-            id: "mapbox.streets",
-            subdomains: ['a', 'b', 'c', 'd'],
-            attribution: '',
-            token: 'pk.eyJ1IjoiYmFybmV0dHkiLCJhIjoiY2pkeXM5cGlvNGY5cTMzcXB4enltMDhvaSJ9.sWdz4snAjiUU0Aw3Pikmjw',
-            minZoom: 14
-        }).addTo(momAPI.LM.map);
 
         // add a custom 'zoom to Missouri' control on the map
         var moZoomControl = L.Control.extend({
@@ -319,7 +319,7 @@ jQuery(document).ready(function ($) {
                     layers: layerIds,
                     format: "png32",
                     opacity: 1,
-                    maxZoom: 13,
+                    maxZoom: 12,
                     position: "back"
                 }).addTo(map);
             }
@@ -348,7 +348,7 @@ jQuery(document).ready(function ($) {
                     layerDefs: def,
                     format: "png32",
                     opacity: 1,
-                    maxZoom: 13,
+                    maxZoom: 12,
                     pane: 'highlight'
                 }).addTo(map);
             }
