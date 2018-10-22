@@ -98,10 +98,19 @@ jQuery(document).ready(function ($) {
                     map.setView(center, 7);
                     map.setMinZoom(7);
                     ECI.bounds = map.getBounds();
-                    map.setMaxBounds(ECI.bounds.pad(0.05));       // add 5% padding for popup
+
+                    //set maximum bounds to include 10% on north and south to accomodate popups
+                    var n = ECI.bounds.getNorth();
+                    var s = ECI.bounds.getSouth();
+                    var lng = ECI.bounds.getCenter().lng;
+                    var maxBounds = ECI.bounds.extend([
+                        [n + (n - s) * 0.1, lng],
+                        [s - (n - s) * 0.1, lng]
+                    ]);
+                    map.setMaxBounds(maxBounds);
                 }
 
-                // add street map for when zoomed in beyond level 13
+                // add street map for when zoomed in to level 13+
                 L.tileLayer('https://{s}.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={token}', {
                     id: "mapbox.streets",
                     subdomains: ['a', 'b', 'c', 'd'],
