@@ -135,7 +135,7 @@ jQuery(document).ready(function ($) {
                 var aTag = L.DomUtil.create('a', 'leaflet-control-custom', container);
                 aTag.href = "#";
                 container.onclick = function (e) {
-                    map.flyToBounds(ECI.bounds);
+                    map.fitBounds(ECI.bounds);
                     e.stopPropagation();
                 }
                 return container;
