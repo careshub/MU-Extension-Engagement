@@ -85,15 +85,17 @@ jQuery(document).ready(function ($) {
      
         // get the statewide map extent
         var map = momAPI.LM.map;
-        map.setView([38.333, -92.34], 7);
+        var center = [38.37, -92.48];
+        map.setView(center, 7);
 
         // after map is loaded, set state bounds
         var mapLoaded = function () {
             if (momAPI.LM.loaded) {
-                if ( $("#" + momAPI.LM.mapId).width() < 800 ) {
-                    ECI.bounds = L.latLngBounds(L.latLng(35.88, -95.8), L.latLng(40.73, -89));
+                if ($("#" + momAPI.LM.mapId).width() < 800) {
+                    ECI.bounds = L.latLngBounds(L.latLng(center[0] - 3, center[1] - 3), L.latLng(center[0] + 3, center[1] + 3));
                     map.fitBounds(ECI.bounds);                    
                 } else {
+                    map.setView(center, 7);
                     map.setMinZoom(7);
                     ECI.bounds = map.getBounds();
                     map.setMaxBounds(ECI.bounds.pad(0.05));       // add 5% padding for popup
@@ -108,7 +110,7 @@ jQuery(document).ready(function ($) {
                     minZoom: 13
                 }).addTo(momAPI.LM.map);
             } else {
-                setTimeout(mapLoaded, 500);
+                setTimeout(mapLoaded, 1000);
             }
         }
 
@@ -574,6 +576,7 @@ jQuery(document).ready(function ($) {
          * @param {string} name - The name of geography selection
          */
         function showImpactCard(name, dataId) {
+            console.log(name);
             if (ECI.geoid.length === 1 || !dataId) {
                 $("#impact-list").empty();
             }
@@ -1386,13 +1389,6 @@ jQuery(document).ready(function ($) {
 
                 if (posts.engagements.hasOwnProperty(pId)) {
                     var item = posts.engagements[pId];
-
-					//item = {
-					//	title: item.title,
-					//	link: item.link,
-     //                   image: item.image || stockImg + themeId + (Math.floor(Math.random() * 6) + 1) + ".jpg",
-     //                   location: item.location[0]
-					//};
                     item.image = item.image || stockImg + themeId + (Math.floor(Math.random() * 6) + 1) + ".jpg";
 					var $item = addItem(item, pId, style, false);
 
@@ -1462,7 +1458,7 @@ jQuery(document).ready(function ($) {
                 // engage card
                 $item.find(".row").append($("<div />", { "class": "geog" })
                     .append($("<i />", { "class": "fa fa-map-marker" }))
-                    .append(item.location[0])
+                    .append(item.location? item.location[0]: "")
                 );
             }
 
