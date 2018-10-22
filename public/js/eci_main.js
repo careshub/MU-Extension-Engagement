@@ -133,7 +133,7 @@ jQuery(document).ready(function ($) {
             onAdd: function (map) {
                 var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
                 var aTag = L.DomUtil.create('a', 'leaflet-control-custom', container);
-                aTag.href = "#";
+                aTag.href = "javascript:void(0)";
                 container.onclick = function (e) {
                     map.fitBounds(ECI.bounds);
                     e.stopPropagation();
