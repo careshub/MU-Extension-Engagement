@@ -24,7 +24,7 @@ function muext_render_filters_box() {
 
 	//uninclude program tags
 	$taxonomies = array_diff($all_taxonomies, array('muext_program_tag'));
-	
+
 	// Are there any search terms?
 	$search_terms = ( ! empty( $_REQUEST['s'] ) ) ? $_REQUEST['s'] : '';
 	$toggle_class = muext_archive_is_filtered_view() ? 'toggle-open' : 'toggle-closed';
@@ -45,8 +45,8 @@ function muext_render_filters_box() {
 					$friendly_param = muext_get_friendly_filter_param_name( $taxonomy );
 					?>
 					<div class="Grid-cell Grid--full">
-					
-						<div class="inset-contents">
+
+						<div class="inset-contents-muext">
 							<fieldset class="taxonomy-terms toggle-container <?php echo $toggle_class; ?>">
 								<!--<legend><?php echo $tax_object->labels->name; ?></legend>-->
 								<!--<legend>-->
@@ -63,7 +63,7 @@ function muext_render_filters_box() {
 								// Get the active filter terms, if available.
 								$selected_terms = muext_get_archive_filter_params( $taxonomy );
 								?>
-								
+
 								<div id="filter-<?php echo $tax_object->name; ?>" class="toggle-content filter-<?php echo $tax_object->name; ?> clear">
 
 									<?php

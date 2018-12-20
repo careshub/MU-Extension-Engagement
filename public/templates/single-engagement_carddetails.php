@@ -61,7 +61,7 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 	</div>
 	<div class="single-engagement-card clearfix col-xs-12 single-engagement">
 
-		
+
 		<div class="row">
 			<?php if( get_the_post_thumbnail() != "" ){ ?>
 				<div class="thumbnail col-xs-3">
@@ -80,7 +80,7 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 						__( 'Continue reading<span class="screen-reader-text"> "%s"</span>', 'muext-engagement' ),
 						get_the_title()
 					) );
-					
+
 				?>
 			</div>
 		</div>
@@ -91,12 +91,12 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 
 					<div>
 						<?php if ( $location ) { ?>
-						
+
 							<div class="location Grid-cell">
-								<div class="inset-contents">
-								
+								<div class="inset-contents-muext">
+
 								<?php if ( is_array( $location ) ){
-									
+
 									foreach( $location as $one_place ){
 										if( $one_place['_muext_location_text'] ){ //TODO: why isn't 'senior night' working?
 										?>
@@ -108,14 +108,14 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 								} else if ($location) { ?>
 										<span class="fa fa-map-marker icon-left"></span>&nbsp;<span class=""><?php echo $location; ?></span>
 								<?php } ?>
-							
+
 								</div>
 							</div>
 						<?php } ?>
-						
+
 						<?php if ( $human_date || $freq ) : ?>
 							<div class="date Grid-cell">
-								<div class="inset-contents">
+								<div class="inset-contents-muext">
 									<span class="fa fa-calendar icon-left"></span>
 									<span class="">
 									<?php
@@ -142,13 +142,13 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 			<?php } else { ?>
 				<div class="engagement-meta end-of-single">
 			<?php } ?>
-					<?php if ( $contact ) { 
+					<?php if ( $contact ) {
 						if( is_array( $contact ) ){ ?>
-							<div class="inset-contents">
+							<div class="inset-contents-muext">
 								<h4>Contacts</h4>
-								<?php 
+								<?php
 								foreach( $contact as $one_contact ){ ?>
-									
+
 										<?php echo $one_contact["_muext_contact_name"]; ?>
 											<?php if ( $one_contact["_muext_contact_email"] ) : ?>
 												&emsp;<a href="mailto:<?php echo $one_contact["_muext_contact_email"]; ?>"><span class="fa fa-envelope"></span></a>
@@ -161,7 +161,7 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 							</div>
 						<?php
 						} else { ?>
-							<div class="inset-contents">
+							<div class="inset-contents-muext">
 								<h4>Contact</h4>
 								<?php echo $contact; ?>
 									<?php if ( $email ) : ?>
@@ -172,45 +172,45 @@ if( !( ( $freq == 'recurring' ) || ( $freq == 'ongoing' ) ) ){
 									<?php endif; ?>
 							</div>
 						<?php } ?>
-						
+
 					<?php } //endif ?>
-					
+
 					<?php if ( $website ) { ?>
-						<div class="inset-contents">
+						<div class="inset-contents-muext">
 							<h4>Website</h4>
 							<?php echo '<a href="' . $website . '" title="' . get_the_title() . '" target="_blank">' . $website . ' </a>&nbsp;&nbsp;<span class="external-link fa fa-external-link"></span>'; ?>
 						</div>
 					<?php } ?>
-					
+
 					<?php if ( is_single() && $this_aff_str ) { ?>
-						<div class="inset-contents">
+						<div class="inset-contents-muext">
 							<h4>Affiliation</h4>
 							<?php echo $this_aff_str; ?>
 						</div>
 					<?php } ?>
-					
+
 				</div>
 
 			<?php if ( is_single() ) : ?>
 				<div class="engagement-meta end-of-single">
 					<?php if( $outcome || $audience_str || $impact_str ){ ?>
-						
+
 						<?php if( $outcome ){ ?>
-							<div class="inset-contents">
+							<div class="inset-contents-muext">
 								<h4>Outcomes</h4>
 								<p><?php echo $outcome; ?> </p>
 							</div>
 						<?php } ?>
-						
+
 						<?php if( $audience_str ){ ?>
-							<div class="inset-contents">
+							<div class="inset-contents-muext">
 								<h4>Audience</h4>
 								<?php echo $audience_str; ?>
 							</div>
 						<?php } ?>
-						
+
 						<?php if( $impact_str ){ ?>
-							<div class="inset-contents">
+							<div class="inset-contents-muext">
 								<h4>Impact</h4>
 								<?php echo $impact_str; ?>
 							</div>

@@ -6,7 +6,7 @@
 .site-branding .site-branding-text{
 	float:right;
 	width:88%;
-	
+
 }
 .entry-header .entry-title,
 .home h2{
@@ -41,7 +41,7 @@ body.page-two-column.page-template-add_engagement_form  #primary .muext_engageme
 .home #secondary {
 	background-color: #eaeaea;
 	padding: 1.5em;
-} 
+}
 .entry-content .description{
 	padding: 1em;
 }
@@ -118,316 +118,23 @@ body.page-two-column.page-template-add_engagement_form  #primary .muext_engageme
 }
 
 /*
- * Some flexbox structures for layout.
- * From https://philipwalton.github.io/solved-by-flexbox/demos/grids/
+ * Most Flexbox layout is provided by the "CARES Flexbox Grids" plugin.
+ * There is one change, though.
  */
-.Grid {
-	display: flex;
-	flex-wrap: wrap;
-	list-style: none;
-	margin: 0;
-	padding: 0;
-}
-.Grid * {
-	box-sizing: border-box;
-}
 
-.Grid-cell {
-	flex: 1;
-}
-
-.Grid--flexCells > .Grid-cell {
-	display: flex;
-}
-
-.Grid--top {
-	align-items: flex-start;
-}
-
-.Grid--bottom {
-	align-items: flex-end;
-}
-
-.Grid--fill-height {
-	flex-direction: column;
-	justify-content: space-between;
-}
-
-.Grid--nowrap {
-	flex-wrap: nowrap;
-}
-
-.Grid--center {
-	align-items: center;
-}
-
-.Grid--justifyCenter {
-	justify-content: center;
-}
-
-.Grid-cell--top {
-	align-self: flex-start;
-}
-
-.Grid-cell--bottom {
-	align-self: flex-end;
-}
-
-.Grid-cell--center {
-	align-self: center;
-}
-
-.Grid-cell--autoSize {
-	flex: none;
-}
-
-.Grid--fit > .Grid-cell {
-	flex: 1;
-}
-
-.Grid--full > .Grid-cell {
-	flex: 0 0 100%;
-}
-
-.Grid--1of2 > .Grid-cell {
-	flex: 0 0 auto;
-	width: 50%;
-}
-
-.Grid--1of3 > .Grid-cell {
-	flex: 0 0 auto;
-	width: 33.3%
-}
-
-.Grid--1of4 > .Grid-cell {
-	flex: 0 0 auto;
-	width: 25%;
-}
-.inset-contents {
+.inset-contents-muext {
 	/* width: 100%; */
 	height: 100%;
 	padding: 0.4em 0.6em 0px;
 }
-.inset-contents h3{
+.inset-contents-muext h3{
 	margin-bottom:0.25em;
 }
-.inset-contents::after {
+.inset-contents-muext::after {
 	content: '\00a0';
 	display: block;
 	margin-top: 0.4em;
 	height: 0;
 	visibility: hidden;
 }
-.inset-contents-lg {
-	/* width: 100%; */
-	height: 100%;
-	padding: 0.8em 1em 0px;
-}
-.inset-contents-lg::after {
-	content: '\00a0';
-	display: block;
-	margin-top: 0.8em;
-	height: 0;
-	visibility: hidden;
-}
 
-.Grid-cell > .Grid-cell-100pc {
-	width: 100%;
-}
-
-@media (min-width:24em) {
-	.small-Grid--fit > .Grid-cell {
-		flex: 1;
-	}
-	.small-Grid--full > .Grid-cell {
-		flex: 0 0 100%;
-	}
-	.small-Grid--1of2 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 50%;
-	}
-	.small-Grid--1of3 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 33.3%;
-	}
-	.small-Grid--1of3 > .Grid-cell.u-2of3 {
-		flex: 0 0 auto;
-		width: 66.6%;
-	}
-	.small-Grid--1of4 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 25%;
-	}
-	.small-Grid--1of4 > .Grid-cell.u-2of4 {
-		flex: 0 0 auto;
-		width: 50%;
-	}
-	.small-Grid--1of4 > .Grid-cell.u-3of4 {
-		flex: 0 0 auto;
-		width: 75%;
-	}
-}
-
-@media (min-width:36em) {
-	.med-Grid--fit > .Grid-cell {
-		flex: 1;
-	}
-	.med-Grid--full > .Grid-cell {
-		flex: 0 0 100%;
-	}
-	.med-Grid--1of2 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 50%;
-	}
-	.med-Grid--1of3 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 33.3%;
-	}
-	.med-Grid--1of3 > .Grid-cell.u-2of3 {
-		flex: 0 0 auto;
-		width: 66.6%;
-	}
-	.med-Grid--1of4 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 25%;
-	}
-	.med-Grid--1of4 > .Grid-cell.u-2of4 {
-		flex: 0 0 auto;
-		width: 50%;
-	}
-	.med-Grid--1of4 > .Grid-cell.u-3of4 {
-		flex: 0 0 auto;
-		width: 75%;
-	}
-	/* Allow the quarter blocks to stack 2-up. */
-	/* this is hinky, the math doesn't work out. */
-	.large-Grid--1of4 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 50%;
-	}
-	.large-Grid--1of4 > .Grid-cell img {
-		width: 100%;
-	}
-}
-
-@media (min-width:48em) {
-	.large-Grid--fit > .Grid-cell {
-		flex: 1;
-	}
-	.large-Grid--full > .Grid-cell {
-		flex: 0 0 100%;
-	}
-	.large-Grid--1of2 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 50%;
-	}
-	.large-Grid--1of3 > .Grid-cell {
-		flex: 0 0 auto;
-		width: 33.3%; /* For IE 10 & 11 compatibility. */
-	}
-	.large-Grid--1of3 > .Grid-cell.u-2of3 {
-		flex: 0 0 auto;
-		width: 66.6%;
-	}
-	.large-Grid--1of4 > .Grid-cell {
-		/*
-		 * There's a bug in IE 10 and 11 that causes the flex-basis to calculate in a content-box world.
-		 * See https://github.com/philipwalton/flexbugs#7-flex-basis-doesnt-account-for-box-sizingborder-box
-		 * flex: 0 0 25%; <-- This is the "normal" flexbox approach
-		 */
-		flex: 0 0 auto; /* This plus the explicit width works with IE 10 & 11. */
-		width: 25%;
-	}
-	.large-Grid--1of4 > .Grid-cell.u-2of4 {
-		flex: 0 0 auto;
-		width: 50%;
-	}
-	.large-Grid--1of4 > .Grid-cell.u-3of4 {
-		flex: 0 0 auto;
-		width: 75%;
-	}
-}
-
-.Grid--gutters {
-	margin: -1em 0 1em -1em;
-}
-.Grid--gutters > .Grid-cell {
-	padding: 1em 0 0 1em;
-}
-
-.Grid--guttersLg {
-	margin: -1.5em 0 1.5em -1.5em;
-}
-.Grid--guttersLg > .Grid-cell {
-	padding: 1.5em 0 0 1.5em;
-}
-
-.Grid--guttersXl {
-	margin: -2em 0 2em -2em;
-}
-.Grid--guttersXl > .Grid-cell {
-	padding: 2em 0 0 2em;
-}
-
-@media (min-width:24em) {
-	.small-Grid--gutters {
-		margin: -1em 0 1em -1em;
-	}
-	.small-Grid--gutters > .Grid-cell {
-		padding: 1em 0 0 1em;
-	}
-	.small-Grid--guttersLg {
-		margin: -1.5em 0 1.5em -1.5em;
-	}
-	.small-Grid--guttersLg > .Grid-cell {
-		padding: 1.5em 0 0 1.5em;
-	}
-	.small-Grid--guttersXl {
-		margin: -2em 0 2em -2em;
-	}
-	.small-Grid--guttersXl > .Grid-cell {
-		padding: 2em 0 0 2em;
-	}
-}
-
-@media (min-width:36em) {
-	.med-Grid--gutters {
-		margin: -1em 0 1em -1em;
-	}
-	.med-Grid--gutters > .Grid-cell {
-		padding: 1em 0 0 1em;
-	}
-	.med-Grid--guttersLg {
-		margin: -1.5em 0 1.5em -1.5em;
-	}
-	.med-Grid--guttersLg > .Grid-cell {
-		padding: 1.5em 0 0 1.5em;
-	}
-	.med-Grid--guttersXl {
-		margin: -2em 0 2em -2em;
-	}
-	.med-Grid--guttersXl > .Grid-cell {
-		padding: 2em 0 0 2em;
-	}
-}
-
-@media (min-width:48em) {
-	.large-Grid--gutters {
-		margin: -1em 0 1em -1em;
-	}
-	.large-Grid--gutters > .Grid-cell {
-		padding: 1em 0 0 1em;
-	}
-	.large-Grid--guttersLg {
-		margin: -1.5em 0 1.5em -1.5em;
-	}
-	.large-Grid--guttersLg > .Grid-cell {
-		padding: 1.5em 0 0 1.5em;
-	}
-	.large-Grid--guttersXl {
-		margin: -2em 0 2em -2em;
-	}
-	.large-Grid--guttersXl > .Grid-cell {
-		padding: 2em 0 0 2em;
-	}
-}
