@@ -68,7 +68,7 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 	<?php if ( '' !== get_the_post_thumbnail() && ! is_single() ) : ?>
 		<div class="post-thumbnail">
 			<a href="<?php the_permalink(); ?>">
-				<?php the_post_thumbnail(); ?>
+				<?php the_post_thumbnail('medium'); ?>
 			</a>
 		</div><!-- .post-thumbnail -->
 	<?php endif; ?>
@@ -80,30 +80,30 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 				<!--<div class="Grid Grid--full med-Grid--fit">-->
 				<div>
 					<?php if ( $location ) { ?>
-					
+
 						<div class="location Grid-cell">
-							<div class="inset-contents">
-							
+							<div class="inset-contents-muext">
+
 						<?php if ( is_array( $location ) ){
-							
-							foreach( $location as $one_place ){ 
-							
+
+							foreach( $location as $one_place ){
+
 									//var_dump( $one_place );
 							?>
 									<span class="fa fa-map-marker icon-left"></span>&nbsp;<span class=""><?php echo $one_place['_muext_location_text']; ?></span>
 									<br />
-							<?php } 
+							<?php }
 						} else { ?>
 									<span class="fa fa-map-marker icon-left"></span>&nbsp;<span class=""><?php echo $location; ?></span>
 						<?php } ?>
-						
+
 							</div>
 						</div>
 					<?php } ?>
-					
+
 					<?php if ( $human_date ) : ?>
 						<div class="date Grid-cell">
-							<div class="inset-contents">
+							<div class="inset-contents-muext">
 								<span class="fa fa-calendar icon-left"></span>
 								<span class="">
 								<?php
@@ -128,25 +128,25 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 					__( 'Continue reading<span class="screen-reader-text"> "%s"</span>', 'muext-engagement' ),
 					get_the_title()
 				) );
-				
+
 			?>
 		</div>
 
-		
+
 		<?php if ( is_single() ) { ?>
 			<div class="engagement-meta">
 		<?php } else { ?>
 			<div class="engagement-meta end-of-single">
 		<?php } ?>
-				<?php if ( $contact ) { 
-				
+				<?php if ( $contact ) {
+
 					if( is_array( $contact ) ){ ?>
-					
-						<div class="inset-contents">
+
+						<div class="inset-contents-muext">
 							<h4>Contacts</h4>
-							<?php 
+							<?php
 							foreach( $contact as $one_contact ){ ?>
-								
+
 									<?php echo $one_contact["_muext_contact_name"]; ?>
 										<?php if ( $one_contact["_muext_contact_email"] ) : ?>
 											&emsp;<a href="mailto:<?php echo $one_contact["_muext_contact_email"]; ?>"><span class="fa fa-envelope"></span></a>
@@ -159,7 +159,7 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 						</div>
 					<?php
 					} else { ?>
-						<div class="inset-contents">
+						<div class="inset-contents-muext">
 							<h4>Contact</h4>
 							<?php echo $contact; ?>
 								<?php if ( $email ) : ?>
@@ -170,45 +170,45 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 								<?php endif; ?>
 						</div>
 					<?php } ?>
-					
+
 				<?php } //endif ?>
-				
+
 				<?php if ( $website ) { ?>
-					<div class="inset-contents">
+					<div class="inset-contents-muext">
 						<h4>Website</h4>
 						<?php echo '<a href="' . $website . '" title="' . get_the_title() . '">' . $website . '</a>'; ?>
 					</div>
 				<?php } ?>
-				
+
 				<?php if ( is_single() && $this_aff_str ) { ?>
-					<div class="inset-contents">
+					<div class="inset-contents-muext">
 						<h4>Affiliation</h4>
 						<?php echo $this_aff_str; ?>
 					</div>
 				<?php } ?>
-				
+
 			</div>
 
 		<?php if ( is_single() ) : ?>
 			<div class="engagement-meta end-of-single">
 				<?php if( $outcome || $audience_str || $impact_str ){ ?>
-					
+
 					<?php if( $outcome ){ ?>
-						<div class="inset-contents">
+						<div class="inset-contents-muext">
 							<h4>Outcomes</h4>
 							<p><?php echo $outcome; ?> </p>
 						</div>
 					<?php } ?>
-					
+
 					<?php if( $audience_str ){ ?>
-						<div class="inset-contents">
+						<div class="inset-contents-muext">
 							<h4>Audience</h4>
 							<?php echo $audience_str; ?>
 						</div>
 					<?php } ?>
-					
+
 					<?php if( $impact_str ){ ?>
-						<div class="inset-contents">
+						<div class="inset-contents-muext">
 							<h4>Impact</h4>
 							<?php echo $impact_str; ?>
 						</div>
@@ -265,7 +265,7 @@ $human_end_date = ( $end_date ) ? \MU_Ext_Engagement\Public_Facing\convert_to_hu
 
 					twentyseventeen_edit_link();
 			}
-			
+
 		 ?>
 		 </footer> <!-- .entry-footer -->
 	<?php } ?>

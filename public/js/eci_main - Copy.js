@@ -527,7 +527,7 @@ jQuery(document).ready(function ($) {
 
             // list UM impact card for the GEOID
             var stockImg = getPluginPath("images");
-            var pdfPath = getPluginPath("pdf");
+            // var pdfPath = getPluginPath("pdf");
             if (ECI.geoid.length > 0) {
                 pdfPath += ECI.geog[ECI.igeog].layer_name.toLowerCase();
             }
@@ -535,7 +535,8 @@ jQuery(document).ready(function ($) {
 
             var $item = addItem({
                 title: name,
-                link: pdfPath + "/" + name + ".pdf",
+                // link: pdfPath + "/" + name + ".pdf",
+                link: "/impact-data-sheets/?geoid=" + ECI.geoid;
                 image: stockImg + "um_impact.png"
             }, dataId, style, true);
             $("#impact-list").append($item);

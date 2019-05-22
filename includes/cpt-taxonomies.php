@@ -572,7 +572,9 @@ function rest_get_engagement_taxonomy_info( $object, $field_name, $request ) {
 function rest_get_engagement_featured_image( $object, $field_name, $request ) {
 	$featured_image_id = get_post_thumbnail_id( $object[ 'id' ] );
 	// @Todo: specify a different size of thumbnail if needed.
-	return wp_get_attachment_url( $featured_image_id, 'medium' );
+	//return wp_get_attachment_url( $featured_image_id, 'medium' );
+	error_log( get_the_post_thumbnail_url( $object[ 'id' ], 'medium' ) );
+	return get_the_post_thumbnail_url( $object[ 'id' ], 'medium' );
 }
 
 /** 
