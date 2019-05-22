@@ -601,7 +601,6 @@ jQuery(document).ready(function ($) {
 
             var $item = addItem({
                 title: name,
-                // link: pdfPath + "/" + name + ".pdf",
                 link: "/impact-data-sheets/?geoid=" + dataId,
                 image: stockImg + "um_impact.png"
             }, dataId, style, true);

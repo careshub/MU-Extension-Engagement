@@ -1,3 +1,4 @@
+
 <?php
 /**
  * Template functions for the plugin.
